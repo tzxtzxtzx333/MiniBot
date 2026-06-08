@@ -1,0 +1,25 @@
+{
+    "id":  "memory_recall_001",
+    "category":  "memory",
+    "input":  "remember archive preference",
+    "expected_behavior":  [
+                              "subagent_trace_contains:MemoryAgent",
+                              "verifier_reason_contains:response addressed goal"
+                          ],
+    "verifier":  {
+                     "rule":  true,
+                     "model":  true,
+                     "human_optional":  false
+                 },
+    "metrics":  [
+                    "pass_rate",
+                    "tool_rounds",
+                    "avg_latency",
+                    "failure_category",
+                    "tool_trace",
+                    "verifier_reason",
+                    "retry_count",
+                    "partial_success",
+                    "downgrade_reason"
+                ]
+}

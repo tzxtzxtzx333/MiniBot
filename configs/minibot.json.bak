@@ -1,0 +1,13 @@
+﻿{
+    "app_name":  "MiniBot",
+    "version":  "0.1.0",
+    "workspace_dir":  ".minibot",
+    "model_mode":  "fake",
+    "chat_turn_limit":  20,
+    "context_token_budget":  1200,
+    "archive_token_budget":  900,
+    "http":  {
+                 "host":  "127.0.0.1",
+                 "port":  8000
+             }
+}

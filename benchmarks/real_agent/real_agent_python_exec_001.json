@@ -1,0 +1,44 @@
+{
+  "id": "real_agent_python_exec_001",
+  "category": "tools",
+  "input": "run python code print(1+1)",
+  "expected_behavior": [
+    "tool_call_contains:python_exec",
+    "tool_result_status:python_exec:success",
+    "tool_result_metadata:python_exec:sandbox:docker"
+  ],
+  "synthetic_tool_plan": [
+    {
+      "tool_name": "python_exec",
+      "arguments": {
+        "code": "print(1+1)"
+      }
+    }
+  ],
+  "preloaded_approval": {
+    "tool_name": "python_exec",
+    "arguments": {
+      "code": "print(1+1)"
+    },
+    "status": "approved"
+  },
+  "profiles": [
+    "real-agent"
+  ],
+  "verifier": {
+    "rule": true,
+    "model": true,
+    "human_optional": false
+  },
+  "metrics": [
+    "pass_rate",
+    "tool_rounds",
+    "avg_latency",
+    "failure_category",
+    "tool_trace",
+    "verifier_reason",
+    "retry_count",
+    "partial_success",
+    "downgrade_reason"
+  ]
+}

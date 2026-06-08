@@ -1,0 +1,63 @@
+{
+  "id": "context_experiment_001",
+  "category": "context",
+  "input": "Who owns Project Atlas and what response style do I prefer?",
+  "expected_behavior": [
+    "context_metrics_present",
+    "key_fact_preserved:true",
+    "avg_prompt_tokens_present:0"
+  ],
+  "profiles": [
+    "context-baseline",
+    "context-optimized"
+  ],
+  "required_facts": [
+    "Project Atlas owner is Alice Chen",
+    "User prefers concise answers"
+  ],
+  "context_tool_results": [
+    {
+      "tool_name": "web_fetch",
+      "output": {
+        "text": "Project Atlas reference dump begins. Critical facts appear elsewhere; this tool output is intentionally noisy."
+      },
+      "output_filler": "Verbose tool output line with HTML fragments, duplicated boilerplate, TODO markers, and placeholder snippets that should be compressed in optimized mode."
+    }
+  ],
+  "context_seed": {
+    "memory": "- User prefers concise answers\n- Project Atlas owner is Alice Chen\n- Region rollout includes Xiamen, Shanghai, Shenzhen\n- TODO remove temporary marker\n- <pending>\n",
+    "memory_filler": "- Atlas filler memory note about migration dependencies, historical meetings, and obsolete snippets that are not needed for the final answer.",
+    "history": "user: remind me who owns Project Atlas and what style I prefer\nassistant: Project Atlas owner is Alice Chen and you prefer concise answers\nuser: repeat the rollout plan in detail\nassistant: rollout covers Xiamen, Shanghai, Shenzhen with staged deployment\nuser: add more background\nassistant: None\nuser: leave placeholder TODO\nassistant: <pending>\n",
+    "history_filler": "user: expanded Atlas discussion about old milestones and temporary notes\nassistant: repeated verbose status details with TODO placeholders and redundant boilerplate",
+    "archives": [
+      {
+        "name": "atlas-archive.md",
+        "content": "# ARCHIVE\n\nsummary_by: SummarizerAgent\nsource_session_id: atlas\ncreated_at: now\ntoken_before: 100\ntoken_after: 40\ncompression_trigger: benchmark\n\n## Key Facts\n- Project Atlas owner is Alice Chen\n- Rollout includes Xiamen, Shanghai, Shenzhen\n- User prefers concise answers\n",
+        "filler": "Archive body for Atlas contains long retained notes, implementation commentary, historical tool output excerpts, and placeholder markers that should stay in baseline but shrink in optimized mode."
+      }
+    ]
+  },
+  "context_expansion": {
+    "placeholder_repeat": 140,
+    "memory_repeat": 36,
+    "history_repeat": 96,
+    "archive_repeat": 40,
+    "tool_output_repeat": 80
+  },
+  "verifier": {
+    "rule": true,
+    "model": false,
+    "human_optional": false
+  },
+  "metrics": [
+    "pass_rate",
+    "tool_rounds",
+    "avg_latency",
+    "failure_category",
+    "tool_trace",
+    "verifier_reason",
+    "retry_count",
+    "partial_success",
+    "downgrade_reason"
+  ]
+}

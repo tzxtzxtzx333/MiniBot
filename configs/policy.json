@@ -1,0 +1,136 @@
+{
+  "workspace_root": ".minibot/sandbox_workspace",
+  "whitelist": [
+    "calculator",
+    "file_read",
+    "web_fetch",
+    "web_search",
+    "weather",
+    "map_route",
+    "map_poi_search",
+    "memory_search",
+    "doc_summarize"
+  ],
+  "graylist": [
+    "file_write",
+    "memory_write",
+    "python_exec",
+    "shell_exec"
+  ],
+  "blacklist": [],
+  "approval": {
+    "auto_approve": false,
+    "tool_defaults": {
+      "file_write": true,
+      "memory_write": true,
+      "python_exec": true,
+      "shell_exec": true
+    }
+  },
+  "shell_blacklist": [
+    "rm -rf",
+    "shutdown",
+    "format",
+    "del /s /q",
+    "mkfs"
+  ],
+  "parameter_limits": {
+    "file_read": {
+      "path": {
+        "max_length": 260
+      }
+    },
+    "file_write": {
+      "path": {
+        "max_length": 260
+      },
+      "content": {
+        "max_length": 8000
+      }
+    },
+    "memory_search": {
+      "query": {
+        "max_length": 500
+      }
+    },
+    "memory_write": {
+      "content": {
+        "max_length": 2000
+      }
+    },
+    "doc_summarize": {
+      "text": {
+        "max_length": 12000
+      },
+      "path": {
+        "max_length": 260
+      }
+    },
+    "web_fetch": {
+      "url": {
+        "max_length": 2000
+      }
+    },
+    "web_search": {
+      "query": {
+        "max_length": 500
+      }
+    },
+    "weather": {
+      "location": {
+        "max_length": 200
+      }
+    },
+    "map_route": {
+      "origin": {
+        "max_length": 200
+      },
+      "destination": {
+        "max_length": 200
+      }
+    },
+    "map_poi_search": {
+      "query": {
+        "max_length": 500
+      },
+      "location": {
+        "max_length": 200
+      },
+      "keyword": {
+        "max_length": 100
+      },
+      "city": {
+        "max_length": 100
+      }
+    },
+    "python_exec": {
+      "code": {
+        "max_length": 4000
+      }
+    },
+    "shell_exec": {
+      "command": {
+        "max_length": 500
+      }
+    }
+  },
+  "sensitive_patterns": [
+    "sk-[A-Za-z0-9_-]+",
+    "(?i)bearer\\s+[A-Za-z0-9._-]+",
+    "(?i)\\b(api[_-]?key|token|secret|password)\\b\\s*([:=])\\s*([^\\s,;，；]+)",
+    "(?i)\\b(api[_-]?key|token|secret|password)\\b\\s+(is)\\s+([^\\s,;，；]+)",
+    "(api[_-]?key|token|secret|password)\\s*(是)\\s*([^\\s,;，；]+)"
+  ],
+  "retry": {
+    "strategy": "exponential",
+    "base_delay_seconds": 0.01,
+    "retryable_failure_categories": [
+      "tool_timeout",
+      "temporary_network_error",
+      "model_format_error"
+    ]
+  },
+  "dedupe": {
+    "enabled": true
+  }
+}

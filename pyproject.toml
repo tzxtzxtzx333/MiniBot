@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "minibot"
+version = "0.1.0"
+description = "MiniBot local assistant skeleton with harness-first architecture."
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [
+  { name = "tzx", email = "tzx080500@gmail.com" }
+]
+dependencies = ["lark-oapi>=1.4.19"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0.0"]
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+include = ["minibot*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

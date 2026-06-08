@@ -1,0 +1,483 @@
+{
+  "phase": "phase1_skeleton",
+  "generated_at": "2026-06-07T12:22:21.861337+00:00",
+  "run_mode": "real",
+  "benchmark_scope": "core",
+  "benchmark_profile": "all-integrations",
+  "total_cases": 6,
+  "counted_cases": 6,
+  "passed_cases": 5,
+  "pass_rate": 0.8333333333333334,
+  "avg_latency": 5432.49,
+  "avg_tool_rounds": 0.83,
+  "tool_rounds": 0.83,
+  "failure_category": {
+    "benchmark_runtime_error": 1
+  },
+  "verifier_reason": {
+    "matched 1/1 rules | The final response includes the route planning result from 厦门大学 to 厦门站, and the tool call to map_route is present. | response addressed goal: 规划路线 厦门大学 到 厦门站": 1,
+    "matched 2/2 rules | The tool call map_poi_search was made and returned success with relevant hospital results near Xiamen University. | response addressed goal: 帮我查一下厦门大学附近有什么医院": 1,
+    "<urlopen error [WinError 10054] 远程主机强迫关闭了一个现有的连接。>": 1,
+    "matched 2/2 rules | The tool call contains 'weather' and the tool result status is 'success', matching all expected assertions. | response addressed goal: weather Xiamen": 1,
+    "matched 2/2 rules | The tool call contains 'web_fetch' and the tool result status is 'success', matching all expected assertions. | response addressed goal: fetch https://example.com": 1,
+    "matched 2/2 rules | The final response includes the web search results for 'MiniBot tool system' and the tool call contains 'web_search' with status 'success', satisfying all expected assertions. | response addressed goal: web search MiniBot tool system": 1
+  },
+  "retry_count": 0.0,
+  "partial_success": 0,
+  "downgrade_reason": {},
+  "model_provider": "deepseek",
+  "model_name": "deepseek-chat",
+  "fake_model": false,
+  "verifier_mode": "real",
+  "fake_verifier": false,
+  "verifier_provider": "deepseek",
+  "verifier_model_name": "deepseek-chat",
+  "verifier_config_source": "dedicated",
+  "docker_available": true,
+  "mock_tools_used": [],
+  "real_tools_used": [
+    "map_poi_search",
+    "map_route",
+    "weather",
+    "web_fetch",
+    "web_search"
+  ],
+  "mcp_tools_used": [
+    "map_poi_search",
+    "map_route"
+  ],
+  "external_integrations": {
+    "feishu": "missing",
+    "web_fetch": "real",
+    "web_search": "real",
+    "weather": "real",
+    "map_route": "mcp",
+    "map_poi_search": "mcp"
+  },
+  "capability_status": {
+    "real_model": "passed",
+    "real_tool_calling": "passed",
+    "llm_archive": "passed",
+    "model_verifier": "passed",
+    "docker_sandbox": "failed",
+    "partial_success": "failed"
+  },
+  "missing_capabilities": [],
+  "model_error": "benchmark_runtime_error",
+  "verifier_error": null,
+  "failed_case_count": 1,
+  "failed_case_categories": {
+    "benchmark_runtime_error": 1
+  },
+  "benchmark_failure_category": "benchmark_runtime_error",
+  "human_review": {
+    "pending_count": 23,
+    "approved_count": 2,
+    "rejected_count": 1
+  },
+  "results": [
+    {
+      "id": "regression_compare_006",
+      "category": "regression",
+      "status": "passed",
+      "passed": true,
+      "counted_in_pass_rate": true,
+      "latency_ms": 10645.43,
+      "tool_rounds": 1,
+      "failure_category": null,
+      "tool_trace": [
+        {
+          "tool_name": "map_route",
+          "arguments": {
+            "origin": "厦门大学",
+            "destination": "厦门站",
+            "city": "厦门"
+          },
+          "status": "success",
+          "success": true,
+          "output": {
+            "origin": "厦门大学",
+            "destination": "厦门站",
+            "mode": "driving",
+            "origin_location": "118.092194,24.435484",
+            "destination_location": "118.115895,24.467462",
+            "distance_km": 7.3,
+            "duration_minutes": 12.2,
+            "summary": "从厦门大学到厦门站，驾车距离约7.3公里，预计用时约12.2分钟。",
+            "steps_summary": [
+              "沿演武路向西南行驶199米靠右",
+              "沿演武大桥向西北行驶1.1千米向右前方行驶进入匝道",
+              "沿成功大道入口途径成功大道向东北行驶376米靠左",
+              "沿成功大道向东北行驶524米直行进入隧道",
+              "沿万石山隧道途径成功大道向东北行驶3.0千米右转",
+              "沿成功大道向西行驶379米右转",
+              "沿成功大道途径后埭溪路向西北行驶807米右转",
+              "沿厦禾路向东行驶677米右转进入左侧道路",
+              "沿站西一路向东南行驶123米直行进入隧道",
+              "沿站西一路向东南行驶90米到达目的地"
+            ],
+            "raw_result": {
+              "content": [
+                {
+                  "type": "text",
+                  "text": "{\"origin\":\"118.092194,24.435484\",\"destination\":\"118.115895,24.467462\",\"paths\":[{\"path\":\"\",\"distance\":\"7299\",\"duration\":\"734\",\"steps\":[{\"instruction\":\"沿演武路向西南行驶199米靠右\",\"road\":\"演武路\",\"distance\":\"199\",\"orientation\":\"西南\",\"duration\":\"34\"},{\"instruction\":\"沿演武大桥向西北行驶1.1千米向右前方行驶进入匝道\",\"road\":\"演武大桥\",\"distance\":\"1084\",\"orientation\":\"西北\",\"duration\":\"80\"},{\"instruction\":\"沿成功大道入口途径成功大道向东北行驶376米靠左\",\"road\":\"成功大道入口\",\"distance\":\"376\",\"orientation\":\"东北\",\"duration\":\"34\"},{\"instruction\":\"沿成功大道向东北行驶524米直行进入隧道\",\"road\":\"成功大道\",\"distance\":\"524\",\"orientation\":\"东北\",\"duration\":\"32\"},{\"instruction\":\"沿万石山隧道途径成功大道向东北行驶3.0千米右转\",\"road\":\"万石山隧道\",\"distance\":\"3040\",\"orientation\":\"东北\",\"duration\":\"179\"},{\"instruction\":\"沿成功大道向西行驶379米右转\",\"road\":\"成功大道\",\"distance\":\"379\",\"orientation\":\"西\",\"duration\":\"72\"},{\"instruction\":\"沿成功大道途径后埭溪路向西北行驶807米右转\",\"road\":\"成功大道\",\"distance\":\"807\",\"orientation\":\"西北\",\"duration\":\"126\"},{\"instruction\":\"沿厦禾路向东行驶677米右转进入左侧道路\",\"road\":\"厦禾路\",\"distance\":\"677\",\"orientation\":\"东\",\"duration\":\"133\"},{\"instruction\":\"沿站西一路向东南行驶123米直行进入隧道\",\"road\":\"站西一路\",\"distance\":\"123\",\"orientation\":\"东南\",\"duration\":\"36\"},{\"instruction\":\"沿站西一路向东南行驶90米到达目的地\",\"road\":\"站西一路\",\"distance\":\"90\",\"orientation\":\"东南\",\"duration\":\"8\"}]}]}"
+                }
+              ],
+              "isError": false
+            }
+          },
+          "error": null,
+          "failure_category": null,
+          "metadata": {
+            "provider": "map_route",
+            "provider_status": "mcp",
+            "mock_provider": false,
+            "real_provider": false,
+            "mcp_provider": true,
+            "mcp_endpoint_host": "mcp.amap.com",
+            "request_method": "POST",
+            "mcp_arguments": {
+              "origin": "118.092194,24.435484",
+              "destination": "118.115895,24.467462"
+            },
+            "request_payload_without_key": {
+              "jsonrpc": "2.0",
+              "id": "map-route-tools-call",
+              "method": "tools/call",
+              "params": {
+                "name": "maps_direction_driving",
+                "arguments": {
+                  "origin": "118.092194,24.435484",
+                  "destination": "118.115895,24.467462"
+                }
+              }
+            },
+            "response_status": 200,
+            "response_body_snippet": "{\"jsonrpc\":\"2.0\",\"id\":\"map-route-tools-call\",\"result\":{\"content\":[{\"type\":\"text\",\"text\":\"{\\\"origin\\\":\\\"118.092194,24.435484\\\",\\\"destination\\\":\\\"118.115895,24.467462\\\",\\\"paths\\\":[{\\\"path\\\":\\\"\\\",\\\"distance\\\":\\\"7299\\\",\\\"duration\\\":\\\"734\\\",\\\"steps\\\":[{\\\"instruction\\\":\\\"沿演武路向西南行驶199米靠右\\\",\\\"road\\\":\\\"演武路\\\",\\\"distance\\\":\\\"199\\\",\\\"orientation\\\":\\\"西南\\\",\\\"duration\\\":\\\"34\\\"},{\\\"instruction\\\":\\\"沿演武大桥向西北行驶1.1千米向右前方行驶进入匝道\\\",\\\"road\\\":\\\"演武大桥\\\",\\\"distance\\\":\\\"1084\\\",\\\"orientation\\\":\\\"西北\\\",\\\"duration\\\":\\\"80\\\"},{\\\"",
+            "mcp_tool_name": "maps_direction_driving",
+            "retry_count": 0,
+            "retry_errors": []
+          }
+        }
+      ],
+      "verifier_reason": "matched 1/1 rules | The final response includes the route planning result from 厦门大学 to 厦门站, and the tool call to map_route is present. | response addressed goal: 规划路线 厦门大学 到 厦门站",
+      "verifier_mode": "real",
+      "fake_verifier": false,
+      "verifier_failure_category": null,
+      "verifier_config_source": "dedicated",
+      "retry_count": 0,
+      "partial_success": false,
+      "downgrade_reason": null,
+      "human_review": false
+    },
+    {
+      "id": "tools_map_poi_search_001",
+      "category": "tools",
+      "status": "passed",
+      "passed": true,
+      "counted_in_pass_rate": true,
+      "latency_ms": 3449.2,
+      "tool_rounds": 1,
+      "failure_category": null,
+      "tool_trace": [
+        {
+          "tool_name": "map_poi_search",
+          "arguments": {
+            "query": "厦门大学附近医院",
+            "location": "厦门大学",
+            "city": "厦门",
+            "keyword": "医院",
+            "radius": 1000
+          },
+          "status": "success",
+          "success": true,
+          "output": {
+            "query": "厦门大学附近医院",
+            "location": "厦门大学",
+            "keyword": "医院",
+            "city": "厦门",
+            "results": [
+              {
+                "name": "厦门大学附属翔安医院(思明院区)",
+                "address": "大学路172号",
+                "distance_m": null,
+                "location": "",
+                "type": "医院"
+              },
+              {
+                "name": "南普陀中医院",
+                "address": "思明南路515号南普陀寺慈善楼西侧1-2层",
+                "distance_m": null,
+                "location": "",
+                "type": "医院"
+              },
+              {
+                "name": "南普陀寺中医院妙湛药堂",
+                "address": "思明南路515号南普陀寺内(南侧)",
+                "distance_m": null,
+                "location": "",
+                "type": "医院"
+              },
+              {
+                "name": "厦港街道社区卫生服务中心",
+                "address": "思明南路358号(思明区青少年宫旁边)",
+                "distance_m": null,
+                "location": "",
+                "type": "医院"
+              }
+            ],
+            "raw_result": {
+              "content": [
+                {
+                  "type": "text",
+                  "text": "{\"pois\":[{\"id\":\"B0FFFWF3DB\",\"name\":\"厦门大学附属翔安医院(思明院区)\",\"address\":\"大学路172号\",\"typecode\":\"090100\",\"photo\":\"https://store.is.autonavi.com/showpic/4b01d10ac91c02970000000726742693?type=pic\"},{\"id\":\"B0FFM5MFCX\",\"name\":\"南普陀中医院\",\"address\":\"思明南路515号南普陀寺慈善楼西侧1-2层\",\"typecode\":\"090100\",\"photo\":\"http://store.is.autonavi.com/showpic/02526a8a1ed54005b474cda6529991f8\"},{\"id\":\"B0FFKPZQSP\",\"name\":\"南普陀寺中医院妙湛药堂\",\"address\":\"思明南路515号南普陀寺内(南侧)\",\"typecode\":\"090601\",\"photo\":\"http://store.is.autonavi.com/showpic/f1846d808a42f9dfc37113f860ca5f01\"},{\"id\":\"B0K6FAJBIS\",\"name\":\"厦港街道社区卫生服务中心\",\"address\":\"思明南路358号(思明区青少年宫旁边)\",\"typecode\":\"090102\",\"photo\":\"https://store.is.autonavi.com/showpic/5b087ab9ac3cc25360a5b5998e907336\"}]}"
+                }
+              ],
+              "isError": false
+            }
+          },
+          "error": null,
+          "failure_category": null,
+          "metadata": {
+            "provider": "map_poi_search",
+            "provider_status": "mcp",
+            "mock_provider": false,
+            "real_provider": false,
+            "mcp_provider": true,
+            "mcp_endpoint_host": "mcp.amap.com",
+            "request_method": "POST",
+            "mcp_arguments": {
+              "keywords": "医院",
+              "location": "118.092194,24.435484",
+              "radius": 1000
+            },
+            "request_payload_without_key": {
+              "jsonrpc": "2.0",
+              "id": "map-route-tools-call",
+              "method": "tools/call",
+              "params": {
+                "name": "maps_around_search",
+                "arguments": {
+                  "keywords": "医院",
+                  "location": "118.092194,24.435484",
+                  "radius": 1000
+                }
+              }
+            },
+            "response_status": 200,
+            "response_body_snippet": "{\"jsonrpc\":\"2.0\",\"id\":\"map-route-tools-call\",\"result\":{\"content\":[{\"type\":\"text\",\"text\":\"{\\\"pois\\\":[{\\\"id\\\":\\\"B0FFFWF3DB\\\",\\\"name\\\":\\\"厦门大学附属翔安医院(思明院区)\\\",\\\"address\\\":\\\"大学路172号\\\",\\\"typecode\\\":\\\"090100\\\",\\\"photo\\\":\\\"https://store.is.autonavi.com/showpic/4b01d10ac91c02970000000726742693?type=pic\\\"},{\\\"id\\\":\\\"B0FFM5MFCX\\\",\\\"name\\\":\\\"南普陀中医院\\\",\\\"address\\\":\\\"思明南路515号南普陀寺慈善楼西侧1-2层\\\",\\\"typecode\\\":\\\"090100\\\",\\\"photo\\\":\\\"http://store.is.autonavi.com/showpic/02526a8a1ed54005b474cda6529991f8\\\"},{\\\"id\\\":\\\"B0FF",
+            "mcp_tool_name": "maps_around_search",
+            "retry_count": 0,
+            "retry_errors": []
+          }
+        }
+      ],
+      "verifier_reason": "matched 2/2 rules | The tool call map_poi_search was made and returned success with relevant hospital results near Xiamen University. | response addressed goal: 帮我查一下厦门大学附近有什么医院",
+      "verifier_mode": "real",
+      "fake_verifier": false,
+      "verifier_failure_category": null,
+      "verifier_config_source": "dedicated",
+      "retry_count": 0,
+      "partial_success": false,
+      "downgrade_reason": null,
+      "human_review": false
+    },
+    {
+      "id": "tools_map_route_001",
+      "category": "tools",
+      "status": "failed",
+      "passed": false,
+      "counted_in_pass_rate": true,
+      "latency_ms": 6040.74,
+      "tool_rounds": 0,
+      "failure_category": "benchmark_runtime_error",
+      "tool_trace": [],
+      "verifier_reason": "<urlopen error [WinError 10054] 远程主机强迫关闭了一个现有的连接。>",
+      "retry_count": 0,
+      "partial_success": false,
+      "downgrade_reason": null,
+      "human_review": false
+    },
+    {
+      "id": "tools_weather_001",
+      "category": "tools",
+      "status": "passed",
+      "passed": true,
+      "counted_in_pass_rate": true,
+      "latency_ms": 2166.11,
+      "tool_rounds": 1,
+      "failure_category": null,
+      "tool_trace": [
+        {
+          "tool_name": "weather",
+          "arguments": {
+            "location": "Xiamen"
+          },
+          "status": "success",
+          "success": true,
+          "output": {
+            "location": "Xiamen",
+            "city": "厦门",
+            "text": "阴",
+            "weather": "阴",
+            "temperature_c": 27,
+            "feels_like": 28,
+            "humidity": 84,
+            "wind_dir": "东南风",
+            "wind_direction": "东南风",
+            "wind_scale": "3",
+            "obs_time": "2026-06-07T20:10+08:00",
+            "updated_at": "2026-06-07T20:10+08:00"
+          },
+          "error": null,
+          "failure_category": null,
+          "metadata": {
+            "provider": "weather",
+            "provider_status": "real",
+            "mock_provider": false,
+            "real_provider": true,
+            "mcp_provider": false,
+            "provider_host": "https://kh38m2krb3.re.qweatherapi.com",
+            "retry_count": 0,
+            "retry_errors": []
+          }
+        }
+      ],
+      "verifier_reason": "matched 2/2 rules | The tool call contains 'weather' and the tool result status is 'success', matching all expected assertions. | response addressed goal: weather Xiamen",
+      "verifier_mode": "real",
+      "fake_verifier": false,
+      "verifier_failure_category": null,
+      "verifier_config_source": "dedicated",
+      "retry_count": 0,
+      "partial_success": false,
+      "downgrade_reason": null,
+      "human_review": false
+    },
+    {
+      "id": "tools_web_fetch_001",
+      "category": "tools",
+      "status": "passed",
+      "passed": true,
+      "counted_in_pass_rate": true,
+      "latency_ms": 3326.42,
+      "tool_rounds": 1,
+      "failure_category": null,
+      "tool_trace": [
+        {
+          "tool_name": "web_fetch",
+          "arguments": {
+            "url": "https://example.com"
+          },
+          "status": "success",
+          "success": true,
+          "output": {
+            "url": "https://example.com",
+            "status_code": 200,
+            "content_type": "text/html",
+            "text_snippet": "<!doctype html><html lang=\"en\"><head><title>Example Domain</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><style>body{background:#eee;width:60vw;margin:15vh auto;font-family:system-ui,sans-serif}h1{font-size:1.5em}div{opacity:0.8}a:link,a:visited{color:#348}</style></head><body><div><h1>Example Domain</h1><p>This domain is for use in documentation examples without needing permission. Avoid use in operations.</p><p><a href=\"https://iana.org/domains/example\">Learn more</a></p></div></body></html>\n"
+          },
+          "error": null,
+          "failure_category": null,
+          "metadata": {
+            "provider": "web_fetch",
+            "provider_status": "real",
+            "mock_provider": false,
+            "real_provider": true,
+            "mcp_provider": false,
+            "output_truncated": false,
+            "retry_count": 0,
+            "retry_errors": []
+          }
+        }
+      ],
+      "verifier_reason": "matched 2/2 rules | The tool call contains 'web_fetch' and the tool result status is 'success', matching all expected assertions. | response addressed goal: fetch https://example.com",
+      "verifier_mode": "real",
+      "fake_verifier": false,
+      "verifier_failure_category": null,
+      "verifier_config_source": "dedicated",
+      "retry_count": 0,
+      "partial_success": false,
+      "downgrade_reason": null,
+      "human_review": false
+    },
+    {
+      "id": "tools_web_search_001",
+      "category": "tools",
+      "status": "passed",
+      "passed": true,
+      "counted_in_pass_rate": true,
+      "latency_ms": 6967.06,
+      "tool_rounds": 1,
+      "failure_category": null,
+      "tool_trace": [
+        {
+          "tool_name": "web_search",
+          "arguments": {
+            "query": "MiniBot tool system"
+          },
+          "status": "success",
+          "success": true,
+          "output": {
+            "query": "MiniBot tool system",
+            "results": [
+              {
+                "title": "MiniBOT-6R | Educational Robot | NexCOBOT",
+                "url": "https://www.nexcobot.com/en/product/robot-system/robot-arm/minibot-6r",
+                "snippet": "6-axis Robot Package for Education, provides an expandable distributed control system. **EtherCAT Communication**Based on standard EtherCAT communication, MiniBOT provides an expandable distributed control system. **Industrial Robot Design**By referring to the design of general industrial 6-axis articulated robots, MiniBOT is built in the same concept. | **Ordering Information** | * **Robot Package** MiniBOT robot package (P/N: 7900000179X00) * **Optional** Robot stand (P/N: 790000180X00) 70 x 70 x 78 (cm) Robot stand (P/N: 7900000183X00) 80 x 80 x 78 (cm) Gripper package (P/N: 7900000181X00) Terminal board package (P/N: 7900000182X00) 2m and DB-37 terminal board |. **Robot Package**MiniBOT robot package (P/N: 7900000179X00). **Optional**Robot stand (P/N: 790000180X00) 70 x 70 x 78 (cm). Robot stand (P/N: 7900000183X00) 80 x 80 x 78 (cm). | 2020/03/19 | MiniBOT User Manual | 1.4 | Windows | User Manual |. | 2020/03/19 | NexMotion Studio User Manual | 1.1 | Windows | User Manual |. | 2020/03/19 | NexMotion Library User Manual | 1.6 | Windows | User Manual |.",
+                "score": 0.99996996
+              },
+              {
+                "title": "MiniBot - MRx Products – Lord of Robots",
+                "url": "https://lordofrobots.com/pages/minibot-mrx-products",
+                "snippet": "* LoR Core Version 3 LoR Core Version 3. ### LoR Core Version 3. Regular price  $45.00 CAD. Regular price   Sale price  $45.00 CAD. * MiniBot Kit - Version 3 MiniBot Kit - Version 3. ### MiniBot Kit - Version 3. * Servo Motor - MG90 Servo Motor - MG90. ### Servo Motor - MG90. * Battery Holder - 18650 Battery Holder - 18650. ### Battery Holder - 18650. ## MiniBot Program. The MiniBot Program is a hands-on robotics experience where students build, program, and compete with small, customizable robots. Through the MiniBot program, students gain experience with:. * **3D Design in Onshape** – Learn how to model custom parts using cloud-based CAD tools. * **System Design and Architecture** – Learn to think holistically about how mechanical, electrical, and software systems interact. The program provides a complete and functional foundation to start from, while giving each student the freedom to explore and develop these skills at their own pace.",
+                "score": 0.9993538
+              },
+              {
+                "title": "MINIBOT - Open Source Hardware Board",
+                "url": "https://www.olimex.com/Products/Soldering-Kits/Beginner/MINIBOT/open-source-hardware",
+                "snippet": "## Products. # MINIBOT. MINIBOT - Open Source Hardware Board. MINIBOT - Open Source Hardware Board MINIBOT - Open Source Hardware Board. **Mini robot for line tracing programmable with Arduino**. https://www.olimex.com/Products/Soldering-Kits/Beginner/MINIBOT/open-source-hardware. Minibot is OSHW certified Open Source Hardware with UID BG000025. Minibot is small robot kit with two motors, four photo sensors and that can be programmed to escape labyrinths or follow a line. You can see it in acton here:. The code is available and can be modified, Arduino IDE is used for programming. Notice that there is no USB connector in the kit, additional circuitry and wires are needed for attaching to a personal computer. The kit comes without a battery, it should be purchased separately. * 3.7V Li-Po battery connector. #### HARDWARE. * Minibot schematic in PDF format. Rechargable LI-PO battery 3.7V 250mAh with JST connector. VISA VISA Electron V-Pay Master Card Master Card Electronic Maestro. Verified by VISA Master Card Secure Code.",
+                "score": 0.9990073
+              },
+              {
+                "title": "MiniBot Hardware Kit - REV Robotics",
+                "url": "https://www.revrobotics.com/rev-45-1171",
+                "snippet": "# MiniBot Hardware Kit. The MiniBot Hardware Kit is a fast robot build ideal for basic programming training. * QTY 4 - 90 Tooth Plastic Gear (2 packs of REV-41-1337). * QTY 8 - 15mm Plastic Motion Bracket (REV-41-1303). * QTY 8 - 5mm x 75mm Hex Shaft (2 packs of REV-41-1347). * QTY 4 - M3 x 16mm Hex Cap Screws (Sub-pack of REV-41-1360). 15mm Linear Motion Kit V2 Hardware Pack. This is all of the hardware included in the 15mm Linear Motion Kit V2 (REV-45-1507). Specifications Hole Diameter: M3 Clearance Kit Contents QTY 8 - M3 x 8mm Low Profile Socket Screws QTY. ### M3 Hardware Bundle. The M3 Hardware Bundle provides a multitude of hardware options that can be used within the 15mm Build System. This is all of the hardware included in the UltraPlanetary Gearbox Kit & HD Hex Motor (REV-41-1600) Kit Contents QTY 6 - M3x40mm QTY 6 - M3x30mm QTY 6 - M3x20mm QTY 6 - M3x10mm QTY 2 - M3x8mm...",
+                "score": 0.9988575
+              },
+              {
+                "title": "Building a Mini Bot - Technical - Chief Delphi",
+                "url": "https://www.chiefdelphi.com/t/building-a-mini-bot/364948",
+                "snippet": "# Building a Mini Bot. I decided to work on a project to make a mini bot. I am a programmer and decided to challenge myself by building a mini bot and I’m struggling with the drive train. My bot is 20x20x4.5, though the same system would fit in a 13x13 area if you used 4 wheels instead of 6. I designed a relativity small robot that I plan to manufacture at some point, although it may be too big for your purposes. Its 18x18 and should have room for an frc control system (although its not designed for such). I intended to make it 12x12 but had trouble getting the gearboxes to be small enough with the cims. However, not wanting to add $100 to the BOM if I didn’t have to, I’d be trying to stagger the drive gearboxes instead. If you’re set on using the FRC control system and motors, it will be possible to get your bot that small if you’re smart about it.",
+                "score": 0.9988213
+              }
+            ]
+          },
+          "error": null,
+          "failure_category": null,
+          "metadata": {
+            "provider": "web_search",
+            "provider_status": "real",
+            "mock_provider": false,
+            "real_provider": true,
+            "mcp_provider": false,
+            "provider_name": "tavily",
+            "search_depth": "basic",
+            "max_results": 5,
+            "retry_count": 0,
+            "retry_errors": []
+          }
+        }
+      ],
+      "verifier_reason": "matched 2/2 rules | The final response includes the web search results for 'MiniBot tool system' and the tool call contains 'web_search' with status 'success', satisfying all expected assertions. | response addressed goal: web search MiniBot tool system",
+      "verifier_mode": "real",
+      "fake_verifier": false,
+      "verifier_failure_category": null,
+      "verifier_config_source": "dedicated",
+      "retry_count": 0,
+      "partial_success": false,
+      "downgrade_reason": null,
+      "human_review": false
+    }
+  ],
+  "report_path": "reports/latest.json"
+}

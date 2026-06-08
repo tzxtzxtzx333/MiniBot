@@ -1,0 +1,26 @@
+{
+    "id":  "reasoning_retry_002",
+    "category":  "reasoning",
+    "input":  "simulate failed weather and give me travel advice",
+    "expected_behavior":  [
+                              "tool_call_contains:weather",
+                              "retry_count_at_least:1",
+                              "tool_result_status:weather:success"
+                          ],
+    "verifier":  {
+                     "rule":  true,
+                     "model":  true,
+                     "human_optional":  false
+                 },
+    "metrics":  [
+                    "pass_rate",
+                    "tool_rounds",
+                    "avg_latency",
+                    "failure_category",
+                    "tool_trace",
+                    "verifier_reason",
+                    "retry_count",
+                    "partial_success",
+                    "downgrade_reason"
+                ]
+}

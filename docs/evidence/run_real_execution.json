@@ -1,0 +1,311 @@
+{
+  "phase": "phase1_skeleton",
+  "generated_at": "2026-06-07T12:21:41.196266+00:00",
+  "run_mode": "real",
+  "benchmark_scope": "core",
+  "benchmark_profile": "execution",
+  "total_cases": 5,
+  "counted_cases": 5,
+  "passed_cases": 5,
+  "pass_rate": 1.0,
+  "avg_latency": 2604.4,
+  "avg_tool_rounds": 1.2,
+  "tool_rounds": 1.2,
+  "failure_category": {
+    "unsupported_url_scheme": 1
+  },
+  "verifier_reason": {
+    "matched 2/2 rules | The final response indicates partial success, matches the expected assertion 'final_response_contains:MiniBot partial success:', and the tool results show one success and one failure, consistent with partial success. | response addressed goal: synthetic partial success execution case": 1,
+    "matched 2/2 rules | The tool call 'file_write' was made with the correct arguments and returned a success status, matching the expected assertions. | response addressed goal: write notes/result1.txt content hello one": 1,
+    "matched 2/2 rules | The tool call contains memory_write and the tool result status is success, matching all expected assertions. | response addressed goal: 请调用 memory_write 工具保存这条长期记忆：I prefer concise answers": 1,
+    "matched 2/2 rules | The tool call contains python_exec and the tool result status is success, matching all expected assertions. | response addressed goal: run python code print(1+1)": 1,
+    "matched 2/2 rules | The tool call contains shell_exec and the tool result status is success, matching all expected assertions. | response addressed goal: shell_exec echo hello": 1
+  },
+  "retry_count": 0.0,
+  "partial_success": 1,
+  "downgrade_reason": {},
+  "model_provider": "deepseek",
+  "model_name": "deepseek-chat",
+  "fake_model": false,
+  "verifier_mode": "real",
+  "fake_verifier": false,
+  "verifier_provider": "deepseek",
+  "verifier_model_name": "deepseek-chat",
+  "verifier_config_source": "dedicated",
+  "docker_available": true,
+  "mock_tools_used": [],
+  "real_tools_used": [
+    "calculator",
+    "file_write",
+    "memory_write",
+    "python_exec",
+    "shell_exec",
+    "web_fetch"
+  ],
+  "mcp_tools_used": [],
+  "external_integrations": {
+    "feishu": "missing",
+    "web_fetch": "failed",
+    "web_search": "real",
+    "weather": "real",
+    "map_route": "mcp",
+    "map_poi_search": "mcp"
+  },
+  "capability_status": {
+    "real_model": "passed",
+    "real_tool_calling": "passed",
+    "llm_archive": "failed",
+    "model_verifier": "passed",
+    "docker_sandbox": "passed",
+    "partial_success": "passed"
+  },
+  "missing_capabilities": [],
+  "model_error": null,
+  "verifier_error": null,
+  "failed_case_count": 0,
+  "failed_case_categories": {},
+  "benchmark_failure_category": null,
+  "human_review": {
+    "pending_count": 23,
+    "approved_count": 2,
+    "rejected_count": 1
+  },
+  "results": [
+    {
+      "id": "reasoning_partial_001",
+      "category": "reasoning",
+      "status": "passed",
+      "passed": true,
+      "counted_in_pass_rate": true,
+      "latency_ms": 1101.44,
+      "tool_rounds": 2,
+      "failure_category": "unsupported_url_scheme",
+      "tool_trace": [
+        {
+          "tool_name": "calculator",
+          "arguments": {
+            "expression": "2 + 3"
+          },
+          "status": "success",
+          "success": true,
+          "output": {
+            "result": 5,
+            "expression": "2 + 3"
+          },
+          "error": null,
+          "failure_category": null,
+          "metadata": {
+            "retry_count": 0,
+            "retry_errors": []
+          }
+        },
+        {
+          "tool_name": "web_fetch",
+          "arguments": {
+            "url": "file:///tmp/not-allowed"
+          },
+          "status": "failed",
+          "success": false,
+          "output": null,
+          "error": "unsupported_url_scheme",
+          "failure_category": "unsupported_url_scheme",
+          "metadata": {
+            "provider": "web_fetch",
+            "provider_status": "failed",
+            "mock_provider": false,
+            "real_provider": true,
+            "mcp_provider": false,
+            "retry_count": 0,
+            "retry_errors": []
+          }
+        }
+      ],
+      "verifier_reason": "matched 2/2 rules | The final response indicates partial success, matches the expected assertion 'final_response_contains:MiniBot partial success:', and the tool results show one success and one failure, consistent with partial success. | response addressed goal: synthetic partial success execution case",
+      "verifier_mode": "real",
+      "fake_verifier": false,
+      "verifier_failure_category": null,
+      "verifier_config_source": "dedicated",
+      "retry_count": 0,
+      "partial_success": true,
+      "downgrade_reason": null,
+      "human_review": false
+    },
+    {
+      "id": "tools_file_write_001",
+      "category": "tools",
+      "status": "passed",
+      "passed": true,
+      "counted_in_pass_rate": true,
+      "latency_ms": 2743.71,
+      "tool_rounds": 1,
+      "failure_category": null,
+      "tool_trace": [
+        {
+          "tool_name": "file_write",
+          "arguments": {
+            "path": "notes/result1.txt",
+            "content": "hello one"
+          },
+          "status": "success",
+          "success": true,
+          "output": {
+            "path": "C:\\Users\\DELL\\Desktop\\MiniBot\\.minibot\\sandbox_workspace\\notes\\result1.txt",
+            "bytes_written": 9
+          },
+          "error": null,
+          "failure_category": null,
+          "metadata": {
+            "retry_count": 0,
+            "retry_errors": []
+          }
+        }
+      ],
+      "verifier_reason": "matched 2/2 rules | The tool call 'file_write' was made with the correct arguments and returned a success status, matching the expected assertions. | response addressed goal: write notes/result1.txt content hello one",
+      "verifier_mode": "real",
+      "fake_verifier": false,
+      "verifier_failure_category": null,
+      "verifier_config_source": "dedicated",
+      "retry_count": 0,
+      "partial_success": false,
+      "downgrade_reason": null,
+      "human_review": false
+    },
+    {
+      "id": "tools_memory_write_001",
+      "category": "tools",
+      "status": "passed",
+      "passed": true,
+      "counted_in_pass_rate": true,
+      "latency_ms": 1065.23,
+      "tool_rounds": 1,
+      "failure_category": null,
+      "tool_trace": [
+        {
+          "tool_name": "memory_write",
+          "arguments": {
+            "content": "I prefer concise answers"
+          },
+          "status": "success",
+          "success": true,
+          "output": {
+            "content": "I prefer concise answers",
+            "written": false,
+            "recorded_at": "2026-06-07T12:21:28.976071+00:00"
+          },
+          "error": null,
+          "failure_category": null,
+          "metadata": {
+            "retry_count": 0,
+            "retry_errors": []
+          }
+        }
+      ],
+      "verifier_reason": "matched 2/2 rules | The tool call contains memory_write and the tool result status is success, matching all expected assertions. | response addressed goal: 请调用 memory_write 工具保存这条长期记忆：I prefer concise answers",
+      "verifier_mode": "real",
+      "fake_verifier": false,
+      "verifier_failure_category": null,
+      "verifier_config_source": "dedicated",
+      "retry_count": 0,
+      "partial_success": false,
+      "downgrade_reason": null,
+      "human_review": false
+    },
+    {
+      "id": "tools_python_exec_001",
+      "category": "tools",
+      "status": "passed",
+      "passed": true,
+      "counted_in_pass_rate": true,
+      "latency_ms": 4010.97,
+      "tool_rounds": 1,
+      "failure_category": null,
+      "tool_trace": [
+        {
+          "tool_name": "python_exec",
+          "arguments": {
+            "code": "print(1+1)"
+          },
+          "status": "success",
+          "success": true,
+          "output": {
+            "stdout": "2\n",
+            "stderr": "",
+            "returncode": 0
+          },
+          "error": null,
+          "failure_category": null,
+          "metadata": {
+            "sandbox_required": true,
+            "sandbox": "docker",
+            "docker_available": true,
+            "container_image": "python:3.11-slim",
+            "timeout": 30,
+            "exit_code": 0,
+            "output_truncated": false,
+            "blocked_by_policy": false,
+            "retry_count": 0,
+            "retry_errors": []
+          }
+        }
+      ],
+      "verifier_reason": "matched 2/2 rules | The tool call contains python_exec and the tool result status is success, matching all expected assertions. | response addressed goal: run python code print(1+1)",
+      "verifier_mode": "real",
+      "fake_verifier": false,
+      "verifier_failure_category": null,
+      "verifier_config_source": "dedicated",
+      "retry_count": 0,
+      "partial_success": false,
+      "downgrade_reason": null,
+      "human_review": false
+    },
+    {
+      "id": "tools_shell_exec_001",
+      "category": "tools",
+      "status": "passed",
+      "passed": true,
+      "counted_in_pass_rate": true,
+      "latency_ms": 4100.63,
+      "tool_rounds": 1,
+      "failure_category": null,
+      "tool_trace": [
+        {
+          "tool_name": "shell_exec",
+          "arguments": {
+            "command": "echo hello"
+          },
+          "status": "success",
+          "success": true,
+          "output": {
+            "stdout": "hello\n",
+            "stderr": "",
+            "returncode": 0
+          },
+          "error": null,
+          "failure_category": null,
+          "metadata": {
+            "sandbox_required": true,
+            "sandbox": "docker",
+            "docker_available": true,
+            "container_image": "python:3.11-slim",
+            "timeout": 30,
+            "exit_code": 0,
+            "output_truncated": false,
+            "blocked_by_policy": false,
+            "retry_count": 0,
+            "retry_errors": []
+          }
+        }
+      ],
+      "verifier_reason": "matched 2/2 rules | The tool call contains shell_exec and the tool result status is success, matching all expected assertions. | response addressed goal: shell_exec echo hello",
+      "verifier_mode": "real",
+      "fake_verifier": false,
+      "verifier_failure_category": null,
+      "verifier_config_source": "dedicated",
+      "retry_count": 0,
+      "partial_success": false,
+      "downgrade_reason": null,
+      "human_review": false
+    }
+  ],
+  "report_path": "reports/latest.json"
+}

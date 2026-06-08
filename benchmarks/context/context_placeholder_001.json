@@ -1,0 +1,24 @@
+{
+    "id":  "context_placeholder_001",
+    "category":  "context",
+    "input":  "PlaceholderCleaner field test",
+    "expected_behavior":  [
+                              "verifier_reason_contains:response addressed goal"
+                          ],
+    "verifier":  {
+                     "rule":  true,
+                     "model":  true,
+                     "human_optional":  false
+                 },
+    "metrics":  [
+                    "pass_rate",
+                    "tool_rounds",
+                    "avg_latency",
+                    "failure_category",
+                    "tool_trace",
+                    "verifier_reason",
+                    "retry_count",
+                    "partial_success",
+                    "downgrade_reason"
+                ]
+}

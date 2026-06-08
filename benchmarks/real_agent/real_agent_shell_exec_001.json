@@ -1,0 +1,44 @@
+{
+  "id": "real_agent_shell_exec_001",
+  "category": "tools",
+  "input": "shell_exec echo hello",
+  "expected_behavior": [
+    "tool_call_contains:shell_exec",
+    "tool_result_status:shell_exec:success",
+    "tool_result_metadata:shell_exec:sandbox:docker"
+  ],
+  "synthetic_tool_plan": [
+    {
+      "tool_name": "shell_exec",
+      "arguments": {
+        "command": "echo hello"
+      }
+    }
+  ],
+  "preloaded_approval": {
+    "tool_name": "shell_exec",
+    "arguments": {
+      "command": "echo hello"
+    },
+    "status": "approved"
+  },
+  "profiles": [
+    "real-agent"
+  ],
+  "verifier": {
+    "rule": true,
+    "model": true,
+    "human_optional": false
+  },
+  "metrics": [
+    "pass_rate",
+    "tool_rounds",
+    "avg_latency",
+    "failure_category",
+    "tool_trace",
+    "verifier_reason",
+    "retry_count",
+    "partial_success",
+    "downgrade_reason"
+  ]
+}

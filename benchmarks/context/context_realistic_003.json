@@ -1,0 +1,64 @@
+{
+  "id": "context_realistic_003",
+  "category": "context",
+  "input": "Recall my language preference and the preserved summary for Phoenix beta.",
+  "expected_behavior": [
+    "context_metrics_present",
+    "key_fact_preserved:true",
+    "avg_prompt_tokens_present:0"
+  ],
+  "profiles": [
+    "context-realistic-baseline",
+    "context-realistic-optimized"
+  ],
+  "required_facts": [
+    "User prefers Chinese responses",
+    "Phoenix beta coordinator is Carol Wu",
+    "Beta freeze date is 2026-07-01"
+  ],
+  "context_tool_results": [
+    {
+      "tool_name": "doc_summarize",
+      "output": {
+        "summary": "Phoenix beta appendix includes long copied notes, translation variants, and repetitive review comments."
+      },
+      "output_filler": "Long bilingual appendix with repeated translation variants, copied comments, TODO markers, and stale issue lists."
+    }
+  ],
+  "context_seed": {
+    "memory": "- User prefers Chinese responses\n- Phoenix beta coordinator is Carol Wu\n- Beta freeze date is 2026-07-01\n",
+    "memory_filler": "- Phoenix memory filler about old localization notes, duplicate beta checklists, and repetitive rollout planning.",
+    "history": "user: what language do I prefer\nassistant: you prefer Chinese responses\nuser: who coordinates Phoenix beta\nassistant: Carol Wu\nuser: when is freeze date\nassistant: 2026-07-01\n",
+    "history_filler": "user: repeated Phoenix beta discussion with copied notes, multilingual placeholder fragments, and old review comments\nassistant: verbose repeated rollout notes and duplicated summary text",
+    "archives": [
+      {
+        "name": "phoenix-realistic-archive.md",
+        "content": "# ARCHIVE\n\n## Key Facts\n- User prefers Chinese responses\n- Phoenix beta coordinator is Carol Wu\n- Beta freeze date is 2026-07-01\n",
+        "filler": "Archive body with long copied localization transcripts, repeated beta planning commentary, and stale notes."
+      }
+    ]
+  },
+  "context_expansion": {
+    "placeholder_repeat": 60,
+    "memory_repeat": 15,
+    "history_repeat": 40,
+    "archive_repeat": 18,
+    "tool_output_repeat": 34
+  },
+  "verifier": {
+    "rule": true,
+    "model": false,
+    "human_optional": false
+  },
+  "metrics": [
+    "pass_rate",
+    "tool_rounds",
+    "avg_latency",
+    "failure_category",
+    "tool_trace",
+    "verifier_reason",
+    "retry_count",
+    "partial_success",
+    "downgrade_reason"
+  ]
+}

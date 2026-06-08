@@ -1,0 +1,108 @@
+{
+  "tools": [
+    {
+      "name": "calculator",
+      "description": "Evaluate arithmetic expressions.",
+      "risk_level": "low",
+      "sandbox_required": false,
+      "timeout": 5,
+      "max_retries": 0
+    },
+    {
+      "name": "file_read",
+      "description": "Read text files within the workspace root.",
+      "risk_level": "medium",
+      "sandbox_required": false,
+      "timeout": 5,
+      "max_retries": 0
+    },
+    {
+      "name": "file_write",
+      "description": "Write text files within the workspace root.",
+      "risk_level": "high",
+      "sandbox_required": false,
+      "timeout": 5,
+      "max_retries": 0
+    },
+    {
+      "name": "web_fetch",
+      "description": "Fetch a URL using the real HTTP provider.",
+      "risk_level": "medium",
+      "sandbox_required": false,
+      "timeout": 10,
+      "max_retries": 0
+    },
+    {
+      "name": "web_search",
+      "description": "Search the web using a mock provider or the Tavily real provider.",
+      "risk_level": "medium",
+      "sandbox_required": false,
+      "timeout": 10,
+      "max_retries": 0
+    },
+    {
+      "name": "weather",
+      "description": "Get weather data with a mock provider by default and a real-provider config boundary.",
+      "risk_level": "low",
+      "sandbox_required": false,
+      "timeout": 10,
+      "max_retries": 0
+    },
+    {
+      "name": "map_route",
+      "description": "Plan routes with a mock provider by default and an AMap MCP adapter boundary.",
+      "risk_level": "medium",
+      "sandbox_required": false,
+      "timeout": 10,
+      "max_retries": 0
+    },
+    {
+      "name": "map_poi_search",
+      "description": "Search nearby POIs with a mock provider by default and an AMap MCP adapter boundary.",
+      "risk_level": "medium",
+      "sandbox_required": false,
+      "timeout": 10,
+      "max_retries": 0
+    },
+    {
+      "name": "python_exec",
+      "description": "High-risk Python execution reserved for the sandbox executor.",
+      "risk_level": "high",
+      "sandbox_required": true,
+      "timeout": 30,
+      "max_retries": 0
+    },
+    {
+      "name": "shell_exec",
+      "description": "High-risk shell execution reserved for the sandbox executor.",
+      "risk_level": "high",
+      "sandbox_required": true,
+      "timeout": 30,
+      "max_retries": 0
+    },
+    {
+      "name": "memory_search",
+      "description": "Search MEMORY.md and HISTORY.md for relevant entries.",
+      "risk_level": "low",
+      "sandbox_required": false,
+      "timeout": 5,
+      "max_retries": 0
+    },
+    {
+      "name": "memory_write",
+      "description": "Write structured long-term memory entries.",
+      "risk_level": "high",
+      "sandbox_required": false,
+      "timeout": 5,
+      "max_retries": 0
+    },
+    {
+      "name": "doc_summarize",
+      "description": "Summarize input text or a workspace file.",
+      "risk_level": "medium",
+      "sandbox_required": false,
+      "timeout": 10,
+      "max_retries": 0
+    }
+  ]
+}

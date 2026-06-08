@@ -1,0 +1,64 @@
+{
+  "id": "context_realistic_005",
+  "category": "context",
+  "input": "Provide the compact support answer for Apollo launch without losing the escalation window and owner.",
+  "expected_behavior": [
+    "context_metrics_present",
+    "key_fact_preserved:true",
+    "avg_prompt_tokens_present:0"
+  ],
+  "profiles": [
+    "context-realistic-baseline",
+    "context-realistic-optimized"
+  ],
+  "required_facts": [
+    "Apollo retail launch owner is Bob Li",
+    "Support escalation window is 09:00-18:00 CST",
+    "User wants status summaries with bullet points"
+  ],
+  "context_tool_results": [
+    {
+      "tool_name": "doc_summarize",
+      "output": {
+        "summary": "Apollo appendix contains long copied rollout summaries, support matrices, and temporary note blocks."
+      },
+      "output_filler": "Verbose support appendix with copied matrices, stale escalation notes, placeholder clutter, and repeated postmortem fragments."
+    }
+  ],
+  "context_seed": {
+    "memory": "- Apollo retail launch owner is Bob Li\n- Support escalation window is 09:00-18:00 CST\n- User wants status summaries with bullet points\n",
+    "memory_filler": "- Apollo filler memory about redundant support queues, obsolete launch notes, and copied retrospective bullets.",
+    "history": "user: who owns Apollo retail launch\nassistant: Bob Li\nuser: what is the escalation window\nassistant: 09:00-18:00 CST\nuser: what format should you use\nassistant: bullet points\n",
+    "history_filler": "user: repeated Apollo support planning with copied updates, noisy placeholder text, and verbose retrospective detail\nassistant: repeated escalation notes, duplicated support summaries, and cleanup reminders",
+    "archives": [
+      {
+        "name": "apollo-realistic-archive.md",
+        "content": "# ARCHIVE\n\n## Key Facts\n- Apollo retail launch owner is Bob Li\n- Support escalation window is 09:00-18:00 CST\n- User wants status summaries with bullet points\n",
+        "filler": "Archive appendix for Apollo with copied escalation histories, duplicate rollout summaries, and stale status transcripts."
+      }
+    ]
+  },
+  "context_expansion": {
+    "placeholder_repeat": 68,
+    "memory_repeat": 16,
+    "history_repeat": 42,
+    "archive_repeat": 18,
+    "tool_output_repeat": 34
+  },
+  "verifier": {
+    "rule": true,
+    "model": false,
+    "human_optional": false
+  },
+  "metrics": [
+    "pass_rate",
+    "tool_rounds",
+    "avg_latency",
+    "failure_category",
+    "tool_trace",
+    "verifier_reason",
+    "retry_count",
+    "partial_success",
+    "downgrade_reason"
+  ]
+}

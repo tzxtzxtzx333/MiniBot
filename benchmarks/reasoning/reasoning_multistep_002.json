@@ -1,0 +1,26 @@
+{
+    "id":  "reasoning_multistep_002",
+    "category":  "reasoning",
+    "input":  "calculate 8 * 8 and run python code print(2+2)",
+    "expected_behavior":  [
+                              "tool_call_contains:calculator",
+                              "tool_call_contains:python_exec",
+                              "partial_success:true"
+                          ],
+    "verifier":  {
+                     "rule":  true,
+                     "model":  true,
+                     "human_optional":  false
+                 },
+    "metrics":  [
+                    "pass_rate",
+                    "tool_rounds",
+                    "avg_latency",
+                    "failure_category",
+                    "tool_trace",
+                    "verifier_reason",
+                    "retry_count",
+                    "partial_success",
+                    "downgrade_reason"
+                ]
+}

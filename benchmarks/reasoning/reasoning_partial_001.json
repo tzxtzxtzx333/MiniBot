@@ -1,0 +1,42 @@
+{
+    "id":  "reasoning_partial_001",
+    "category":  "reasoning",
+    "input":  "synthetic partial success execution case",
+    "expected_behavior":  [
+                              "partial_success:true",
+                              "final_response_contains:MiniBot partial success:"
+                          ],
+    "synthetic_tool_plan":  [
+                                {
+                                    "tool_name":  "calculator",
+                                    "arguments":  {
+                                                      "expression":  "2 + 3"
+                                                  }
+                                },
+                                {
+                                    "tool_name":  "web_fetch",
+                                    "arguments":  {
+                                                      "url":  "file:///tmp/not-allowed"
+                                                  }
+                                }
+                            ],
+    "profiles":  [
+                     "execution"
+                 ],
+    "verifier":  {
+                     "rule":  true,
+                     "model":  true,
+                     "human_optional":  false
+                 },
+    "metrics":  [
+                    "pass_rate",
+                    "tool_rounds",
+                    "avg_latency",
+                    "failure_category",
+                    "tool_trace",
+                    "verifier_reason",
+                    "retry_count",
+                    "partial_success",
+                    "downgrade_reason"
+                ]
+}

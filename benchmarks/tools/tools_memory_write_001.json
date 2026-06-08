@@ -1,0 +1,36 @@
+{
+    "id":  "tools_memory_write_001",
+    "category":  "tools",
+    "input":  "请调用 memory_write 工具保存这条长期记忆：I prefer concise answers",
+    "expected_behavior":  [
+                              "tool_call_contains:memory_write",
+                              "tool_result_status:memory_write:success"
+                          ],
+    "synthetic_tool_plan":  [
+                                {
+                                    "tool_name":  "memory_write",
+                                    "arguments":  {
+                                                      "content":  "I prefer concise answers"
+                                                  }
+                                }
+                            ],
+    "profiles":  [
+                     "execution"
+                 ],
+    "verifier":  {
+                     "rule":  true,
+                     "model":  true,
+                     "human_optional":  false
+                 },
+    "metrics":  [
+                    "pass_rate",
+                    "tool_rounds",
+                    "avg_latency",
+                    "failure_category",
+                    "tool_trace",
+                    "verifier_reason",
+                    "retry_count",
+                    "partial_success",
+                    "downgrade_reason"
+                ]
+}

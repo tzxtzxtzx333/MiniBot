@@ -1,0 +1,63 @@
+{
+  "id": "context_experiment_003",
+  "category": "context",
+  "input": "What are the preserved facts for Phoenix beta and my preferred language?",
+  "expected_behavior": [
+    "context_metrics_present",
+    "key_fact_preserved:true",
+    "avg_prompt_tokens_present:0"
+  ],
+  "profiles": [
+    "context-baseline",
+    "context-optimized"
+  ],
+  "required_facts": [
+    "Phoenix beta coordinator is Carol Wu",
+    "User prefers Chinese responses"
+  ],
+  "context_tool_results": [
+    {
+      "tool_name": "web_fetch",
+      "output": {
+        "text": "Phoenix beta raw appendix starts here with preserved signal hidden among verbose artifacts."
+      },
+      "output_filler": "Raw integration output fragment with stack traces, TODO placeholders, duplicated records, and verbose beta rollout commentary."
+    }
+  ],
+  "context_seed": {
+    "memory": "- Phoenix beta coordinator is Carol Wu\n- User prefers Chinese responses\n- Beta freeze date is 2026-07-01\n",
+    "memory_filler": "- Phoenix filler memory item about beta logistics, outdated geography lists, and repetitive multilingual notes.",
+    "history": "user: who coordinates phoenix beta\nassistant: Phoenix beta coordinator is Carol Wu\nuser: what language do I prefer\nassistant: you prefer Chinese responses\nuser: dump placeholder TODO None TODO\nassistant: None\n",
+    "history_filler": "user: expanded Phoenix beta planning with multilingual placeholder noise and copied meeting minutes\nassistant: repeated verbose notes about freeze rehearsals and TODO actions",
+    "archives": [
+      {
+        "name": "phoenix-archive.md",
+        "content": "# ARCHIVE\n\nsummary_by: SummarizerAgent\nsource_session_id: phoenix\ncreated_at: now\ntoken_before: 120\ntoken_after: 48\ncompression_trigger: benchmark\n\n## Key Facts\n- Phoenix beta coordinator is Carol Wu\n- User prefers Chinese responses\n- Beta freeze date is 2026-07-01\n",
+        "filler": "Phoenix archive appendix with lengthy copied rollout notes, issue triage history, and placeholder-heavy preserved transcripts."
+      }
+    ]
+  },
+  "context_expansion": {
+    "placeholder_repeat": 150,
+    "memory_repeat": 30,
+    "history_repeat": 92,
+    "archive_repeat": 42,
+    "tool_output_repeat": 84
+  },
+  "verifier": {
+    "rule": true,
+    "model": false,
+    "human_optional": false
+  },
+  "metrics": [
+    "pass_rate",
+    "tool_rounds",
+    "avg_latency",
+    "failure_category",
+    "tool_trace",
+    "verifier_reason",
+    "retry_count",
+    "partial_success",
+    "downgrade_reason"
+  ]
+}

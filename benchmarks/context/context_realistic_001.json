@@ -1,0 +1,64 @@
+{
+  "id": "context_realistic_001",
+  "category": "context",
+  "input": "Summarize my standing preferences and the current Atlas integration task owner.",
+  "expected_behavior": [
+    "context_metrics_present",
+    "key_fact_preserved:true",
+    "avg_prompt_tokens_present:0"
+  ],
+  "profiles": [
+    "context-realistic-baseline",
+    "context-realistic-optimized"
+  ],
+  "required_facts": [
+    "User prefers concise bullet summaries",
+    "Atlas integration owner is Alice Chen",
+    "Priority timezone is CST"
+  ],
+  "context_tool_results": [
+    {
+      "tool_name": "doc_summarize",
+      "output": {
+        "summary": "Atlas weekly notes include long copied status text, temporary markers, and repeated tool output sections."
+      },
+      "output_filler": "Repeated status appendix with copied timelines, stale action items, TODO markers, and verbose launch notes."
+    }
+  ],
+  "context_seed": {
+    "memory": "- User prefers concise bullet summaries\n- Atlas integration owner is Alice Chen\n- Priority timezone is CST\n- User dislikes redundant prose\n",
+    "memory_filler": "- Atlas background memory about prior migration steps, repeated sync notes, and obsolete rollout commentary.",
+    "history": "user: remind me who owns Atlas integration\nassistant: Atlas integration owner is Alice Chen\nuser: what style should you use\nassistant: concise bullet summaries\nuser: what timezone should status windows use\nassistant: CST\n",
+    "history_filler": "user: expanded Atlas planning discussion with repeated deployment chatter and noisy retrospective notes\nassistant: verbose repeated summaries, copied decisions, and placeholder cleanup reminders",
+    "archives": [
+      {
+        "name": "atlas-realistic-archive.md",
+        "content": "# ARCHIVE\n\n## Key Facts\n- User prefers concise bullet summaries\n- Atlas integration owner is Alice Chen\n- Priority timezone is CST\n",
+        "filler": "Archive transcript with long copied meeting recaps, stale implementation details, and placeholder-heavy narrative."
+      }
+    ]
+  },
+  "context_expansion": {
+    "placeholder_repeat": 70,
+    "memory_repeat": 18,
+    "history_repeat": 48,
+    "archive_repeat": 18,
+    "tool_output_repeat": 32
+  },
+  "verifier": {
+    "rule": true,
+    "model": false,
+    "human_optional": false
+  },
+  "metrics": [
+    "pass_rate",
+    "tool_rounds",
+    "avg_latency",
+    "failure_category",
+    "tool_trace",
+    "verifier_reason",
+    "retry_count",
+    "partial_success",
+    "downgrade_reason"
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "id": "real_agent_file_write_read_001",
+  "category": "reasoning",
+  "input": "写入 notes/agent_demo.txt 内容 RealAgentOK，然后读取它",
+  "expected_behavior": [
+    "tool_call_contains:file_write",
+    "tool_call_contains:file_read",
+    "tool_result_status:file_write:success",
+    "tool_result_status:file_read:success",
+    "tool_result_metadata:file_write:approval_status:approved",
+    "tool_result_metadata:file_write:risk_level:gray",
+    "final_response_not_empty"
+  ],
+  "synthetic_tool_plan": [
+    {
+      "tool_name": "file_write",
+      "arguments": {
+        "path": "notes/agent_demo.txt",
+        "content": "RealAgentOK"
+      }
+    },
+    {
+      "tool_name": "file_read",
+      "arguments": {
+        "path": "notes/agent_demo.txt"
+      }
+    }
+  ],
+  "profiles": [
+    "real-agent"
+  ],
+  "preloaded_approval": {
+    "tool_name": "file_write",
+    "arguments": {
+      "path": "notes/agent_demo.txt",
+      "content": "RealAgentOK"
+    },
+    "status": "approved"
+  },
+  "verifier": {
+    "rule": true,
+    "model": true,
+    "human_optional": false
+  },
+  "metrics": [
+    "pass_rate",
+    "tool_rounds",
+    "avg_latency",
+    "failure_category",
+    "tool_trace",
+    "verifier_reason",
+    "retry_count",
+    "partial_success",
+    "downgrade_reason"
+  ]
+}

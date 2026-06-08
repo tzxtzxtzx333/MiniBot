@@ -1,0 +1,24 @@
+{
+    "id":  "reasoning_batch_001",
+    "category":  "reasoning",
+    "input":  "simulate failed weather and give me travel advice",
+    "expected_behavior":  [
+                              "retry_count_at_least:1"
+                          ],
+    "verifier":  {
+                     "rule":  true,
+                     "model":  true,
+                     "human_optional":  false
+                 },
+    "metrics":  [
+                    "pass_rate",
+                    "tool_rounds",
+                    "avg_latency",
+                    "failure_category",
+                    "tool_trace",
+                    "verifier_reason",
+                    "retry_count",
+                    "partial_success",
+                    "downgrade_reason"
+                ]
+}

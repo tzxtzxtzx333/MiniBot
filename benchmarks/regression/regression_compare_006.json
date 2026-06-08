@@ -1,0 +1,27 @@
+{
+    "id":  "regression_compare_006",
+    "category":  "regression",
+    "input":  "规划路线 厦门大学 到 厦门站",
+    "expected_behavior":  [
+                              "tool_call_contains:map_route"
+                          ],
+    "profiles":  [
+                     "all-integrations"
+                 ],
+    "verifier":  {
+                     "rule":  true,
+                     "model":  true,
+                     "human_optional":  false
+                 },
+    "metrics":  [
+                    "pass_rate",
+                    "tool_rounds",
+                    "avg_latency",
+                    "failure_category",
+                    "tool_trace",
+                    "verifier_reason",
+                    "retry_count",
+                    "partial_success",
+                    "downgrade_reason"
+                ]
+}

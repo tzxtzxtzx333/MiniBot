@@ -1,0 +1,28 @@
+{
+    "id":  "tools_map_route_001",
+    "category":  "tools",
+    "input":  "规划路线 厦门大学 到 厦门站",
+    "expected_behavior":  [
+                              "tool_call_contains:map_route",
+                              "tool_result_status:map_route:success"
+                          ],
+    "profiles":  [
+                     "all-integrations"
+                 ],
+    "verifier":  {
+                     "rule":  true,
+                     "model":  true,
+                     "human_optional":  false
+                 },
+    "metrics":  [
+                    "pass_rate",
+                    "tool_rounds",
+                    "avg_latency",
+                    "failure_category",
+                    "tool_trace",
+                    "verifier_reason",
+                    "retry_count",
+                    "partial_success",
+                    "downgrade_reason"
+                ]
+}

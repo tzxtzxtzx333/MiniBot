@@ -1,0 +1,28 @@
+{
+    "id":  "tools_web_fetch_001",
+    "category":  "tools",
+    "input":  "fetch https://example.com",
+    "expected_behavior":  [
+                              "tool_call_contains:web_fetch",
+                              "tool_result_status:web_fetch:success"
+                          ],
+    "profiles":  [
+                     "all-integrations"
+                 ],
+    "verifier":  {
+                     "rule":  true,
+                     "model":  true,
+                     "human_optional":  false
+                 },
+    "metrics":  [
+                    "pass_rate",
+                    "tool_rounds",
+                    "avg_latency",
+                    "failure_category",
+                    "tool_trace",
+                    "verifier_reason",
+                    "retry_count",
+                    "partial_success",
+                    "downgrade_reason"
+                ]
+}

@@ -1,0 +1,64 @@
+{
+  "id": "context_realistic_002",
+  "category": "context",
+  "input": "What were the latest checkout API findings and who is the incident owner?",
+  "expected_behavior": [
+    "context_metrics_present",
+    "key_fact_preserved:true",
+    "avg_prompt_tokens_present:0"
+  ],
+  "profiles": [
+    "context-realistic-baseline",
+    "context-realistic-optimized"
+  ],
+  "required_facts": [
+    "Checkout API incident owner is Bob Li",
+    "p95 latency target is under 250ms",
+    "Customer-facing summary should stay concise"
+  ],
+  "context_tool_results": [
+    {
+      "tool_name": "web_fetch",
+      "output": {
+        "text": "Checkout API raw logs include long stack traces, repeated request lines, and copied debugging snippets."
+      },
+      "output_filler": "Raw log fragment with duplicated trace lines, retry details, temporary placeholders, and repeated payload dumps."
+    }
+  ],
+  "context_seed": {
+    "memory": "- Checkout API incident owner is Bob Li\n- p95 latency target is under 250ms\n- Customer-facing summary should stay concise\n",
+    "memory_filler": "- Historical checkout API memory item about noisy staging incidents, outdated hypothesis threads, and copied notes.",
+    "history": "user: summarize the checkout API issue\nassistant: owner is Bob Li and p95 target is under 250ms\nuser: keep it concise\nassistant: customer-facing summary should stay concise\n",
+    "history_filler": "user: repeated checkout troubleshooting conversation with long copied traces and redundant mitigation chatter\nassistant: detailed repeated debugging notes and placeholder-heavy thread excerpts",
+    "archives": [
+      {
+        "name": "checkout-realistic-archive.md",
+        "content": "# ARCHIVE\n\n## Key Facts\n- Checkout API incident owner is Bob Li\n- p95 latency target is under 250ms\n- Customer-facing summary should stay concise\n",
+        "filler": "Archive appendix for checkout API with long copied traces, duplicate postmortem fragments, and obsolete rollout details."
+      }
+    ]
+  },
+  "context_expansion": {
+    "placeholder_repeat": 65,
+    "memory_repeat": 16,
+    "history_repeat": 44,
+    "archive_repeat": 20,
+    "tool_output_repeat": 40
+  },
+  "verifier": {
+    "rule": true,
+    "model": false,
+    "human_optional": false
+  },
+  "metrics": [
+    "pass_rate",
+    "tool_rounds",
+    "avg_latency",
+    "failure_category",
+    "tool_trace",
+    "verifier_reason",
+    "retry_count",
+    "partial_success",
+    "downgrade_reason"
+  ]
+}

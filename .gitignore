@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# IDE / local settings
+.vscode/
+.idea/
+.claude/settings.local.json
+
+# MiniBot runtime data
+.minibot/
+
+# Test artifacts
+.pytest_cache/
+.pytest_tmp/
+.tmp_test_roots/
+.coverage
+htmlcov/
+
+# Generated reports
+reports/
+
+# OS
+.DS_Store
+Thumbs.db

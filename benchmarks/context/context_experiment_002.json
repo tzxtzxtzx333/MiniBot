@@ -1,0 +1,63 @@
+{
+  "id": "context_experiment_002",
+  "category": "context",
+  "input": "Summarize the latest support status for Apollo retail launch.",
+  "expected_behavior": [
+    "context_metrics_present",
+    "key_fact_preserved:true",
+    "avg_prompt_tokens_present:0"
+  ],
+  "profiles": [
+    "context-baseline",
+    "context-optimized"
+  ],
+  "required_facts": [
+    "Apollo retail launch owner is Bob Li",
+    "Support escalation window is 09:00-18:00 CST"
+  ],
+  "context_tool_results": [
+    {
+      "tool_name": "doc_summarize",
+      "output": {
+        "summary": "Apollo launch appendix contains many retrospective notes and temporary remediation items."
+      },
+      "output_filler": "Large summarized document fragment with duplicated mitigation steps, noisy placeholders, repeated vendor notes, and obsolete escalation details."
+    }
+  ],
+  "context_seed": {
+    "memory": "- Apollo retail launch owner is Bob Li\n- Support escalation window is 09:00-18:00 CST\n- User wants status summaries with bullet points\n",
+    "memory_filler": "- Apollo filler memory item about old retail blockers, obsolete store lists, and repeated retrospective details.",
+    "history": "user: collect the Apollo launch status\nassistant: Apollo retail launch owner is Bob Li\nuser: what is the escalation window\nassistant: 09:00-18:00 CST\nuser: keep temporary placeholders TODO TODO\nassistant: <pending>\n",
+    "history_filler": "user: expanded Apollo support discussion about rollout details and noisy pasted updates\nassistant: repeated support notes with TODO markers and stale remediation text",
+    "archives": [
+      {
+        "name": "apollo-archive.md",
+        "content": "# ARCHIVE\n\nsummary_by: SummarizerAgent\nsource_session_id: apollo\ncreated_at: now\ntoken_before: 90\ntoken_after: 35\ncompression_trigger: benchmark\n\n## Key Facts\n- Apollo retail launch owner is Bob Li\n- Support escalation window is 09:00-18:00 CST\n- User wants status summaries with bullet points\n",
+        "filler": "Archive appendix for Apollo with verbose escalation transcripts, copied issue lists, and placeholder fragments from older summaries."
+      }
+    ]
+  },
+  "context_expansion": {
+    "placeholder_repeat": 120,
+    "memory_repeat": 28,
+    "history_repeat": 88,
+    "archive_repeat": 36,
+    "tool_output_repeat": 72
+  },
+  "verifier": {
+    "rule": true,
+    "model": false,
+    "human_optional": false
+  },
+  "metrics": [
+    "pass_rate",
+    "tool_rounds",
+    "avg_latency",
+    "failure_category",
+    "tool_trace",
+    "verifier_reason",
+    "retry_count",
+    "partial_success",
+    "downgrade_reason"
+  ]
+}

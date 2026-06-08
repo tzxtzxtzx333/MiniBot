@@ -1,0 +1,24 @@
+{
+    "id":  "context_history_004",
+    "category":  "context",
+    "input":  "context turn four",
+    "expected_behavior":  [
+                              "final_response_contains:MiniBot echo:"
+                          ],
+    "verifier":  {
+                     "rule":  true,
+                     "model":  true,
+                     "human_optional":  false
+                 },
+    "metrics":  [
+                    "pass_rate",
+                    "tool_rounds",
+                    "avg_latency",
+                    "failure_category",
+                    "tool_trace",
+                    "verifier_reason",
+                    "retry_count",
+                    "partial_success",
+                    "downgrade_reason"
+                ]
+}

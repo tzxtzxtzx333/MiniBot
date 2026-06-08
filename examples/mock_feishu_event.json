@@ -1,0 +1,18 @@
+{
+  "schema": "2.0",
+  "header": {
+    "event_type": "im.message.receive_v1"
+  },
+  "event": {
+    "sender": {
+      "sender_id": {
+        "user_id": "mock-user"
+      }
+    },
+    "message": {
+      "message_id": "om_mock_001",
+      "chat_id": "chat_mock_001",
+      "content": "{\"text\":\"你好，MiniBot\"}"
+    }
+  }
+}

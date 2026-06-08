@@ -1,0 +1,63 @@
+{
+  "id": "context_experiment_004",
+  "category": "context",
+  "input": "Give me the latest Orion migration facts without losing the owner and city list.",
+  "expected_behavior": [
+    "context_metrics_present",
+    "key_fact_preserved:true",
+    "avg_prompt_tokens_present:0"
+  ],
+  "profiles": [
+    "context-baseline",
+    "context-optimized"
+  ],
+  "required_facts": [
+    "Orion migration owner is David Sun",
+    "Priority cities are Beijing, Shanghai, Xiamen"
+  ],
+  "context_tool_results": [
+    {
+      "tool_name": "doc_summarize",
+      "output": {
+        "summary": "Orion migration summary contains a large appendix of copied notes and obsolete excerpts."
+      },
+      "output_filler": "Verbose Orion migration tool output with repeated timeline details, stale action items, placeholder fragments, and copied route planning notes."
+    }
+  ],
+  "context_seed": {
+    "memory": "- Orion migration owner is David Sun\n- Priority cities are Beijing, Shanghai, Xiamen\n- User wants the shortest acceptable answer\n",
+    "memory_filler": "- Orion filler memory item about migration milestones, copied city spreadsheets, and repeated operational chatter.",
+    "history": "user: tell me the owner for orion migration\nassistant: Orion migration owner is David Sun\nuser: what are the priority cities\nassistant: Beijing, Shanghai, Xiamen\nuser: add placeholder noise TODO TODO\nassistant: <pending>\n",
+    "history_filler": "user: expanded Orion migration thread with repeated city notes and placeholder-heavy status updates\nassistant: long migration recap with duplicated milestone commentary and TODO markers",
+    "archives": [
+      {
+        "name": "orion-archive.md",
+        "content": "# ARCHIVE\n\nsummary_by: SummarizerAgent\nsource_session_id: orion\ncreated_at: now\ntoken_before: 130\ntoken_after: 52\ncompression_trigger: benchmark\n\n## Key Facts\n- Orion migration owner is David Sun\n- Priority cities are Beijing, Shanghai, Xiamen\n- User wants the shortest acceptable answer\n",
+        "filler": "Orion archive appendix with lengthy migration logs, repeated spreadsheet imports, and preserved placeholder-heavy transcripts."
+      }
+    ]
+  },
+  "context_expansion": {
+    "placeholder_repeat": 160,
+    "memory_repeat": 32,
+    "history_repeat": 100,
+    "archive_repeat": 44,
+    "tool_output_repeat": 88
+  },
+  "verifier": {
+    "rule": true,
+    "model": false,
+    "human_optional": false
+  },
+  "metrics": [
+    "pass_rate",
+    "tool_rounds",
+    "avg_latency",
+    "failure_category",
+    "tool_trace",
+    "verifier_reason",
+    "retry_count",
+    "partial_success",
+    "downgrade_reason"
+  ]
+}

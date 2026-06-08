@@ -1,0 +1,263 @@
+{
+  "phase": "phase1_skeleton",
+  "generated_at": "2026-06-08T08:19:16.152844+00:00",
+  "run_mode": "fake",
+  "benchmark_scope": "all",
+  "benchmark_profile": "multiround",
+  "benchmark_case_count": 107,
+  "benchmark_case_count_by_profile": {
+    "all-integrations": 8,
+    "approval": 3,
+    "context-baseline": 4,
+    "context-optimized": 4,
+    "context-realistic-baseline": 5,
+    "context-realistic-optimized": 5,
+    "default": 63,
+    "execution": 7,
+    "multiround": 2,
+    "real-agent": 12,
+    "safety": 9
+  },
+  "benchmark_case_count_by_category": {
+    "channel": 7,
+    "context": 21,
+    "memory": 14,
+    "reasoning": 13,
+    "regression": 11,
+    "safety": 16,
+    "tools": 25
+  },
+  "total_cases": 2,
+  "counted_cases": 2,
+  "passed_cases": 2,
+  "pass_rate": 1.0,
+  "avg_latency": 353.5,
+  "avg_tool_rounds": 2.5,
+  "tool_rounds": 2.5,
+  "failure_category": {},
+  "verifier_reason": {
+    "matched 5/5 rules | fake model verifier accepted structured response | response addressed goal: search for MiniBot and fetch example.com": 1,
+    "matched 5/5 rules | fake model verifier accepted structured response | response addressed goal: calculate 1+1 repeatedly to test budget stop": 1
+  },
+  "retry_count": 0.0,
+  "partial_success": 0,
+  "downgrade_reason": {},
+  "model_provider": "fake",
+  "model_name": "fake",
+  "fake_model": true,
+  "verifier_mode": "fake",
+  "fake_verifier": true,
+  "verifier_provider": "fake",
+  "verifier_model_name": "fake",
+  "verifier_config_source": "dedicated",
+  "docker_available": true,
+  "mock_tools_used": [
+    "web_search"
+  ],
+  "real_tools_used": [
+    "calculator",
+    "web_fetch"
+  ],
+  "mcp_tools_used": [],
+  "external_integrations": {
+    "feishu": "missing",
+    "web_fetch": "real",
+    "web_search": "mock",
+    "weather": "mock",
+    "map_route": "mock",
+    "map_poi_search": "mock"
+  },
+  "capability_status": {
+    "real_model": "missing",
+    "real_tool_calling": "missing",
+    "llm_archive": "missing",
+    "model_verifier": "fake",
+    "docker_sandbox": "failed",
+    "partial_success": "failed"
+  },
+  "missing_capabilities": [],
+  "model_error": null,
+  "verifier_error": null,
+  "failed_case_count": 0,
+  "failed_case_categories": {},
+  "benchmark_failure_category": null,
+  "human_review": {
+    "pending_count": 5,
+    "approved_count": 33,
+    "rejected_count": 18
+  },
+  "real_agent_case_count": 0,
+  "real_agent_passed_count": 0,
+  "real_agent_pass_rate": 0.0,
+  "safety_case_count": 0,
+  "safety_passed_count": 0,
+  "safety_pass_rate": 0.0,
+  "multiround_case_count": 2,
+  "multiround_passed_count": 2,
+  "multiround_pass_rate": 1.0,
+  "avg_prompt_tokens": 0.0,
+  "avg_context_chars": 0.0,
+  "avg_dynamic_context_chars": 0.0,
+  "avg_dynamic_context_tokens": 0.0,
+  "avg_history_chars": 0.0,
+  "avg_memory_chars": 0.0,
+  "avg_archive_chars": 0.0,
+  "avg_tool_specs_chars": 0.0,
+  "context_case_count": 0,
+  "token_estimator": "ceil_len_div_4",
+  "results": [
+    {
+      "id": "reasoning_multi_round_001",
+      "category": "reasoning",
+      "status": "passed",
+      "passed": true,
+      "counted_in_pass_rate": true,
+      "latency_ms": 644.59,
+      "tool_rounds": 2,
+      "failure_category": null,
+      "tool_trace": [
+        {
+          "tool_name": "web_search",
+          "arguments": {
+            "query": "MiniBot Agent Harness"
+          },
+          "status": "success",
+          "success": true,
+          "output": {
+            "query": "MiniBot Agent Harness",
+            "results": [
+              {
+                "title": "Mock result for MiniBot Agent Harness",
+                "url": "https://example.com/search?q=MiniBot Agent Harness",
+                "snippet": "Mock search snippet for MiniBot Agent Harness"
+              }
+            ]
+          },
+          "error": null,
+          "failure_category": null,
+          "metadata": {
+            "provider": "web_search",
+            "provider_status": "mock",
+            "mock_provider": true,
+            "real_provider": false,
+            "mcp_provider": false,
+            "provider_name": "mock",
+            "retry_count": 0,
+            "retry_errors": []
+          }
+        },
+        {
+          "tool_name": "web_fetch",
+          "arguments": {
+            "url": "https://example.com"
+          },
+          "status": "success",
+          "success": true,
+          "output": {
+            "url": "https://example.com",
+            "status_code": 200,
+            "content_type": "text/html",
+            "text_snippet": "<!doctype html><html lang=\"en\"><head><title>Example Domain</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><style>body{background:#eee;width:60vw;margin:15vh auto;font-family:system-ui,sans-serif}h1{font-size:1.5em}div{opacity:0.8}a:link,a:visited{color:#348}</style></head><body><div><h1>Example Domain</h1><p>This domain is for use in documentation examples without needing permission. Avoid use in operations.</p><p><a href=\"https://iana.org/domains/example\">Learn more</a></p></div></body></html>\n"
+          },
+          "error": null,
+          "failure_category": null,
+          "metadata": {
+            "provider": "web_fetch",
+            "provider_status": "real",
+            "mock_provider": false,
+            "real_provider": true,
+            "mcp_provider": false,
+            "output_truncated": false,
+            "retry_count": 0,
+            "retry_errors": []
+          }
+        }
+      ],
+      "verifier_reason": "matched 5/5 rules | fake model verifier accepted structured response | response addressed goal: search for MiniBot and fetch example.com",
+      "verifier_mode": "fake",
+      "fake_verifier": true,
+      "verifier_failure_category": null,
+      "verifier_config_source": "dedicated",
+      "retry_count": 0,
+      "partial_success": false,
+      "downgrade_reason": null,
+      "human_review": false
+    },
+    {
+      "id": "reasoning_multi_round_budget_stop_001",
+      "category": "reasoning",
+      "status": "passed",
+      "passed": true,
+      "counted_in_pass_rate": true,
+      "latency_ms": 62.4,
+      "tool_rounds": 3,
+      "failure_category": null,
+      "tool_trace": [
+        {
+          "tool_name": "calculator",
+          "arguments": {
+            "expression": "1 + 1"
+          },
+          "status": "success",
+          "success": true,
+          "output": {
+            "result": 2,
+            "expression": "1 + 1"
+          },
+          "error": null,
+          "failure_category": null,
+          "metadata": {
+            "retry_count": 0,
+            "retry_errors": []
+          }
+        },
+        {
+          "tool_name": "calculator",
+          "arguments": {
+            "expression": "1 + 1"
+          },
+          "status": "success",
+          "success": true,
+          "output": {
+            "result": 2,
+            "expression": "1 + 1"
+          },
+          "error": null,
+          "failure_category": null,
+          "metadata": {
+            "retry_count": 0,
+            "retry_errors": []
+          }
+        },
+        {
+          "tool_name": "calculator",
+          "arguments": {
+            "expression": "1 + 1"
+          },
+          "status": "success",
+          "success": true,
+          "output": {
+            "result": 2,
+            "expression": "1 + 1"
+          },
+          "error": null,
+          "failure_category": null,
+          "metadata": {
+            "retry_count": 0,
+            "retry_errors": []
+          }
+        }
+      ],
+      "verifier_reason": "matched 5/5 rules | fake model verifier accepted structured response | response addressed goal: calculate 1+1 repeatedly to test budget stop",
+      "verifier_mode": "fake",
+      "fake_verifier": true,
+      "verifier_failure_category": null,
+      "verifier_config_source": "dedicated",
+      "retry_count": 0,
+      "partial_success": false,
+      "downgrade_reason": null,
+      "human_review": false
+    }
+  ],
+  "report_path": "reports/latest.json"
+}

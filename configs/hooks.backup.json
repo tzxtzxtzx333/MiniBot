@@ -1,0 +1,26 @@
+{
+  "defaults": {
+    "auto_approve": true
+  },
+  "hooks": [
+    {
+      "name": "log_session_start",
+      "event": "SessionStart",
+      "match_type": "exact",
+      "pattern": "SessionStart",
+      "action": "log",
+      "message": "session_started"
+    },
+    {
+      "name": "tag_calculator_usage",
+      "event": "PreToolUse",
+      "match_type": "regex",
+      "pattern": "calculator",
+      "action": "tag",
+      "tags": [
+        "tool",
+        "calculator"
+      ]
+    }
+  ]
+}

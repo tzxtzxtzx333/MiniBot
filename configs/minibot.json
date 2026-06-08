@@ -1,0 +1,43 @@
+{
+    "app_name":  "MiniBot",
+    "version":  "0.1.0",
+    "workspace_dir":  ".minibot",
+    "model_mode":  "fake",
+    "chat_turn_limit":  20,
+    "context_token_budget":  1200,
+    "archive_token_budget":  900,
+    "max_tool_rounds":  3,
+    "max_tool_calls_total":  10,
+    "max_runtime_seconds":  60,
+    "max_same_tool_calls":  2,
+    "agent_profiles":  {
+                           "test":  {
+                                        "max_tool_rounds":  2,
+                                        "max_tool_calls_total":  6,
+                                        "max_runtime_seconds":  30,
+                                        "max_same_tool_calls":  2
+                                    },
+                           "default":  {
+                                           "max_tool_rounds":  3,
+                                           "max_tool_calls_total":  10,
+                                           "max_runtime_seconds":  60,
+                                           "max_same_tool_calls":  2
+                                       },
+                           "real-agent":  {
+                                              "max_tool_rounds":  5,
+                                              "max_tool_calls_total":  15,
+                                              "max_runtime_seconds":  90,
+                                              "max_same_tool_calls":  3
+                                          },
+                           "long-task":  {
+                                             "max_tool_rounds":  8,
+                                             "max_tool_calls_total":  24,
+                                             "max_runtime_seconds":  180,
+                                             "max_same_tool_calls":  3
+                                         }
+                       },
+    "http":  {
+                 "host":  "127.0.0.1",
+                 "port":  8000
+             }
+}

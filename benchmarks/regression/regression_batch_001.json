@@ -1,0 +1,24 @@
+{
+    "id":  "regression_batch_001",
+    "category":  "regression",
+    "input":  "summarize MiniBot regression summary",
+    "expected_behavior":  [
+                              "tool_call_contains:doc_summarize"
+                          ],
+    "verifier":  {
+                     "rule":  true,
+                     "model":  true,
+                     "human_optional":  false
+                 },
+    "metrics":  [
+                    "pass_rate",
+                    "tool_rounds",
+                    "avg_latency",
+                    "failure_category",
+                    "tool_trace",
+                    "verifier_reason",
+                    "retry_count",
+                    "partial_success",
+                    "downgrade_reason"
+                ]
+}

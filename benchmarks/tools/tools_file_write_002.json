@@ -1,0 +1,25 @@
+{
+    "id":  "tools_file_write_002",
+    "category":  "tools",
+    "input":  "write notes/result2.txt content hello two",
+    "expected_behavior":  [
+                              "tool_call_contains:file_write",
+                              "tool_result_status:file_write:success"
+                          ],
+    "verifier":  {
+                     "rule":  true,
+                     "model":  true,
+                     "human_optional":  false
+                 },
+    "metrics":  [
+                    "pass_rate",
+                    "tool_rounds",
+                    "avg_latency",
+                    "failure_category",
+                    "tool_trace",
+                    "verifier_reason",
+                    "retry_count",
+                    "partial_success",
+                    "downgrade_reason"
+                ]
+}

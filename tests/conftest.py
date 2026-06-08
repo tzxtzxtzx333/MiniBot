@@ -1,0 +1,43 @@
+from __future__ import annotations
+
+import pytest
+
+
+TEST_ENV_KEYS = (
+    "MINIBOT_MODEL_MODE",
+    "MINIBOT_MODEL_PROVIDER",
+    "MINIBOT_MODEL_BASE_URL",
+    "MINIBOT_MODEL_API_KEY",
+    "MINIBOT_MODEL_NAME",
+    "MINIBOT_VERIFIER_MODE",
+    "MINIBOT_VERIFIER_PROVIDER",
+    "MINIBOT_VERIFIER_BASE_URL",
+    "MINIBOT_VERIFIER_API_KEY",
+    "MINIBOT_VERIFIER_MODEL_NAME",
+    "MINIBOT_BASE_URL",
+    "MINIBOT_API_KEY",
+    "MINIBOT_WEATHER_PROVIDER",
+    "MINIBOT_WEATHER_API_KEY",
+    "MINIBOT_WEATHER_API_HOST",
+    "MINIBOT_WEB_SEARCH_PROVIDER",
+    "TAVILY_API_KEY",
+    "TAVILY_PROJECT",
+    "TAVILY_SEARCH_DEPTH",
+    "TAVILY_MAX_RESULTS",
+    "MINIBOT_MAP_PROVIDER",
+    "MINIBOT_AMAP_MCP_ENDPOINT",
+    "MINIBOT_AMAP_MCP_API_KEY",
+    "FEISHU_APP_ID",
+    "FEISHU_APP_SECRET",
+    "FEISHU_BOT_NAME",
+    "FEISHU_BOT_MODE",
+    "FEISHU_WS_ENABLED",
+    "LARK_APP_ID",
+    "LARK_APP_SECRET",
+)
+
+
+@pytest.fixture(autouse=True)
+def _isolate_host_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    for key in TEST_ENV_KEYS:
+        monkeypatch.delenv(key, raising=False)

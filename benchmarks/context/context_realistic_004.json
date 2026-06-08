@@ -1,0 +1,64 @@
+{
+  "id": "context_realistic_004",
+  "category": "context",
+  "input": "List the preserved owners and city priorities for Orion migration and Atlas rollout.",
+  "expected_behavior": [
+    "context_metrics_present",
+    "key_fact_preserved:true",
+    "avg_prompt_tokens_present:0"
+  ],
+  "profiles": [
+    "context-realistic-baseline",
+    "context-realistic-optimized"
+  ],
+  "required_facts": [
+    "Orion migration owner is David Sun",
+    "Atlas integration owner is Alice Chen",
+    "Priority cities are Beijing, Shanghai, Xiamen"
+  ],
+  "context_tool_results": [
+    {
+      "tool_name": "web_fetch",
+      "output": {
+        "text": "Combined migration appendix includes long location tables, copied timeline notes, and stale commentary."
+      },
+      "output_filler": "Verbose multi-entity appendix with copied city tables, duplicate owner notes, placeholder markers, and stale route details."
+    }
+  ],
+  "context_seed": {
+    "memory": "- Orion migration owner is David Sun\n- Atlas integration owner is Alice Chen\n- Priority cities are Beijing, Shanghai, Xiamen\n",
+    "memory_filler": "- Multi-entity filler memory covering redundant regional notes, copied planning bullets, and obsolete handoff details.",
+    "history": "user: tell me the Orion owner\nassistant: David Sun\nuser: tell me the Atlas owner\nassistant: Alice Chen\nuser: what are the priority cities\nassistant: Beijing, Shanghai, Xiamen\n",
+    "history_filler": "user: repeated multi-entity discussion with copied city lists and noisy migration details\nassistant: verbose repeated entity summaries and placeholder-heavy historical notes",
+    "archives": [
+      {
+        "name": "multi-entity-realistic-archive.md",
+        "content": "# ARCHIVE\n\n## Key Facts\n- Orion migration owner is David Sun\n- Atlas integration owner is Alice Chen\n- Priority cities are Beijing, Shanghai, Xiamen\n",
+        "filler": "Archive appendix with long copied rollout plans, duplicate entity summaries, and repetitive city matrix text."
+      }
+    ]
+  },
+  "context_expansion": {
+    "placeholder_repeat": 72,
+    "memory_repeat": 18,
+    "history_repeat": 46,
+    "archive_repeat": 20,
+    "tool_output_repeat": 36
+  },
+  "verifier": {
+    "rule": true,
+    "model": false,
+    "human_optional": false
+  },
+  "metrics": [
+    "pass_rate",
+    "tool_rounds",
+    "avg_latency",
+    "failure_category",
+    "tool_trace",
+    "verifier_reason",
+    "retry_count",
+    "partial_success",
+    "downgrade_reason"
+  ]
+}
