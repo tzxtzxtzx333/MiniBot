@@ -45,7 +45,11 @@ class DocSummarizeTool(BaseTool):
 
     def _read_path(self, raw_path: str) -> str:
         candidate = Path(raw_path)
-        target = (self.allowed_root / candidate).resolve() if not candidate.is_absolute() else candidate.resolve()
+        target = (
+            (self.allowed_root / candidate).resolve()
+            if not candidate.is_absolute()
+            else candidate.resolve()
+        )
         if self.allowed_root not in target.parents and target != self.allowed_root:
             raise ToolError("path_not_allowed", "path_not_allowed")
         if not target.exists():

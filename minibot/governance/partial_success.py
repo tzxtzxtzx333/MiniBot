@@ -19,7 +19,9 @@ class PartialSuccessHandler:
     """Detect and summarize mixed success/failure outcomes."""
 
     def evaluate(self, results: list[dict[str, object]]) -> PartialSuccessSummary:
-        success_tools = [str(item["tool_name"]) for item in results if item.get("status") == "success"]
+        success_tools = [
+            str(item["tool_name"]) for item in results if item.get("status") == "success"
+        ]
         failed_tools = [
             str(item["tool_name"])
             for item in results
@@ -28,10 +30,7 @@ class PartialSuccessHandler:
         partial_success = bool(success_tools and failed_tools)
         message = None
         if partial_success:
-            message = (
-                f"completed {', '.join(success_tools)}; "
-                f"failed {', '.join(failed_tools)}"
-            )
+            message = f"completed {', '.join(success_tools)}; " f"failed {', '.join(failed_tools)}"
         return PartialSuccessSummary(
             partial_success=partial_success,
             success_tools=success_tools,

@@ -144,8 +144,8 @@ python -m minibot compare reports/run_real_execution.json reports/run_real_execu
 - `chat` 命令用于展示 Harness、Tool Calling、上下文治理、Docker 沙箱和高风险命令阻断（三层治理：白名单自动 / 灰名单审批 / 黑名单阻断并审计）。
 - `execution` profile 是简历核心数字来源。
 - `safety` profile 用于证明三层治理和阻断链路（含 shell_blacklist + tool-level blacklist）。
-- `all-integrations` profile 用于展示真实 provider 接入证据。
-- `real-agent` profile 用于展示端到端模型驱动行为（12/12）。
+- `all-integrations` profile 用于展示可配置的外部 provider 接入边界与状态标记。
+- `real-agent` profile 用于展示端到端模型驱动行为（12 个 case 覆盖工具调用、安全阻断、文件读写、搜索抓取等场景）。
 - `multiround` profile 用于展示预算受控多轮 observe → re-plan loop（2/2），覆盖 web_search→web_fetch 两轮链路与 duplicate_loop_detected 停止机制。多轮能力不再用整个 reasoning category 证明。
 - `tasks` 命令用于展示 TaskStore 任务状态管理（create / list / show / cancel / resume）。
 - `http` 命令用于展示 HTTP 服务与 Approval API（GET /approvals, POST approve / reject）。

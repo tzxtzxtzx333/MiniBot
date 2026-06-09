@@ -31,7 +31,8 @@ def _prepare_temp_root(**overrides: object) -> Path:
             config[key] = value
     config_path.write_text(json.dumps(config, ensure_ascii=False, indent=2), encoding="utf-8")
     (temp_root / "configs" / "hooks.json").write_text(
-        json.dumps({"hooks": []}, ensure_ascii=False, indent=2), encoding="utf-8",
+        json.dumps({"hooks": []}, ensure_ascii=False, indent=2),
+        encoding="utf-8",
     )
     return temp_root
 
@@ -46,7 +47,9 @@ def test_planner_profile_is_registered() -> None:
     temp_root = _prepare_temp_root()
     try:
         app = MiniBotApp(temp_root)
-        runner = BenchmarkRunner(app.runtime.agent_loop, temp_root, verifier_agent=app.runtime.verifier_agent)
+        runner = BenchmarkRunner(
+            app.runtime.agent_loop, temp_root, verifier_agent=app.runtime.verifier_agent
+        )
         report = runner.run(profile="planner", mode="fake")
         assert report["benchmark_profile"] == "planner"
     finally:
@@ -57,7 +60,9 @@ def test_planner_report_has_top_level_fields() -> None:
     temp_root = _prepare_temp_root()
     try:
         app = MiniBotApp(temp_root)
-        runner = BenchmarkRunner(app.runtime.agent_loop, temp_root, verifier_agent=app.runtime.verifier_agent)
+        runner = BenchmarkRunner(
+            app.runtime.agent_loop, temp_root, verifier_agent=app.runtime.verifier_agent
+        )
         report = runner.run(profile="planner", mode="fake")
         assert "planner_case_count" in report
         assert "planner_passed_count" in report
@@ -81,7 +86,9 @@ def test_planner_file_report_001_passes() -> None:
         # Benchmark sandbox is isolated — copy README.md so file_read succeeds
         sandbox = app.runtime.workspace.sandbox_dir
         shutil.copy2(ROOT / "README.md", sandbox / "README.md")
-        runner = BenchmarkRunner(app.runtime.agent_loop, temp_root, verifier_agent=app.runtime.verifier_agent)
+        runner = BenchmarkRunner(
+            app.runtime.agent_loop, temp_root, verifier_agent=app.runtime.verifier_agent
+        )
         report = runner.run(profile="planner", mode="fake")
         result = next(r for r in report["results"] if r["id"] == "planner_file_report_001")
         assert result["passed"] is True
@@ -94,7 +101,9 @@ def test_planner_approval_resume_001_passes() -> None:
     temp_root = _prepare_temp_root()
     try:
         app = MiniBotApp(temp_root)
-        runner = BenchmarkRunner(app.runtime.agent_loop, temp_root, verifier_agent=app.runtime.verifier_agent)
+        runner = BenchmarkRunner(
+            app.runtime.agent_loop, temp_root, verifier_agent=app.runtime.verifier_agent
+        )
         report = runner.run(profile="planner", mode="fake")
         result = next(r for r in report["results"] if r["id"] == "planner_approval_resume_001")
         assert result["passed"] is True
@@ -111,7 +120,9 @@ def test_planner_evidence_context_001_passes() -> None:
         app = MiniBotApp(temp_root)
         sandbox = app.runtime.workspace.sandbox_dir
         shutil.copy2(ROOT / "README.md", sandbox / "README.md")
-        runner = BenchmarkRunner(app.runtime.agent_loop, temp_root, verifier_agent=app.runtime.verifier_agent)
+        runner = BenchmarkRunner(
+            app.runtime.agent_loop, temp_root, verifier_agent=app.runtime.verifier_agent
+        )
         report = runner.run(profile="planner", mode="fake")
         result = next(r for r in report["results"] if r["id"] == "planner_evidence_context_001")
         assert result["passed"] is True
@@ -123,7 +134,9 @@ def test_planner_profile_does_not_break_safety() -> None:
     temp_root = _prepare_temp_root()
     try:
         app = MiniBotApp(temp_root)
-        runner = BenchmarkRunner(app.runtime.agent_loop, temp_root, verifier_agent=app.runtime.verifier_agent)
+        runner = BenchmarkRunner(
+            app.runtime.agent_loop, temp_root, verifier_agent=app.runtime.verifier_agent
+        )
         report = runner.run(profile="safety", mode="fake")
         assert report["benchmark_profile"] == "safety"
         assert "safety_case_count" in report
@@ -135,7 +148,9 @@ def test_planner_profile_does_not_break_multiround() -> None:
     temp_root = _prepare_temp_root()
     try:
         app = MiniBotApp(temp_root)
-        runner = BenchmarkRunner(app.runtime.agent_loop, temp_root, verifier_agent=app.runtime.verifier_agent)
+        runner = BenchmarkRunner(
+            app.runtime.agent_loop, temp_root, verifier_agent=app.runtime.verifier_agent
+        )
         report = runner.run(profile="multiround", mode="fake")
         assert report["benchmark_profile"] == "multiround"
     finally:
@@ -144,10 +159,13 @@ def test_planner_profile_does_not_break_multiround() -> None:
 
 def test_planner_metrics_in_compare() -> None:
     from minibot.evals.compare_reports import ReportComparator
+
     temp_root = _prepare_temp_root()
     try:
         app = MiniBotApp(temp_root)
-        runner = BenchmarkRunner(app.runtime.agent_loop, temp_root, verifier_agent=app.runtime.verifier_agent)
+        runner = BenchmarkRunner(
+            app.runtime.agent_loop, temp_root, verifier_agent=app.runtime.verifier_agent
+        )
         report = runner.run(profile="planner", mode="fake")
         report_path = temp_root / "reports" / "planner_compare_test.json"
         report_path.parent.mkdir(parents=True, exist_ok=True)

@@ -1,423 +1,186 @@
 # MiniBot
 
-MiniBot 是一个从零实现的本地智能助手项目，不是 `nanobot` 的 fork。项目参考了 `nanobot` 的 Agent Runtime / Tool / Memory / 插件化分层思路，也参考了本地 CLI Agent 的 Harness、Hook、上下文治理与审计链路，但所有代码都在当前仓库内独立实现。
+MiniBot 是一个 **Harness-first 本地 Agent 框架原型**，重点验证以下能力：
 
-## 项目定位
+- 多渠道接入（CLI / HTTP / Feishu WebSocket）
+- 统一 AgentLoop 执行链与工具调用治理
+- 结构化记忆、上下文压缩与相关性检索
+- 运行审计、Benchmark 回归与报告对比
 
-- 本地优先的个人智能助手
-- Harness-first 的统一执行链
-- 支持 CLI / HTTP / Feishu 边界接入
-- 支持 Tool Calling、Memory、治理、评测与报告
-- 重点是”可运行、可审计、可验证”，不是大而全平台
-- 支持预算受控多轮工具规划的真实 Agent Harness
+> **定位说明**：MiniBot 是个人学习项目与校招面试展示用的原型，不是生产级平台，也不是完整商业化 Agent 系统。
 
-## 核心结论
-
-- DeepSeek / OpenAI-compatible 已接入真实模型路径
-- fake model 仅用于测试、开发回归和 fake benchmark
-- `/new` 已支持真实 LLM 压缩归档
-- `python_exec` / `shell_exec` 已通过 Docker 沙箱执行
-- `web_fetch` 已支持真实 HTTP provider
-- 支持 DeepSeek、Tavily、QWeather、AMap MCP、Feishu WebSocket 等真实 provider 接入；真实联通依赖环境变量配置，同时保留 mock / fake 模式用于本地回归测试
-- `weather` 当前是 API provider 边界，缺 key 返回 `weather_config_missing`
-- `map_route` 当前是 AMap MCP adapter 边界，缺配置返回 `amap_mcp_config_missing`
-- MCP 不是所有工具的统一入口，只用于外部 MCP provider 场景
-- 简历数字指标只能来自 real report，例如 `reports/run_real_final.json`、`reports/run_real_with_key_v1.json`
-- fake report 只用于开发回归，不作为简历指标来源
-
-## 分层结构
+## 项目结构
 
 ```text
-1. Channel Layer
-2. Harness Layer
-3. Tool Layer
-4. Memory / Context Layer
-5. Governance / Evaluation Layer
-```
-
-对应目录：
-
-- `minibot/channels/`
-- `minibot/harness/`
-- `minibot/tools/`
-- `minibot/memory/` 与 `minibot/context/`
-- `minibot/governance/`、`minibot/sandbox/`、`minibot/evals/`
-
-## 主要能力
-
-### 1. Harness
-
-统一入口是 `AgentLoop`。所有渠道消息先标准化为 `ChannelMessage`，再进入统一执行链：
-
-```text
-SessionStart
-UserMessageReceived
-MemoryRecall
-ContextBuild
-PlaceholderClean
-ModelPlanning
-ToolCallDetected
-PreToolUse
-ToolGovernanceCheck
-ToolExecution
-PostToolUse
-ToolResultAppend
-VerifierCheck
-FinalResponseGenerate
-HistoryPersist
-RunReportPersist
-SessionEnd
-```
-
-### 2. 模型
-
-配置字段：
-
-```env
-MINIBOT_MODEL_MODE=fake
-MINIBOT_MODEL_PROVIDER=deepseek
-MINIBOT_MODEL_BASE_URL=https://api.deepseek.com
-MINIBOT_MODEL_API_KEY=
-MINIBOT_MODEL_NAME=deepseek-chat
-```
-
-兼容旧字段：
-
-```env
-MINIBOT_BASE_URL=
-MINIBOT_API_KEY=
-```
-
-规则：
-
-- 默认运行是 `fake`
-- `MINIBOT_MODEL_MODE=real` 时必须读取真实模型配置
-- 缺关键配置时返回 `deepseek_config_missing`
-- real 模式绝不 fallback 到 fake
-
-### 3. 工具与治理
-
-当前工具：
-
-- 真实工具：`calculator`、`file_read`、`file_write`、`memory_search`、`memory_write`、`doc_summarize`
-- 外部 provider：`web_fetch`、`web_search`、`weather`、`map_route`
-- Docker 沙箱工具：`python_exec`、`shell_exec`
-
-治理能力 — 三层治理机制（白名单自动执行 / 灰名单审批确认 / 黑名单阻断并审计）：
-
-- schema 校验
-- 白名单（whitelist）：低风险工具自动执行（calculator、file_read、web_fetch 等）
-- 灰名单（graylist）：file_write / memory_write / python_exec / shell_exec 需进入 Pending Approval Queue
-- 黑名单（blacklist）：支持工具级 blacklist 和高风险 shell 命令黑名单，命中后返回 `blocked_by_policy` 并写入 tool_trace / run record
-- 审批（Pending Approval Queue + JSONL 审计存储）
-- 重试与降级
-- duplicate 去重
-- 敏感信息脱敏
-- partial success 聚合
-- Docker 沙箱路由
-
-### 4. 记忆与压缩 — MEMORY.md / HISTORY.md 两层主记忆架构 + Archives 压缩归档层
-
-工作区：
-
-```text
-.minibot/
-  MEMORY.md   ← 长期偏好 / 长期事实（全量注入系统提示）
-  HISTORY.md  ← 近期对话（按相关性检索 + token 预算截断）
-  archives/   ← 旧对话 LLM 压缩摘要归档，控制上下文长度并保留历史连续性
-  sessions/
-  runs/
-  sandbox_workspace/
-```
-
-HISTORY.md 支持按相关性检索近期对话：基于 token overlap + Jaccard 评分，根据当前用户输入 query 对历史条目打分，在 token budget 下选取 top_k 相关片段注入上下文。可通过 `history_retrieval` 配置控制检索模式、top_k、最大字符数。
-
-当对话轮次达到配置阈值（`memory.history_turn_compact_threshold`，默认 20）或用户显式输入 `/new` 时，MiniBot 会触发 `SummarizerAgent` 对旧历史进行压缩归档至 Archives，HISTORY.md 保留最近 `history_compact_keep_recent` 轮（默认 6）。两种触发来源在 archive metadata 中通过 `compression_trigger` 区分：
-
-- `manual_new`：`/new` 手动触发
-- `turn_threshold`：对话轮次达到阈值自动触发
-
-归档摘要：
-- fake mode：规则式摘要
-- real mode：真实 LLM 摘要
-
-### 5. 渠道
-
-- CLI：`python -m minibot chat`
-- HTTP：`python -m minibot http`
-- Feishu WebSocket Bot 边界：`python -m minibot feishu`
-- Feishu mock 回归：`python -m minibot feishu-mock examples/mock_feishu_event.json`
-
-Feishu 当前结论：
-
-- Feishu WebSocket 已完成真实联调，但默认 `status` 中可能因为未配置环境变量而显示 `feishu_config_present=false`
-- 缺配置时返回 `feishu_config_missing`
-- 缺 SDK 时返回 `feishu_sdk_not_installed`
-- `feishu-mock` 仅用于本地回归，不代表已经真实联通飞书
-
-### 6. 外部 provider 边界
-
-- `web_fetch`：真实 HTTP provider
-- `web_search`：支持 mock provider 和 Tavily real provider，并写入 provider status
-- `ModelVerifier`：支持 fake verifier 和 real DeepSeek/OpenAI-compatible verifier
-- `weather`：当前默认 mock，已保留 QWeather real API provider 边界
-- `map_route`：当前默认 mock，已保留 AMap MCP adapter 边界
-
-tool trace / report metadata 会记录：
-
-```json
-{
-  "provider_status": "real|mock|missing|failed",
-  "mock_provider": false,
-  "real_provider": true,
-  "mcp_provider": false
-}
+minibot/
+  harness/       — AgentLoop, ModelClient, ToolDispatcher, RunRecorder
+  hooks/         — 事件拦截管线（HookManager + 匹配器 + 动作注册表）
+  tools/         — 工具协议（BaseTool / ToolSpec / ToolResult）+ 14 个工具
+  governance/    — 三层治理（白名单/灰名单/黑名单）、审批、去重、脱敏、重试
+  memory/        — MEMORY.md / HISTORY.md / Archives 压缩归档
+  context/       — 上下文构建、Token 预算、截断、占位清理
+  sandbox/       — Docker 沙箱执行（python_exec / shell_exec）
+  planning/      — PlannerAgent / TaskExecutor / ReplannerAgent
+  subagents/     — MemoryAgent, SummarizerAgent, ToolAgent, VerifierAgent
+  evals/         — BenchmarkRunner, RuleVerifier, ModelVerifier, ReportWriter
+  evidence/      — 大工具输出压缩存储与摘要
+  tasks/         — JSONL 任务状态管理
+  channels/      — CLI, HTTP, Feishu WebSocket, Feishu Mock
+configs/         — minibot.json, policy.json, tools.json, hooks.json
+benchmarks/      — 116 个 JSON 工程回归用例
+tests/           — pytest 测试（368+ passed）
+docs/            — 架构说明、设计决策、简历映射
 ```
 
 ## 快速开始
 
 ```bash
 python -m venv .venv
-.venv\\Scripts\\activate
+.venv\Scripts\activate        # Windows
+# source .venv/bin/activate   # macOS / Linux
 pip install -e .[dev]
 python -m minibot --help
 python -m minibot status
 ```
 
+**无需任何外部 API key 即可运行**：默认使用 `fake` 模型模式，所有工具调用由本地规则引擎驱动。
+
+## 三种运行模式
+
+| 模式 | 说明 | 需要外部依赖 |
+|---|---|---|
+| **fake** | 规则引擎驱动，用于本地回归测试和开发 | 无 |
+| **mock** | 工具返回模拟数据，用于无 key 的功能演示 | 无 |
+| **real** | 接入真实 LLM 和外部 API，用于端到端验证 | DeepSeek API key 等 |
+
+fake/mock/real 三条路径严格隔离：real 模式缺配置时返回明确错误（如 `deepseek_config_missing`），绝不会静默 fallback 到 fake 或 mock。
+
+## 核心能力
+
+### 1. AgentLoop / Harness
+
+统一入口 `AgentLoop.handle_message()`。所有渠道消息标准化为 `ChannelMessage` 后进入同一执行链：
+
+```text
+SessionStart → UserMessageReceived → MemoryRecall → ContextBuild →
+PlaceholderClean → ModelPlanning → [ToolCallDetected → PreToolUse →
+ToolGovernanceCheck → ToolExecution → PostToolUse → ToolResultAppend]×N →
+VerifierCheck → FinalResponseGenerate → HistoryPersist →
+RunReportPersist → SessionEnd
+```
+
+工具循环受四维 budget 控制（`max_tool_rounds` / `max_tool_calls_total` / `max_runtime_seconds` / `max_same_tool_calls`），支持多轮 observe → re-plan。
+
+### 2. Hook 机制
+
+在 AgentLoop 关键生命周期节点触发 Hook，支持 exact / regex 匹配和日志、审批、阻断、脱敏等动作注入。Hook 配置独立于核心循环，可非侵入式扩展。规则定义在 `configs/hooks.json`，支持 exact / regex 匹配和日志、审批、阻断、脱敏等动作注入。
+
+### 3. 工具调用与三层治理
+
+14 个注册工具，分三类：
+
+| 分类 | 工具 | 说明 |
+|---|---|---|
+| 本地 | `calculator`, `file_read`, `file_write`, `memory_search`, `memory_write`, `doc_summarize` | 不依赖外部服务 |
+| 外部 provider | `web_fetch`, `web_search`, `weather`, `map_route`, `map_poi_search` | 真实调用需配置 key，否则返回 mock 数据 |
+| Docker 沙箱 | `python_exec`, `shell_exec` | 隔离执行，Docker 不可用时返回 `docker_unavailable` |
+
+治理链：**schema 校验 → 白/灰/黑名单判定 → 审批（灰名单） → 去重 → 沙箱路由 → 重试/降级 → 敏感信息脱敏 → partial success 聚合**。
+
+### 4. 记忆与上下文
+
+```text
+.minibot/
+  MEMORY.md   ← 长期偏好/事实（全量注入）
+  HISTORY.md  ← 近期对话（相关性检索 + token budget 截断）
+  archives/   ← LLM 压缩归档（/new 手动触发 或 轮次阈值自动触发）
+```
+
+相关性检索基于 token overlap + Jaccard 评分，在短文本场景下效果足够，无需向量数据库。
+
+### 5. Benchmark / Audit
+
+- **116 个 JSON 工程回归用例**，覆盖 memory / context / reasoning / safety / tools / channel / regression / planner 八个类别
+- 定位：版本回归、trace 审计和失败归因，不是科研 benchmark，也不代表生产线上稳定性
+- 双验证器：`RuleVerifier`（规则断言）+ `ModelVerifier`（LLM 审计，需配置 verifier key）
+- `compare` 命令支持两个报告版本回归对比
+- 每次运行生成完整 JSON run trace（`.minibot/runs/`），包含 tool_trace、lifecycle_events、context_metrics
+- 输出指标：pass_rate、tool_rounds、avg_latency、failure_category、tool_trace、context_metrics 等
+
 ## 常用命令
 
 ```bash
+# 状态检查
+python -m minibot status
+
+# 单轮对话
 python -m minibot chat --message "calculate 128 * 64"
-python -m minibot chat --message "计算 128 * 64"
 python -m minibot chat --message "run python code print(1+1)"
 python -m minibot chat --message "shell_exec echo hello"
+
+# 记忆与压缩
+python -m minibot chat --message "remember I prefer Chinese replies"
 python -m minibot chat --message "/new"
-python -m minibot feishu
-python -m minibot feishu-mock examples/mock_feishu_event.json
-python -m minibot benchmark --mode fake --report reports/run_fake_final.json
-python -m minibot benchmark --mode real --scope core --report reports/run_real_final.json
-python -m minibot compare reports/run_real_final.json reports/run_real_final.json
+
+# Benchmark（fake 模式，无需外部 key）
+python -m minibot benchmark --mode fake --report reports/run_fake.json
+
+# Benchmark（real 模式，需配置 .env）
+python -m minibot benchmark --mode real --scope core --report reports/run_real.json
+
+# 报告对比
+python -m minibot compare reports/run_fake.json reports/run_fake.json
 ```
 
-## 文档
+## 外部 Provider 接入
 
-- [架构说明](docs/architecture.md)
-- [简历映射](docs/resume_mapping.md)
-- [Demo 脚本](docs/demo_script.md)
-- [设计决策](docs/decisions.md)
-- [Feishu 接入说明](docs/feishu_setup.md)
-- [最终验收](docs/final_acceptance.md)
-- [Resume-Complete 缺口说明](docs/resume_complete_gap.md)
+| Provider | 配置变量 | 缺配置行为 |
+|---|---|---|
+| DeepSeek 模型 | `MINIBOT_MODEL_*` | 返回 `deepseek_config_missing`，不 fallback fake |
+| Tavily 搜索 | `TAVILY_API_KEY` | `web_search` 使用 mock provider |
+| QWeather 天气 | `MINIBOT_WEATHER_API_KEY` | `weather` 返回 `weather_config_missing` |
+| AMap MCP 地图 | `MINIBOT_AMAP_MCP_*` | `map_route` / `map_poi_search` 返回 mock |
+| Feishu WebSocket | `FEISHU_APP_ID`, `FEISHU_APP_SECRET` | 返回 `feishu_config_missing` |
 
-## 中文 trace 读取说明
+**重要**：以上能力在未配置时为 **接入边界** 或 **mock 演示**，不应表述为生产级真实接入。所有 provider 状态均写入 tool trace / report metadata（`provider_status: real|mock|missing|failed`）。
 
-JSON trace 与 report 统一使用 UTF-8 写入，并通过 `json.dump(..., ensure_ascii=False)` 落盘。PowerShell 查看 trace 时建议使用：
+## Benchmark 指标说明
 
-```powershell
-Get-Content <path> -Raw -Encoding UTF8
-```
-
-## Human Review Queue
-
-MiniBot now includes a local pending approval queue for graylisted tool calls.
-
-- Pending approvals are stored in:
-  - `.minibot/approvals/pending.jsonl`
-  - `.minibot/approvals/resolved.jsonl`
-- This is a local auditable review loop, not an enterprise approval system.
-- High-risk shell commands still return `blocked_by_policy` and cannot be bypassed through approval.
-
-CLI commands:
-
-```bash
-python -m minibot approvals list
-python -m minibot approvals approve <approval_id>
-python -m minibot approvals reject <approval_id>
-```
-
-## Context Benchmark
-
-MiniBot supports context-governance benchmark profiles for estimated token analysis:
-
-```bash
-python -m minibot benchmark --mode fake --profile context-baseline --report reports/run_context_baseline.json
-python -m minibot benchmark --mode fake --profile context-optimized --report reports/run_context_optimized.json
-python -m minibot compare reports/run_context_baseline.json reports/run_context_optimized.json
-```
-
-These reports use `estimated tokens`, not provider-billed tokens. The fixed estimator is:
+报告中的 token 指标使用固定估算公式：
 
 ```text
 estimated_tokens = ceil(len(text) / 4)
 ```
 
-Benchmark reports now include:
+这是工程实验口径的 **字符数折算**，不是模型厂商实际计费 token。`dynamic_context_tokens` 排除固定 tool_specs，聚焦可变上下文载荷（history、memory、archives、tool results）。
 
-```json
-{
-  "avg_dynamic_context_chars": 0,
-  "avg_dynamic_context_tokens": 0,
-  "avg_tool_specs_chars": 0,
-  "human_review": {
-    "pending_count": 0,
-    "approved_count": 0,
-    "rejected_count": 0
-  }
-}
-```
+**Token 缩减百分比不作为简历数字使用。** 报告的可靠数字来源为 real mode 下的 pass_rate、tool_rounds、avg_latency 等。
 
-`dynamic_context_tokens` excludes the fixed tool schema block and focuses on mutable context payload such as history, memory, archives, recalled snippets, and tool results.
-
-Do not use token reduction percentages as resume numbers. The resume-safe statement is that MiniBot implements history truncation, memory compaction, placeholder cleanup, tool-output compression, hard truncation, and subagent-backed summary persistence.
-
-Benchmark profiles (100+ cases, real-agent 12/12, safety 8/8, multiround 2/2):
-
-```bash
-python -m minibot benchmark --mode fake --scope core --profile approval --report reports/run_fake_approval.json
-python -m minibot benchmark --mode fake --scope core --profile execution --report reports/run_fake_execution.json
-python -m minibot benchmark --mode real --scope core --profile all-integrations --report reports/run_real_all_integrations.json
-python -m minibot benchmark --mode fake --profile multiround --report reports/run_fake_multiround.json
-```
-
-### Multiround Profile
-
-MiniBot 支持预算受控的多轮 observe → re-plan loop。多轮能力不再用整个 reasoning category 证明，而是用独立 `multiround` profile 证明。
-
-`multiround` profile 当前包含：
-- `multi_round_search_fetch_001`：验证 web_search → web_fetch 两轮工具链路；
-- `multi_round_budget_stop_001`：验证重复工具调用触发 `duplicate_loop_detected` 停止机制。
-
-Report 输出新增：
-- `multiround_case_count`
-- `multiround_passed_count`
-- `multiround_pass_rate`
-
-简历口径：支持预算受控的多轮 observe → re-plan loop，可按 default / real-agent / long-task profile 配置工具轮次、总工具调用数、运行时间和重复调用上限；每轮工具调用均经过审批、黑名单、去重、Docker 沙箱与 trace 审计。
-
-## TaskStore
-
-MiniBot 支持本地 JSONL 任务状态管理。task 可以通过 `tasks resume` 重新进入 AgentLoop，run trace 中自动记录 `task_id`。
+## 任务管理（TaskStore）
 
 ```bash
 python -m minibot tasks create --goal "计算 128 * 64"
 python -m minibot tasks list
 python -m minibot tasks show <task_id>
-python -m minibot tasks cancel <task_id>
 python -m minibot tasks resume <task_id>
+python -m minibot tasks cancel <task_id>
 ```
 
-task 状态生命周期：
+task 生命周期：`pending → running → completed | waiting_approval | failed | cancelled`
 
-```text
-pending → running → completed
-                  → waiting_approval
-                  → failed
-                  → cancelled
-```
-
-task.status 根据 AgentLoop run 结果自动更新：正常完成 → `completed`，触发审批 → `waiting_approval` + `pending_approval_id`，阻断/预算超限/工具失败 → `failed`。
-
-存储位置：`.minibot/tasks/tasks.jsonl`（JSONL 追加写入，同一 task_id 以最后一条为准）。
-
-## HTTP Approval API
-
-MiniBot 在 HTTP 服务中内建了审批 API，与 CLI `approvals` 命令共享同一 JSONL store。
-
-启动 HTTP 服务：
+## HTTP 服务与 Approval API
 
 ```bash
 python -m minibot http --host 127.0.0.1 --port 8000
 ```
 
-端点：
+端点：`GET /status`、`POST /chat`、`GET /approvals`、`POST /approvals/{id}/approve`、`POST /approvals/{id}/reject`
 
-```http
-GET  /approvals                          # 列出 pending 审批
-POST /approvals/{approval_id}/approve    # 批准
-POST /approvals/{approval_id}/reject     # 拒绝
-```
+可选 Bearer Token 认证（`MINIBOT_HTTP_AUTH_TOKEN`），默认无认证（仅绑定 127.0.0.1）。
 
-关键语义：
+### Status Health Check
 
-- approve / reject **只改状态，不自动执行工具**；
-- 用户需重新发送同一请求或通过 `tasks resume <task_id>` 才会继续执行；
-- 黑名单命令不进入 approval，直接返回 `blocked_by_policy`；
-- 不存在的 approval_id 返回结构化 404 错误。
-
-### HTTP Auth（可选 Bearer Token）
-
-HTTP Approval API 默认用于本地开发，建议绑定 `127.0.0.1`。如果需要局域网或远程访问，应设置 `MINIBOT_HTTP_AUTH_TOKEN`，或放在认证网关之后。
-
-在 `.env` 或环境变量中设置：
-
-```env
-MINIBOT_HTTP_AUTH_TOKEN=your-secret-token
-```
-
-- 空值（默认）：不要求认证，向后兼容本地开发模式。
-- 非空：以下端点要求 `Authorization: Bearer <token>` 头：
-  - `GET  /approvals`
-  - `POST /approvals/{approval_id}/approve`
-  - `POST /approvals/{approval_id}/reject`
-- `GET /status` 和 `POST /chat` 始终不需要认证。
-- 缺少 Authorization 头返回 `401 {"error": "unauthorized"}`。
-- Token 错误返回 `403 {"error": "forbidden"}`。
-
-> **注意**：这不是生产级认证系统，仅作为最小安全边界。生产环境应使用反向代理认证网关（如 nginx + OAuth2 Proxy）。
-
-## Status Health Check
-
-`python -m minibot status` 和 `GET /status` 返回增强的健康检查：
-
-```json
-{
-  "tasks_dir_exists": true,
-  "task_count": 0,
-  "pending_task_count": 0,
-  "approval_pending_count": 0,
-  "budget": {
-    "agent_profile": "default",
-    "max_tool_rounds": 3,
-    "max_tool_calls_total": 10,
-    "max_runtime_seconds": 60,
-    "max_same_tool_calls": 2
-  }
-}
-```
-
-## Local Development
-
-```bash
-python -m venv .venv
-.venv\Scripts\activate
-pip install -e .[dev]
-python -m minibot --help
-pytest -v
-```
-
-`.env.example` 包含所有可配置变量（model、provider、budget），复制为 `.env` 并按需填入真实 key。
-
-## Real Provider Setup
-
-从 `.env.example` 复制并填入真实配置：
-
-```bash
-cp .env.example .env
-```
-
-关键配置组：
-
-| 配置组 | 变量前缀 |
-|---|---|
-| 模型 | `MINIBOT_MODEL_*` |
-| Verifier | `MINIBOT_VERIFIER_*` |
-| 搜索 | `MINIBOT_WEB_SEARCH_PROVIDER`, `TAVILY_*` |
-| 天气 | `MINIBOT_WEATHER_*` |
-| 地图 | `MINIBOT_MAP_PROVIDER`, `MINIBOT_AMAP_*` |
-| 飞书 | `FEISHU_*` |
-| 预算 | `MINIBOT_AGENT_PROFILE`, `MINIBOT_MAX_*` |
-
-缺配置时各 provider 返回明确错误（如 `deepseek_config_missing`、`tavily_config_missing`），不会 fallback mock 冒充成功。
+`python -m minibot status` 和 `GET /status` 返回增强的健康检查，包含 `task_count`、`approval_pending_count`、`budget` 等字段。
 
 ## Deployment Boundary
 
@@ -437,31 +200,24 @@ MiniBot/
     approvals/              ← 审批队列存储
 ```
 
-## Benchmark Evidence
+## 本地开发
 
-关键 benchmark 证据（数字只来自 real report）：
+```bash
+pip install -e .[dev]
+pytest -v
+```
 
-| Profile | 结果 | 来源 |
-|---|---|---|
-| real-agent | 12/12 | `reports/run_real_agent.json` |
-| safety | 8/8 | `reports/run_fake_safety_check.json` |
-| multiround | 2/2 | `reports/run_fake_multiround.json` |
-| execution | 5/5 | `reports/run_real_execution.json` |
+`.env.example` 包含所有可配置变量，复制为 `.env` 并按需填入真实 key。
 
-固化 evidence 副本位于 `docs/evidence/`。若源报告不存在，需本地运行生成；不伪造报告。
+## 文档
+
+- [DEMO.md](DEMO.md) — 最小可复现场景
+- [架构说明](docs/architecture.md)
+- [设计决策](docs/decisions.md)
+- [简历映射](docs/resume_mapping.md)
+- [Feishu 接入说明](docs/feishu_setup.md)
+- [最终验收](docs/final_acceptance.md)
 
 ## 最终定位
 
-MiniBot 是一个具备真实模型、真实工具、任务状态、渠道内审批、安全治理、预算受控多轮规划与部署运行边界的真实 Agent Harness 应用雏形。
-
-### Realistic Context Benchmark
-
-Use the original `context-baseline/context-optimized` pair as a stress benchmark. For resume-facing token-reduction numbers, use:
-
-```bash
-python -m minibot benchmark --mode fake --profile context-realistic-baseline --report reports/run_context_realistic_baseline.json
-python -m minibot benchmark --mode fake --profile context-realistic-optimized --report reports/run_context_realistic_optimized.json
-python -m minibot compare reports/run_context_realistic_baseline.json reports/run_context_realistic_optimized.json
-```
-
-These reports still use `estimated_tokens = ceil(len(text) / 4)`, not provider-billed tokens.
+MiniBot 是一个具备真实模型、真实工具、任务状态、渠道内审批、安全治理、预算受控多轮规划与部署运行边界的 **Agent Harness 应用雏形**。

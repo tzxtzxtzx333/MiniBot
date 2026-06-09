@@ -14,7 +14,6 @@ from minibot.hooks.actions import HookAction, HookActionRegistry, LogAction
 from minibot.hooks.hook_manager import HookManager
 from minibot.hooks.matchers import ExactMatcher, RegexMatcher
 
-
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -191,7 +190,9 @@ def test_hook_block_prevents_tool_execution() -> None:
         assert trace["tool_results"][0]["status"] == "blocked"
         assert trace["failure_category"] == "blocked_by_hook"
         assert trace["final_response"] == "MiniBot tool blocked: calculator blocked_by_hook"
-        assert any(item["action"] == "block" and item["blocked"] is True for item in trace["hook_results"])
+        assert any(
+            item["action"] == "block" and item["blocked"] is True for item in trace["hook_results"]
+        )
     finally:
         shutil.rmtree(temp_root, ignore_errors=True)
 
@@ -261,7 +262,9 @@ def test_hook_require_approval_respects_auto_approve() -> None:
         )
         run_path = app.runtime.workspace.runs_dir / f"{result.run_id}.json"
         trace = json.loads(run_path.read_text(encoding="utf-8"))
-        approval_result = next(item for item in trace["hook_results"] if item["action"] == "require_approval")
+        approval_result = next(
+            item for item in trace["hook_results"] if item["action"] == "require_approval"
+        )
         assert result.response == "MiniBot tool blocked: calculator approval_denied"
         assert approval_result["status"] == "denied"
         assert trace["tool_results"][0]["status"] == "blocked"
@@ -401,7 +404,9 @@ def test_hook_exception_is_recorded_without_crashing_main_flow() -> None:
         assert result.response == "MiniBot echo: 普通聊天"
         run_path = app.runtime.workspace.runs_dir / f"{result.run_id}.json"
         trace = json.loads(run_path.read_text(encoding="utf-8"))
-        error_result = next(item for item in trace["hook_results"] if item["hook_name"] == "explode")
+        error_result = next(
+            item for item in trace["hook_results"] if item["hook_name"] == "explode"
+        )
         assert error_result["status"] == "error"
         assert error_result["error"] == "boom"
     finally:

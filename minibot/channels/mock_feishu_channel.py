@@ -37,7 +37,9 @@ class MockFeishuChannel(BaseChannel):
             return plan_reply
         return self.dispatch_message(message).response
 
-    def build_reply_payload(self, response_text: str, payload: dict[str, object]) -> dict[str, object]:
+    def build_reply_payload(
+        self, response_text: str, payload: dict[str, object]
+    ) -> dict[str, object]:
         """Package a mock response with Feishu-like reply metadata."""
 
         message = self.to_channel_message(payload)

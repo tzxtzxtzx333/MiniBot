@@ -10,28 +10,44 @@ import json
 from pathlib import Path
 
 _CONTEXT_METRICS = {
-    "avg_context_chars_baseline", "avg_context_chars_current",
-    "avg_history_chars_baseline", "avg_history_chars_current",
-    "avg_prompt_chars_baseline", "avg_prompt_chars_current",
-    "avg_evidence_chars_current", "context_reduction_rate",
+    "avg_context_chars_baseline",
+    "avg_context_chars_current",
+    "avg_history_chars_baseline",
+    "avg_history_chars_current",
+    "avg_prompt_chars_baseline",
+    "avg_prompt_chars_current",
+    "avg_evidence_chars_current",
+    "context_reduction_rate",
 }
 _ANSWER_METRICS = {"answer_pass_rate", "required_keywords_hit_rate"}
 _GOVERNANCE_METRICS = {
-    "dangerous_call_block_rate", "gray_approval_required_rate",
-    "approval_resume_success_rate", "reject_block_rate",
-    "redaction_success_rate", "sandbox_execution_success_rate",
-    "partial_success_detection_rate", "false_block_rate",
+    "dangerous_call_block_rate",
+    "gray_approval_required_rate",
+    "approval_resume_success_rate",
+    "reject_block_rate",
+    "redaction_success_rate",
+    "sandbox_execution_success_rate",
+    "partial_success_detection_rate",
+    "false_block_rate",
     "safety_pass_rate",
 }
 _TASKPLAN_METRICS = {
-    "task_success_rate_baseline", "task_success_rate_current",
-    "task_success_improvement", "file_created_rate",
-    "avg_plan_steps", "approval_resume_success_rate",
-    "replan_trigger_count", "replan_success_rate",
+    "task_success_rate_baseline",
+    "task_success_rate_current",
+    "task_success_improvement",
+    "file_created_rate",
+    "avg_plan_steps",
+    "approval_resume_success_rate",
+    "replan_trigger_count",
+    "replan_success_rate",
     "real_planner_pass_rate",
 }
-_EVIDENCE_METRICS = {"evidence_count", "answer_pass_rate",
-                     "required_keywords_hit_rate", "evidence_search_hit_rate"}
+_EVIDENCE_METRICS = {
+    "evidence_count",
+    "answer_pass_rate",
+    "required_keywords_hit_rate",
+    "evidence_search_hit_rate",
+}
 
 # Label overrides for experiment types
 _EXPERIMENT_LABELS = {
@@ -97,9 +113,19 @@ def summarize_reports(report_paths: list[Path], output_path: Path | None = None)
                 rid = r.get("id", "?")
                 st = r.get("status", "?")
                 pa = r.get("passed", "?")
-                bm = (r.get("baseline_metrics") or {}) if isinstance(r.get("baseline_metrics"), dict) else {}
-                cm = (r.get("current_metrics") or {}) if isinstance(r.get("current_metrics"), dict) else {}
-                lines.append(f"| {rid} | {st} | {pa} | {bm.get('context_chars','—')} | {cm.get('context_chars','—')} |")
+                bm = (
+                    (r.get("baseline_metrics") or {})
+                    if isinstance(r.get("baseline_metrics"), dict)
+                    else {}
+                )
+                cm = (
+                    (r.get("current_metrics") or {})
+                    if isinstance(r.get("current_metrics"), dict)
+                    else {}
+                )
+                lines.append(
+                    f"| {rid} | {st} | {pa} | {bm.get('context_chars','—')} | {cm.get('context_chars','—')} |"
+                )
             lines.append("\n</details>\n")
 
     # Credibility notice

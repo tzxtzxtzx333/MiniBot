@@ -18,7 +18,7 @@ V1 必须具备：
 - Harness-first 统一执行链
 - 五层插件化架构
 - CLI / HTTP / Feishu Mock 多渠道接入
-- Feishu WebSocket Bot 真实接入路径保留
+- Feishu WebSocket Bot 接入边界代码保留（真实联通需飞书平台配置）
 - Tool Calling 闭环
 - Hook 机制
 - MEMORY / HISTORY / archives 结构化记忆

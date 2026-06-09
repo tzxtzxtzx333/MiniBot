@@ -11,7 +11,6 @@ import urllib.request
 
 from .base import BaseTool, ToolResult, ToolSpec
 
-
 COORDINATE_PATTERN = re.compile(r"^\s*-?\d+(?:\.\d+)?\s*,\s*-?\d+(?:\.\d+)?\s*$")
 
 
@@ -117,7 +116,9 @@ class MapRouteTool(BaseTool):
             tool_map = self._index_tools(tools)
             route_tool_name = self._select_route_tool_name(mode)
             route_tool = self._resolve_route_tool(tool_map, route_tool_name)
-            route_tool_name = str(route_tool.get("name", route_tool_name)).strip() or route_tool_name
+            route_tool_name = (
+                str(route_tool.get("name", route_tool_name)).strip() or route_tool_name
+            )
             legacy_text_route = route_tool_name == "maps_route_plan"
             if legacy_text_route:
                 resolved_origin, origin_city = origin, city
@@ -148,12 +149,21 @@ class MapRouteTool(BaseTool):
                 city=effective_city,
                 mode=mode,
             )
-            if route_tool_name == "maps_direction_transit_integrated" and "city" not in route_arguments and effective_city:
+            if (
+                route_tool_name == "maps_direction_transit_integrated"
+                and "city" not in route_arguments
+                and effective_city
+            ):
                 route_arguments["city"] = effective_city
-            if route_tool_name == "maps_direction_transit_integrated" and "city" not in route_arguments:
+            if (
+                route_tool_name == "maps_direction_transit_integrated"
+                and "city" not in route_arguments
+            ):
                 raise ValueError("transit_route_city_missing")
             debug["mcp_arguments"] = dict(route_arguments)
-            result = self._call_route_tool(endpoint, api_key, route_tool_name, route_arguments, debug)
+            result = self._call_route_tool(
+                endpoint, api_key, route_tool_name, route_arguments, debug
+            )
             output = self._normalize_route_output(result, origin, destination)
         except Exception as exc:  # noqa: BLE001
             return ToolResult(
@@ -184,7 +194,9 @@ class MapRouteTool(BaseTool):
             ),
         )
 
-    def _list_tools(self, endpoint: str, api_key: str, debug: dict[str, object]) -> list[dict[str, object]]:
+    def _list_tools(
+        self, endpoint: str, api_key: str, debug: dict[str, object]
+    ) -> list[dict[str, object]]:
         response = self._mcp_request(endpoint, api_key, "tools/list", {}, debug)
         tools = response.get("result", {}).get("tools", [])
         if not isinstance(tools, list) or not tools:
@@ -196,7 +208,11 @@ class MapRouteTool(BaseTool):
 
     @staticmethod
     def _index_tools(tools: list[dict[str, object]]) -> dict[str, dict[str, object]]:
-        return {str(tool.get("name", "")).strip(): tool for tool in tools if str(tool.get("name", "")).strip()}
+        return {
+            str(tool.get("name", "")).strip(): tool
+            for tool in tools
+            if str(tool.get("name", "")).strip()
+        }
 
     @staticmethod
     def _is_coordinate(value: str) -> bool:
@@ -254,7 +270,9 @@ class MapRouteTool(BaseTool):
         return self._rest_geocode(address, city=city, api_key=api_key)
 
     @staticmethod
-    def _build_geo_arguments(tool: dict[str, object], *, address: str, city: str) -> dict[str, object]:
+    def _build_geo_arguments(
+        tool: dict[str, object], *, address: str, city: str
+    ) -> dict[str, object]:
         schema = tool.get("inputSchema", {})
         properties = schema.get("properties", {}) if isinstance(schema, dict) else {}
         if not isinstance(properties, dict):
@@ -294,7 +312,9 @@ class MapRouteTool(BaseTool):
                     parsed = MapRouteTool._safe_parse_json_text(text)
                     if isinstance(parsed, dict):
                         for payload in MapRouteTool._iter_geocode_payloads(parsed):
-                            location, resolved_city = MapRouteTool._extract_location_from_payload(payload)
+                            location, resolved_city = MapRouteTool._extract_location_from_payload(
+                                payload
+                            )
                             if location:
                                 return location, resolved_city
                     match = COORDINATE_PATTERN.search(text)
@@ -368,7 +388,9 @@ class MapRouteTool(BaseTool):
         }.get(mode, "maps_direction_driving")
 
     @staticmethod
-    def _resolve_route_tool(tool_map: dict[str, dict[str, object]], tool_name: str) -> dict[str, object]:
+    def _resolve_route_tool(
+        tool_map: dict[str, dict[str, object]], tool_name: str
+    ) -> dict[str, object]:
         tool = tool_map.get(tool_name)
         if tool is None and tool_name != "maps_route_plan":
             tool = tool_map.get("maps_route_plan")
@@ -511,7 +533,9 @@ class MapRouteTool(BaseTool):
         return {key: value for key, value in args.items() if value not in {"", None}}
 
     @staticmethod
-    def _normalize_route_output(result: dict[str, object], origin: str, destination: str) -> dict[str, object]:
+    def _normalize_route_output(
+        result: dict[str, object], origin: str, destination: str
+    ) -> dict[str, object]:
         structured = result.get("structuredContent")
         if isinstance(structured, dict):
             summary = str(structured.get("summary", "")).strip()

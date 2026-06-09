@@ -31,16 +31,24 @@ class ToolAgent:
             normalized.append(self._normalize_tool_call(raw_call))
         return normalized
 
-    def execute_plan(self, plan: ModelPlan, dispatch_context: dict[str, object] | None = None) -> dict[str, object]:
+    def execute_plan(
+        self, plan: ModelPlan, dispatch_context: dict[str, object] | None = None
+    ) -> dict[str, object]:
         """Validate and dispatch the tool calls declared by the model plan."""
 
         tool_calls = self.extract_tool_calls(plan)
-        valid_tool_calls = [call for call in tool_calls if call.get("failure_category") != "invalid_tool_call"]
-        invalid_tool_calls = [call for call in tool_calls if call.get("failure_category") == "invalid_tool_call"]
+        valid_tool_calls = [
+            call for call in tool_calls if call.get("failure_category") != "invalid_tool_call"
+        ]
+        invalid_tool_calls = [
+            call for call in tool_calls if call.get("failure_category") == "invalid_tool_call"
+        ]
         tool_results = [self._invalid_tool_result(call) for call in invalid_tool_calls]
         tool_trace = [self._invalid_tool_trace(call) for call in invalid_tool_calls]
         if valid_tool_calls:
-            dispatched_results, dispatched_trace = self.tool_dispatcher.dispatch(valid_tool_calls, dispatch_context=dispatch_context)
+            dispatched_results, dispatched_trace = self.tool_dispatcher.dispatch(
+                valid_tool_calls, dispatch_context=dispatch_context
+            )
             tool_results.extend(dispatched_results)
             tool_trace.extend(dispatched_trace)
         return {
@@ -56,7 +64,9 @@ class ToolAgent:
         arguments = raw_call.get("arguments")
         if isinstance(tool_name, str) and isinstance(arguments, dict):
             return {"tool_name": tool_name, "arguments": dict(arguments)}
-        normalized_name = tool_name if isinstance(tool_name, str) and tool_name else "invalid_tool_call"
+        normalized_name = (
+            tool_name if isinstance(tool_name, str) and tool_name else "invalid_tool_call"
+        )
         return {
             "tool_name": normalized_name,
             "arguments": dict(arguments) if isinstance(arguments, dict) else {},

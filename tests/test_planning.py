@@ -9,6 +9,7 @@ from uuid import uuid4
 
 from minibot.app import MiniBotApp
 from minibot.channels.base import ChannelMessage
+from minibot.json_utils import load_json_file
 from minibot.planning.plan_schema import (
     Step,
     TaskPlan,
@@ -17,7 +18,6 @@ from minibot.planning.plan_schema import (
     validate_plan_dict,
 )
 from minibot.planning.planner_agent import PlannerAgent
-from minibot.json_utils import load_json_file
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -47,7 +47,8 @@ def _prepare_temp_root(**overrides: object) -> Path:
             config[key] = value
     config_path.write_text(json.dumps(config, ensure_ascii=False, indent=2), encoding="utf-8")
     (temp_root / "configs" / "hooks.json").write_text(
-        json.dumps({"hooks": []}, ensure_ascii=False, indent=2), encoding="utf-8",
+        json.dumps({"hooks": []}, ensure_ascii=False, indent=2),
+        encoding="utf-8",
     )
     return temp_root
 
@@ -89,21 +90,27 @@ def test_validate_plan_dict_rejects_invalid() -> None:
     errors = validate_plan_dict({"plan_id": "", "goal": "", "steps": []})
     assert len(errors) > 0
 
-    errors = validate_plan_dict({"plan_id": "p1", "goal": "g", "steps": [{"step_id": "", "description": ""}]})
+    errors = validate_plan_dict(
+        {"plan_id": "p1", "goal": "g", "steps": [{"step_id": "", "description": ""}]}
+    )
     assert len(errors) > 0
 
 
 def test_validate_plan_dict_accepts_valid() -> None:
-    errors = validate_plan_dict({
-        "plan_id": "p1",
-        "goal": "test goal",
-        "steps": [{"step_id": "s1", "description": "do something"}],
-    })
+    errors = validate_plan_dict(
+        {
+            "plan_id": "p1",
+            "goal": "test goal",
+            "steps": [{"step_id": "s1", "description": "do something"}],
+        }
+    )
     assert errors == []
 
 
 def test_plan_from_json_parses_valid() -> None:
-    raw = json.dumps({"plan_id": "p1", "goal": "test", "steps": [{"step_id": "s1", "description": "do"}]})
+    raw = json.dumps(
+        {"plan_id": "p1", "goal": "test", "steps": [{"step_id": "s1", "description": "do"}]}
+    )
     plan = plan_from_json(raw)
     assert plan is not None
     assert plan.plan_id == "p1"
@@ -127,7 +134,8 @@ def test_make_single_step_plan() -> None:
 
 def test_current_step_index() -> None:
     plan = TaskPlan(
-        plan_id="p1", goal="g",
+        plan_id="p1",
+        goal="g",
         steps=[
             Step(step_id="s1", description="a", status="completed"),
             Step(step_id="s2", description="b", status="pending"),
@@ -139,7 +147,8 @@ def test_current_step_index() -> None:
 
 def test_all_completed() -> None:
     plan = TaskPlan(
-        plan_id="p1", goal="g",
+        plan_id="p1",
+        goal="g",
         steps=[
             Step(step_id="s1", description="a", status="completed"),
             Step(step_id="s2", description="b", status="completed"),
@@ -157,7 +166,9 @@ def test_all_completed() -> None:
 
 def test_planner_fake_decomposes_read_summarize_write_goal() -> None:
     planner = PlannerAgent(mode="fake")
-    plan = planner.plan("帮我读取 README.md 和 docs/resume_mapping.md，总结 MiniBot 当前能力边界，并写入 realistic_roadmap.md")
+    plan = planner.plan(
+        "帮我读取 README.md 和 docs/resume_mapping.md，总结 MiniBot 当前能力边界，并写入 realistic_roadmap.md"
+    )
     assert plan is not None
     assert plan.status == "pending"
     assert len(plan.steps) >= 3  # read README, read resume_mapping, summarize, write
@@ -212,7 +223,9 @@ def test_task_executor_executes_read_step_and_records_run() -> None:
             plan_id="plan_exec_test",
             task_id=None,
             goal="read test_target.txt",
-            steps=[Step(step_id="s1", description="读取 test_target.txt", tool_hints=["file_read"])],
+            steps=[
+                Step(step_id="s1", description="读取 test_target.txt", tool_hints=["file_read"])
+            ],
         )
         app.runtime.task_executor.save_plan(plan)
 
@@ -398,7 +411,11 @@ def test_long_task_runner_approval_required_pauses_plan() -> None:
             plan_id="plan_approval",
             goal="write a file",
             steps=[
-                Step(step_id="s1", description="write notes/plan_test.txt content hello", tool_hints=["file_write"]),
+                Step(
+                    step_id="s1",
+                    description="write notes/plan_test.txt content hello",
+                    tool_hints=["file_write"],
+                ),
             ],
         )
         app.runtime.task_executor.save_plan(plan)
@@ -422,7 +439,9 @@ def test_long_task_runner_resume_plan() -> None:
         plan = TaskPlan(
             plan_id="plan_resume",
             goal="read resume_target.txt",
-            steps=[Step(step_id="s1", description="读取 resume_target.txt", tool_hints=["file_read"])],
+            steps=[
+                Step(step_id="s1", description="读取 resume_target.txt", tool_hints=["file_read"])
+            ],
         )
         app.runtime.task_executor.save_plan(plan)
         # Run to completion
@@ -448,11 +467,15 @@ def test_plan_step_evidence_ids_are_tracked() -> None:
         app = MiniBotApp(temp_root)
         # Create the target file in sandbox first
         sandbox = app.runtime.workspace.sandbox_dir
-        (sandbox / "evidence_test.txt").write_text("evidence test content here for reading", encoding="utf-8")
+        (sandbox / "evidence_test.txt").write_text(
+            "evidence test content here for reading", encoding="utf-8"
+        )
         plan = TaskPlan(
             plan_id="plan_evidence",
             goal="read a file",
-            steps=[Step(step_id="s1", description="读取 evidence_test.txt", tool_hints=["file_read"])],
+            steps=[
+                Step(step_id="s1", description="读取 evidence_test.txt", tool_hints=["file_read"])
+            ],
         )
         executor = app.runtime.task_executor
         executor.save_plan(plan)
@@ -471,9 +494,9 @@ def test_plan_step_evidence_ids_are_tracked() -> None:
 
 
 def test_cli_plan_create_and_show() -> None:
+    import os
     import subprocess
     import sys
-    import os
 
     temp_root = _prepare_temp_root()
     try:
@@ -482,8 +505,13 @@ def test_cli_plan_create_and_show() -> None:
         env["PYTHONIOENCODING"] = "utf-8"
         r = subprocess.run(
             [sys.executable, "-m", "minibot", "plan", "create", "--goal", "读取 README.md 并总结"],
-            capture_output=True, text=True, encoding="utf-8", errors="replace",
-            cwd=str(temp_root), env=env, timeout=30,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            cwd=str(temp_root),
+            env=env,
+            timeout=30,
         )
         assert r.returncode == 0, f"stderr: {r.stderr}"
         data = json.loads(r.stdout)
@@ -494,8 +522,13 @@ def test_cli_plan_create_and_show() -> None:
         # Show
         r2 = subprocess.run(
             [sys.executable, "-m", "minibot", "plan", "show", plan_id],
-            capture_output=True, text=True, encoding="utf-8", errors="replace",
-            cwd=str(temp_root), env=env, timeout=30,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            cwd=str(temp_root),
+            env=env,
+            timeout=30,
         )
         assert r2.returncode == 0, f"stderr: {r2.stderr}"
         data2 = json.loads(r2.stdout)
@@ -505,9 +538,9 @@ def test_cli_plan_create_and_show() -> None:
 
 
 def test_cli_plan_show_missing() -> None:
+    import os
     import subprocess
     import sys
-    import os
 
     temp_root = _prepare_temp_root()
     try:
@@ -516,8 +549,13 @@ def test_cli_plan_show_missing() -> None:
         env["PYTHONIOENCODING"] = "utf-8"
         r = subprocess.run(
             [sys.executable, "-m", "minibot", "plan", "show", "plan_nonexistent"],
-            capture_output=True, text=True, encoding="utf-8", errors="replace",
-            cwd=str(temp_root), env=env, timeout=30,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            cwd=str(temp_root),
+            env=env,
+            timeout=30,
         )
         assert r.returncode == 1
         assert "plan_not_found" in r.stderr
@@ -526,9 +564,9 @@ def test_cli_plan_show_missing() -> None:
 
 
 def test_cli_plan_run_executes_plan() -> None:
+    import os
     import subprocess
     import sys
-    import os
 
     temp_root = _prepare_temp_root()
     try:
@@ -544,16 +582,26 @@ def test_cli_plan_run_executes_plan() -> None:
         # Create plan
         r = subprocess.run(
             [sys.executable, "-m", "minibot", "plan", "create", "--goal", "读取 cli_test.txt"],
-            capture_output=True, text=True, encoding="utf-8", errors="replace",
-            cwd=str(temp_root), env=env, timeout=30,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            cwd=str(temp_root),
+            env=env,
+            timeout=30,
         )
         plan_id = json.loads(r.stdout)["plan_id"]
 
         # Run plan
         r2 = subprocess.run(
             [sys.executable, "-m", "minibot", "plan", "run", plan_id],
-            capture_output=True, text=True, encoding="utf-8", errors="replace",
-            cwd=str(temp_root), env=env, timeout=30,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            cwd=str(temp_root),
+            env=env,
+            timeout=30,
         )
         assert r2.returncode == 0, f"stderr: {r2.stderr}"
         data = json.loads(r2.stdout)
@@ -572,12 +620,16 @@ def test_planning_does_not_affect_safety() -> None:
     try:
         app = MiniBotApp(temp_root)
         result = app.runtime.agent_loop.handle_message(
-            ChannelMessage(channel="test", user_id="tester", session_id="plan-safe", content="hello")
+            ChannelMessage(
+                channel="test", user_id="tester", session_id="plan-safe", content="hello"
+            )
         )
         assert result.response == "MiniBot echo: hello"
 
         result2 = app.runtime.agent_loop.handle_message(
-            ChannelMessage(channel="test", user_id="tester", session_id="plan-safe", content="calculate 1 + 1")
+            ChannelMessage(
+                channel="test", user_id="tester", session_id="plan-safe", content="calculate 1 + 1"
+            )
         )
         assert result2.response == "MiniBot tool result: 2"
 
@@ -594,11 +646,15 @@ def test_planning_does_not_affect_task_resume() -> None:
     try:
         app = MiniBotApp(temp_root)
         from minibot.tasks.store import TaskStore
+
         task_store = TaskStore(app.runtime.workspace.root / "tasks")
         task = task_store.create(goal="calculate 2 + 3")
         msg = ChannelMessage(
-            channel="cli", user_id="tester", session_id="test",
-            content="calculate 2 + 3", metadata={"task_id": task["task_id"]},
+            channel="cli",
+            user_id="tester",
+            session_id="test",
+            content="calculate 2 + 3",
+            metadata={"task_id": task["task_id"]},
         )
         result = app.runtime.agent_loop.handle_message(msg)
         assert "5" in result.response

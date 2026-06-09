@@ -33,7 +33,8 @@ def _prepare_temp_root(**overrides: object) -> Path:
             config[key] = value
     config_path.write_text(json.dumps(config, ensure_ascii=False, indent=2), encoding="utf-8")
     (temp_root / "configs" / "hooks.json").write_text(
-        json.dumps({"hooks": []}, ensure_ascii=False, indent=2), encoding="utf-8",
+        json.dumps({"hooks": []}, ensure_ascii=False, indent=2),
+        encoding="utf-8",
     )
     return temp_root
 
@@ -76,9 +77,33 @@ def test_evidence_store_list_filters_by_run_id_and_task_id() -> None:
     try:
         app = MiniBotApp(temp_root)
         store = app.runtime.evidence_store
-        store.create(run_id="run-a", task_id="t1", tool_name="ta", source="s", raw_chars=100, summary="a1", key_points=[])
-        store.create(run_id="run-a", task_id="t2", tool_name="tb", source="s", raw_chars=100, summary="a2", key_points=[])
-        store.create(run_id="run-b", task_id="t1", tool_name="tc", source="s", raw_chars=100, summary="b1", key_points=[])
+        store.create(
+            run_id="run-a",
+            task_id="t1",
+            tool_name="ta",
+            source="s",
+            raw_chars=100,
+            summary="a1",
+            key_points=[],
+        )
+        store.create(
+            run_id="run-a",
+            task_id="t2",
+            tool_name="tb",
+            source="s",
+            raw_chars=100,
+            summary="a2",
+            key_points=[],
+        )
+        store.create(
+            run_id="run-b",
+            task_id="t1",
+            tool_name="tc",
+            source="s",
+            raw_chars=100,
+            summary="b1",
+            key_points=[],
+        )
 
         by_run = store.list(run_id="run-a", limit=10)
         assert len(by_run) == 2
@@ -99,14 +124,20 @@ def test_evidence_store_search_keyword_recall() -> None:
         app = MiniBotApp(temp_root)
         store = app.runtime.evidence_store
         store.create(
-            run_id="r1", task_id=None, tool_name="web_fetch",
-            source="https://python.org", raw_chars=3000,
+            run_id="r1",
+            task_id=None,
+            tool_name="web_fetch",
+            source="https://python.org",
+            raw_chars=3000,
             summary="Python deployment guide with Docker instructions",
             key_points=["Dockerfile setup", "CI/CD pipeline"],
         )
         store.create(
-            run_id="r2", task_id=None, tool_name="web_fetch",
-            source="https://cooking.example.com", raw_chars=2000,
+            run_id="r2",
+            task_id=None,
+            tool_name="web_fetch",
+            source="https://cooking.example.com",
+            raw_chars=2000,
             summary="How to cook pasta with tomato sauce",
             key_points=["Boil water", "Add salt"],
         )
@@ -143,8 +174,7 @@ def test_evidence_summarizer_fake_mode_extracts_key_points() -> None:
     output = (
         "- Deploy using Docker Compose\n"
         "- Set up CI/CD with GitHub Actions\n"
-        "- Monitor with Prometheus\n"
-        + "extra text " * 200
+        "- Monitor with Prometheus\n" + "extra text " * 200
     )
     result = summarizer.summarize("web_fetch", output)
     assert len(result["summary"]) <= 500
@@ -182,7 +212,14 @@ def test_evidence_summarizer_real_mode_falls_back_on_failure() -> None:
 
 def test_large_tool_output_creates_evidence() -> None:
     """When a tool produces output > threshold, evidence is created."""
-    temp_root = _prepare_temp_root(evidence={"enabled": True, "tool_output_min_chars": 100, "summary_max_chars": 500, "key_points_max": 3})
+    temp_root = _prepare_temp_root(
+        evidence={
+            "enabled": True,
+            "tool_output_min_chars": 100,
+            "summary_max_chars": 500,
+            "key_points_max": 3,
+        }
+    )
     try:
         app = MiniBotApp(temp_root)
         # Calculator tool produces small output (< 100 chars) so it won't trigger evidence.
@@ -271,7 +308,9 @@ def test_run_record_includes_evidence_fields() -> None:
     try:
         app = MiniBotApp(temp_root)
         result = app.runtime.agent_loop.handle_message(
-            ChannelMessage(channel="test", user_id="tester", session_id="ev-run-session", content="hello")
+            ChannelMessage(
+                channel="test", user_id="tester", session_id="ev-run-session", content="hello"
+            )
         )
         run_path = app.runtime.workspace.runs_dir / f"{result.run_id}.json"
         record = json.loads(run_path.read_text(encoding="utf-8"))
@@ -287,7 +326,9 @@ def test_context_metrics_includes_evidence_count() -> None:
     try:
         app = MiniBotApp(temp_root)
         result = app.runtime.agent_loop.handle_message(
-            ChannelMessage(channel="test", user_id="tester", session_id="ev-metrics-session", content="hello")
+            ChannelMessage(
+                channel="test", user_id="tester", session_id="ev-metrics-session", content="hello"
+            )
         )
         run_path = app.runtime.workspace.runs_dir / f"{result.run_id}.json"
         record = json.loads(run_path.read_text(encoding="utf-8"))
@@ -340,17 +381,29 @@ def test_cli_evidence_list_returns_json_array() -> None:
     try:
         app = MiniBotApp(temp_root)
         store = app.runtime.evidence_store
-        store.create(run_id="r1", task_id=None, tool_name="t", source="s", raw_chars=100, summary="test", key_points=[])
+        store.create(
+            run_id="r1",
+            task_id=None,
+            tool_name="t",
+            source="s",
+            raw_chars=100,
+            summary="test",
+            key_points=[],
+        )
 
+        import os
         import subprocess
         import sys
-        import os
 
         env = os.environ.copy()
         env["PYTHONPATH"] = str(ROOT)
         result = subprocess.run(
             [sys.executable, "-m", "minibot", "evidence", "list"],
-            capture_output=True, text=True, cwd=str(temp_root), env=env, timeout=10,
+            capture_output=True,
+            text=True,
+            cwd=str(temp_root),
+            env=env,
+            timeout=10,
         )
         assert result.returncode == 0
         data = json.loads(result.stdout)
@@ -364,17 +417,29 @@ def test_cli_evidence_show_found() -> None:
     try:
         app = MiniBotApp(temp_root)
         store = app.runtime.evidence_store
-        record = store.create(run_id="r1", task_id=None, tool_name="t", source="s", raw_chars=100, summary="show me", key_points=["kp"])
+        record = store.create(
+            run_id="r1",
+            task_id=None,
+            tool_name="t",
+            source="s",
+            raw_chars=100,
+            summary="show me",
+            key_points=["kp"],
+        )
 
+        import os
         import subprocess
         import sys
-        import os
 
         env = os.environ.copy()
         env["PYTHONPATH"] = str(ROOT)
         result = subprocess.run(
             [sys.executable, "-m", "minibot", "evidence", "show", record["evidence_id"]],
-            capture_output=True, text=True, cwd=str(temp_root), env=env, timeout=10,
+            capture_output=True,
+            text=True,
+            cwd=str(temp_root),
+            env=env,
+            timeout=10,
         )
         assert result.returncode == 0
         data = json.loads(result.stdout)
@@ -384,9 +449,9 @@ def test_cli_evidence_show_found() -> None:
 
 
 def test_cli_evidence_show_missing() -> None:
+    import os
     import subprocess
     import sys
-    import os
 
     temp_root = _prepare_temp_root()
     try:
@@ -394,7 +459,11 @@ def test_cli_evidence_show_missing() -> None:
         env["PYTHONPATH"] = str(ROOT)
         result = subprocess.run(
             [sys.executable, "-m", "minibot", "evidence", "show", "ev_nonexistent"],
-            capture_output=True, text=True, cwd=str(temp_root), env=env, timeout=10,
+            capture_output=True,
+            text=True,
+            cwd=str(temp_root),
+            env=env,
+            timeout=10,
         )
         assert result.returncode == 1
         assert "evidence_not_found" in result.stderr
@@ -407,18 +476,29 @@ def test_cli_evidence_search() -> None:
     try:
         app = MiniBotApp(temp_root)
         store = app.runtime.evidence_store
-        store.create(run_id="r1", task_id=None, tool_name="web_fetch", source="https://docker.com",
-                     raw_chars=2000, summary="Docker Compose deployment guide", key_points=["Use compose"])
+        store.create(
+            run_id="r1",
+            task_id=None,
+            tool_name="web_fetch",
+            source="https://docker.com",
+            raw_chars=2000,
+            summary="Docker Compose deployment guide",
+            key_points=["Use compose"],
+        )
 
+        import os
         import subprocess
         import sys
-        import os
 
         env = os.environ.copy()
         env["PYTHONPATH"] = str(ROOT)
         result = subprocess.run(
             [sys.executable, "-m", "minibot", "evidence", "search", "Docker deployment"],
-            capture_output=True, text=True, cwd=str(temp_root), env=env, timeout=10,
+            capture_output=True,
+            text=True,
+            cwd=str(temp_root),
+            env=env,
+            timeout=10,
         )
         assert result.returncode == 0
         data = json.loads(result.stdout)
@@ -439,12 +519,16 @@ def test_evidence_does_not_affect_safety() -> None:
         app = MiniBotApp(temp_root)
         # Normal chat
         result = app.runtime.agent_loop.handle_message(
-            ChannelMessage(channel="test", user_id="tester", session_id="ev-safety", content="hello")
+            ChannelMessage(
+                channel="test", user_id="tester", session_id="ev-safety", content="hello"
+            )
         )
         assert result.response == "MiniBot echo: hello"
         # Tool call
         result2 = app.runtime.agent_loop.handle_message(
-            ChannelMessage(channel="test", user_id="tester", session_id="ev-safety", content="calculate 1 + 1")
+            ChannelMessage(
+                channel="test", user_id="tester", session_id="ev-safety", content="calculate 1 + 1"
+            )
         )
         assert result2.response == "MiniBot tool result: 2"
         # /new still works
@@ -462,7 +546,12 @@ def test_evidence_does_not_affect_real_agent_flow() -> None:
         app = MiniBotApp(temp_root)
         # Multi-round: the fake model should still detect calculator expressions
         result = app.runtime.agent_loop.handle_message(
-            ChannelMessage(channel="test", user_id="tester", session_id="ev-real-agent", content="calculate 128 * 64")
+            ChannelMessage(
+                channel="test",
+                user_id="tester",
+                session_id="ev-real-agent",
+                content="calculate 128 * 64",
+            )
         )
         assert result.response == "MiniBot tool result: 8192"
         # Check run record has evidence fields
@@ -480,11 +569,18 @@ def test_evidence_jsonl_persists_across_store_reloads() -> None:
         app = MiniBotApp(temp_root)
         store = app.runtime.evidence_store
         record_id = store.create(
-            run_id="r-persist", task_id=None, tool_name="t", source="s", raw_chars=100, summary="persist", key_points=[]
+            run_id="r-persist",
+            task_id=None,
+            tool_name="t",
+            source="s",
+            raw_chars=100,
+            summary="persist",
+            key_points=[],
         )["evidence_id"]
 
         # Reload store
         from minibot.evidence.store import EvidenceStore
+
         reloaded = EvidenceStore(app.runtime.workspace.evidence_dir)
         retrieved = reloaded.get(record_id)
         assert retrieved is not None

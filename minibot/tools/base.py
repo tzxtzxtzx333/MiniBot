@@ -125,3 +125,24 @@ def blocked_tool_result(
         metadata=dict(metadata or {}),
         status_override="blocked",
     )
+
+
+def provider_metadata(
+    *,
+    provider: str,
+    provider_status: str,
+    mock_provider: bool,
+    real_provider: bool,
+    mcp_provider: bool = False,
+    **extra: object,
+) -> dict[str, object]:
+    """Build a standardized provider status metadata dict for tool results."""
+    meta: dict[str, object] = {
+        "provider": provider,
+        "provider_status": provider_status,
+        "mock_provider": mock_provider,
+        "real_provider": real_provider,
+        "mcp_provider": mcp_provider,
+    }
+    meta.update(extra)
+    return meta

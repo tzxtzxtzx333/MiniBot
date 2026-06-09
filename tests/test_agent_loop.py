@@ -7,9 +7,14 @@ from uuid import uuid4
 
 from minibot.app import MiniBotApp
 from minibot.channels.base import ChannelMessage
-from minibot.harness.model_client import ModelFinalAnswer, ModelPlan, OpenAICompatibleModelClient, ToolCall, load_model_client
+from minibot.harness.model_client import (
+    ModelFinalAnswer,
+    ModelPlan,
+    OpenAICompatibleModelClient,
+    ToolCall,
+    load_model_client,
+)
 from minibot.json_utils import load_json_file
-
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -186,7 +191,10 @@ def test_agent_loop_tool_failure_returns_explicit_failure_response_without_crash
             content="请帮我计算 2 + ",
         )
     )
-    assert result.response == "MiniBot tool failed: calculator failed with invalid syntax (<string>, line 1)"
+    assert (
+        result.response
+        == "MiniBot tool failed: calculator failed with invalid syntax (<string>, line 1)"
+    )
 
     run_path = app.runtime.workspace.runs_dir / f"{result.run_id}.json"
     record = json.loads(run_path.read_text(encoding="utf-8"))
@@ -203,8 +211,18 @@ def test_agent_loop_tool_failure_returns_explicit_failure_response_without_crash
     assert record["tool_results"][0]["status"] == "failed"
     assert "invalid syntax" in record["tool_results"][0]["error"]
     assert record["failure_category"] == "tool_execution_failed"
-    assert record["final_response"] == "MiniBot tool failed: calculator failed with invalid syntax (<string>, line 1)"
-    for event_name in ("ToolCallDetected", "PreToolUse", "ToolGovernanceCheck", "ToolExecution", "PostToolUse", "ToolResultAppend"):
+    assert (
+        record["final_response"]
+        == "MiniBot tool failed: calculator failed with invalid syntax (<string>, line 1)"
+    )
+    for event_name in (
+        "ToolCallDetected",
+        "PreToolUse",
+        "ToolGovernanceCheck",
+        "ToolExecution",
+        "PostToolUse",
+        "ToolResultAppend",
+    ):
         assert event_name in record["lifecycle_events"]
 
 
@@ -236,7 +254,9 @@ class _StubRealModelClient:
         self._plan = plan
         self.finalize_calls: list[dict[str, object]] = []
 
-    def plan(self, message: ChannelMessage, context: dict[str, object]) -> ModelPlan:  # noqa: ARG002
+    def plan(
+        self, message: ChannelMessage, context: dict[str, object]
+    ) -> ModelPlan:  # noqa: ARG002
         return self._plan
 
     def plan_next(
@@ -313,8 +333,14 @@ def test_agent_loop_executes_real_model_calculator_tool_plan_without_keyword_tri
                     "mode": "openai_compatible",
                     "reason": "delegated_to_model_client",
                     "raw_model_output": '{"tool_calls":[{"tool_name":"calculator","arguments":{"expression":"128 * 64"}}]}',
-                    "tool_plan": {"tool_calls": [{"tool_name": "calculator", "arguments": {"expression": "128 * 64"}}]},
-                    "tool_calls": [{"tool_name": "calculator", "arguments": {"expression": "128 * 64"}}],
+                    "tool_plan": {
+                        "tool_calls": [
+                            {"tool_name": "calculator", "arguments": {"expression": "128 * 64"}}
+                        ]
+                    },
+                    "tool_calls": [
+                        {"tool_name": "calculator", "arguments": {"expression": "128 * 64"}}
+                    ],
                     "model_mode": "real",
                     "model_provider": "deepseek",
                     "model_name": "deepseek-chat",
@@ -325,7 +351,12 @@ def test_agent_loop_executes_real_model_calculator_tool_plan_without_keyword_tri
         )
 
         result = app.runtime.agent_loop.handle_message(
-            ChannelMessage(channel="test", user_id="tester", session_id="real-tool-calc", content="just answer this task")
+            ChannelMessage(
+                channel="test",
+                user_id="tester",
+                session_id="real-tool-calc",
+                content="just answer this task",
+            )
         )
 
         assert result.response == "MiniBot tool result: 8192"
@@ -333,7 +364,9 @@ def test_agent_loop_executes_real_model_calculator_tool_plan_without_keyword_tri
         record = json.loads(run_path.read_text(encoding="utf-8"))
         assert record["model_plan"]["model_mode"] == "real"
         assert record["model_plan"]["fake_model"] is False
-        assert record["tool_calls"] == [{"tool_name": "calculator", "arguments": {"expression": "128 * 64"}}]
+        assert record["tool_calls"] == [
+            {"tool_name": "calculator", "arguments": {"expression": "128 * 64"}}
+        ]
         assert record["tool_results"][0]["output"]["result"] == 8192
         assert record["tool_trace"][0]["tool_name"] == "calculator"
         assert app.runtime.agent_loop.model_client.finalize_calls
@@ -350,22 +383,37 @@ def test_agent_loop_executes_real_model_calculator_tool_plan_without_keyword_tri
 def test_agent_loop_executes_real_model_file_write_tool_plan() -> None:
     temp_root = _prepare_temp_root()
     try:
-        _write_policy(temp_root, {"approval": {"auto_approve": True, "tool_defaults": {"file_write": True}}})
+        _write_policy(
+            temp_root, {"approval": {"auto_approve": True, "tool_defaults": {"file_write": True}}}
+        )
         app = MiniBotApp(temp_root)
         app.runtime.agent_loop.model_client = _StubRealModelClient(
             ModelPlan(
                 assistant_message="write file",
-                tool_calls=[ToolCall("file_write", {"path": "notes/real.txt", "content": "real tool plan"})],
+                tool_calls=[
+                    ToolCall("file_write", {"path": "notes/real.txt", "content": "real tool plan"})
+                ],
                 raw_plan={
                     "mode": "openai_compatible",
                     "reason": "delegated_to_model_client",
                     "raw_model_output": '{"tool_calls":[{"tool_name":"file_write","arguments":{"path":"notes/real.txt","content":"real tool plan"}}]}',
                     "tool_plan": {
                         "tool_calls": [
-                            {"tool_name": "file_write", "arguments": {"path": "notes/real.txt", "content": "real tool plan"}}
+                            {
+                                "tool_name": "file_write",
+                                "arguments": {
+                                    "path": "notes/real.txt",
+                                    "content": "real tool plan",
+                                },
+                            }
                         ]
                     },
-                    "tool_calls": [{"tool_name": "file_write", "arguments": {"path": "notes/real.txt", "content": "real tool plan"}}],
+                    "tool_calls": [
+                        {
+                            "tool_name": "file_write",
+                            "arguments": {"path": "notes/real.txt", "content": "real tool plan"},
+                        }
+                    ],
                     "model_mode": "real",
                     "model_provider": "deepseek",
                     "model_name": "deepseek-chat",
@@ -376,11 +424,18 @@ def test_agent_loop_executes_real_model_file_write_tool_plan() -> None:
         )
 
         result = app.runtime.agent_loop.handle_message(
-            ChannelMessage(channel="test", user_id="tester", session_id="real-tool-write", content="this text should not matter")
+            ChannelMessage(
+                channel="test",
+                user_id="tester",
+                session_id="real-tool-write",
+                content="this text should not matter",
+            )
         )
 
         assert result.response.startswith("MiniBot tool result:")
-        assert (app.runtime.workspace.sandbox_dir / "notes" / "real.txt").read_text(encoding="utf-8") == "real tool plan"
+        assert (app.runtime.workspace.sandbox_dir / "notes" / "real.txt").read_text(
+            encoding="utf-8"
+        ) == "real tool plan"
         run_path = app.runtime.workspace.runs_dir / f"{result.run_id}.json"
         record = json.loads(run_path.read_text(encoding="utf-8"))
         assert record["tool_calls"][0]["tool_name"] == "file_write"
@@ -397,10 +452,17 @@ def test_agent_loop_fake_mode_keeps_existing_tool_result_template() -> None:
     try:
         app = MiniBotApp(temp_root)
         result = app.runtime.agent_loop.handle_message(
-            ChannelMessage(channel="test", user_id="tester", session_id="fake-tool-template", content="calculate 2 + 3")
+            ChannelMessage(
+                channel="test",
+                user_id="tester",
+                session_id="fake-tool-template",
+                content="calculate 2 + 3",
+            )
         )
         assert result.response == "MiniBot tool result: 5"
-        record = json.loads((app.runtime.workspace.runs_dir / f"{result.run_id}.json").read_text(encoding="utf-8"))
+        record = json.loads(
+            (app.runtime.workspace.runs_dir / f"{result.run_id}.json").read_text(encoding="utf-8")
+        )
         assert record["final_answer_mode"] == "fake"
         assert record["final_answer_used_tool_results"] is True
     finally:
@@ -414,11 +476,23 @@ def test_agent_loop_real_mode_finalize_does_not_bypass_approval_required() -> No
         app.runtime.agent_loop.model_client = _StubRealModelClient(
             ModelPlan(
                 assistant_message="write file",
-                tool_calls=[ToolCall("file_write", {"path": "notes/approval.txt", "content": "needs approval"})],
+                tool_calls=[
+                    ToolCall(
+                        "file_write", {"path": "notes/approval.txt", "content": "needs approval"}
+                    )
+                ],
                 raw_plan={
                     "mode": "openai_compatible",
                     "reason": "delegated_to_model_client",
-                    "tool_calls": [{"tool_name": "file_write", "arguments": {"path": "notes/approval.txt", "content": "needs approval"}}],
+                    "tool_calls": [
+                        {
+                            "tool_name": "file_write",
+                            "arguments": {
+                                "path": "notes/approval.txt",
+                                "content": "needs approval",
+                            },
+                        }
+                    ],
                     "model_mode": "real",
                     "model_provider": "deepseek",
                     "model_name": "deepseek-chat",
@@ -429,11 +503,18 @@ def test_agent_loop_real_mode_finalize_does_not_bypass_approval_required() -> No
         )
 
         result = app.runtime.agent_loop.handle_message(
-            ChannelMessage(channel="test", user_id="tester", session_id="real-approval", content="please save this")
+            ChannelMessage(
+                channel="test",
+                user_id="tester",
+                session_id="real-approval",
+                content="please save this",
+            )
         )
 
         assert "approval required" in result.response.lower()
-        record = json.loads((app.runtime.workspace.runs_dir / f"{result.run_id}.json").read_text(encoding="utf-8"))
+        record = json.loads(
+            (app.runtime.workspace.runs_dir / f"{result.run_id}.json").read_text(encoding="utf-8")
+        )
         assert record["tool_results"][0]["status"] == "approval_required"
         assert record["final_answer_mode"] == "real"
         assert record["final_answer_used_tool_results"] is True
@@ -466,7 +547,9 @@ def test_agent_loop_records_tool_parse_error_without_crashing() -> None:
         )
 
         result = app.runtime.agent_loop.handle_message(
-            ChannelMessage(channel="test", user_id="tester", session_id="real-tool-parse", content="anything")
+            ChannelMessage(
+                channel="test", user_id="tester", session_id="real-tool-parse", content="anything"
+            )
         )
 
         assert result.response == "not-json-but-safe"
@@ -507,7 +590,12 @@ def test_agent_loop_handles_invalid_real_tool_call_structure_without_crashing() 
         app.runtime.agent_loop.model_client = _StubRealModelClient(invalid_plan)
 
         result = app.runtime.agent_loop.handle_message(
-            ChannelMessage(channel="test", user_id="tester", session_id="real-invalid-tool", content="no keyword")
+            ChannelMessage(
+                channel="test",
+                user_id="tester",
+                session_id="real-invalid-tool",
+                content="no keyword",
+            )
         )
 
         assert "MiniBot tool failed:" in result.response
@@ -535,7 +623,9 @@ def test_real_agent_loop_injects_registry_tool_specs_into_model_prompt(monkeypat
 
         class _FakeResponse:
             def read(self) -> bytes:
-                return json.dumps({"choices": [{"message": {"content": '{"type":"message","content":"ok"}'}}]}).encode("utf-8")
+                return json.dumps(
+                    {"choices": [{"message": {"content": '{"type":"message","content":"ok"}'}}]}
+                ).encode("utf-8")
 
             def __enter__(self):
                 return self
@@ -550,7 +640,12 @@ def test_real_agent_loop_injects_registry_tool_specs_into_model_prompt(monkeypat
         monkeypatch.setattr("urllib.request.urlopen", fake_urlopen)
         app = MiniBotApp(temp_root)
         app.runtime.agent_loop.handle_message(
-            ChannelMessage(channel="test", user_id="tester", session_id="real-tools-prompt", content="calculate 128 * 64")
+            ChannelMessage(
+                channel="test",
+                user_id="tester",
+                session_id="real-tools-prompt",
+                content="calculate 128 * 64",
+            )
         )
 
         system_prompt = captured["body"]["messages"][0]["content"]

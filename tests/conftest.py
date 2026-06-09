@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import pytest
 
-
 TEST_ENV_KEYS = (
     "MINIBOT_MODEL_MODE",
     "MINIBOT_MODEL_PROVIDER",

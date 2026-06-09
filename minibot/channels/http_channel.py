@@ -28,12 +28,19 @@ class HttpChannel(BaseChannel):
 
     channel_name = "http"
 
-    def __init__(self, agent_loop, status_service=None, benchmark_runner=None, approval_store=None, auth_token: str | None = None) -> None:
+    def __init__(
+        self,
+        agent_loop,
+        status_service=None,
+        benchmark_runner=None,
+        approval_store=None,
+        auth_token: str | None = None,
+    ) -> None:
         super().__init__(agent_loop)
         self.status_service = status_service
         self.benchmark_runner = benchmark_runner
         self.approval_store = approval_store
-        self.auth_token = (auth_token.strip() if auth_token else None)
+        self.auth_token = auth_token.strip() if auth_token else None
 
     def create_server(self, host: str, port: int) -> ThreadingHTTPServer:
         """Create the HTTP server so tests can run it on an ephemeral port."""
@@ -59,7 +66,9 @@ class HttpChannel(BaseChannel):
             def do_POST(self) -> None:  # noqa: N802
                 try:
                     if self.path == "/chat":
-                        self._send_json(channel._handle_chat(self._read_json(), request_path=self.path))
+                        self._send_json(
+                            channel._handle_chat(self._read_json(), request_path=self.path)
+                        )
                         return
                     if self.path == "/benchmark/run":
                         try:
@@ -218,7 +227,10 @@ class HttpChannel(BaseChannel):
             record = self.approval_store.approve(approval_id)
         except Exception as exc:
             raise HttpErrorResponse(status_code=404, error=str(exc)) from exc
-        return {"approval_id": str(record.get("approval_id", "")), "status": str(record.get("status", ""))}
+        return {
+            "approval_id": str(record.get("approval_id", "")),
+            "status": str(record.get("status", "")),
+        }
 
     def _handle_approval_reject(self, approval_id: str) -> dict[str, object]:
         """POST /approvals/{id}/reject — reject a pending request."""
@@ -228,7 +240,10 @@ class HttpChannel(BaseChannel):
             record = self.approval_store.reject(approval_id)
         except Exception as exc:
             raise HttpErrorResponse(status_code=404, error=str(exc)) from exc
-        return {"approval_id": str(record.get("approval_id", "")), "status": str(record.get("status", ""))}
+        return {
+            "approval_id": str(record.get("approval_id", "")),
+            "status": str(record.get("status", "")),
+        }
 
     # ---- auth helpers ----
 

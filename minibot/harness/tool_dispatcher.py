@@ -55,9 +55,15 @@ class ToolDispatcher:
         self.memory_recall = memory_recall
         self.registry = registry or self._build_default_registry()
         self.approval_manager = approval_manager or ApprovalManager(self.policy_manager.policy)
-        self.redactor = redactor or SensitiveInfoRedactor(list(self.policy_manager.policy.get("sensitive_patterns", [])))
-        dedupe_enabled = bool(dict(self.policy_manager.policy.get("dedupe", {})).get("enabled", True))
-        self.duplicate_detector = duplicate_detector or DuplicateCallDetector(enabled=dedupe_enabled)
+        self.redactor = redactor or SensitiveInfoRedactor(
+            list(self.policy_manager.policy.get("sensitive_patterns", []))
+        )
+        dedupe_enabled = bool(
+            dict(self.policy_manager.policy.get("dedupe", {})).get("enabled", True)
+        )
+        self.duplicate_detector = duplicate_detector or DuplicateCallDetector(
+            enabled=dedupe_enabled
+        )
         self.retry_manager = retry_manager or RetryManager(self.policy_manager.policy)
         self.partial_success_handler = partial_success_handler or PartialSuccessHandler()
         self.sandbox_policy = sandbox_policy or SandboxPolicy()
@@ -134,20 +140,28 @@ class ToolDispatcher:
                                 failure_category="approval_rejected",
                                 metadata=approval_metadata,
                             )
-                            result_record = self._redact_result_record(tool_result.to_result_record())
-                            trace_record = self._redact_trace_record(tool_result.to_trace_record(arguments))
+                            result_record = self._redact_result_record(
+                                tool_result.to_result_record()
+                            )
+                            trace_record = self._redact_trace_record(
+                                tool_result.to_trace_record(arguments)
+                            )
                             self.duplicate_detector.remember(signature, result_record)
                             results.append(result_record)
                             trace.append(trace_record)
                             continue
-                approval = self.approval_manager.decide(tool_name, requires_approval=requires_approval)
+                approval = self.approval_manager.decide(
+                    tool_name, requires_approval=requires_approval
+                )
                 if requires_approval and resolved_approval is None and not approval.approved:
                     redacted_arguments, redacted_fields = self.redactor.redact_value(arguments)
                     pending = self.approval_store.create_pending(
                         session_id=str(dispatch_context.get("session_id", "")),
                         user_id=str(dispatch_context.get("user_id", "")),
                         tool_name=tool_name,
-                        arguments=dict(redacted_arguments if isinstance(redacted_arguments, dict) else {}),
+                        arguments=dict(
+                            redacted_arguments if isinstance(redacted_arguments, dict) else {}
+                        ),
                         risk_level="gray",
                         reason=approval.reason,
                     )
@@ -173,14 +187,18 @@ class ToolDispatcher:
                         execute=lambda: self._execute_tool(tool, arguments),
                     )
                     tool_result = outcome.result
-                    self.last_execution_metadata["retry_count"] = int(self.last_execution_metadata["retry_count"]) + outcome.retry_count
+                    self.last_execution_metadata["retry_count"] = (
+                        int(self.last_execution_metadata["retry_count"]) + outcome.retry_count
+                    )
                     self.last_execution_metadata["retry_errors"].extend(outcome.retry_errors)
                     if outcome.downgrade_reason is not None:
                         self.last_execution_metadata["downgrade_reason"] = outcome.downgrade_reason
                     tool_result.metadata.setdefault("retry_count", outcome.retry_count)
                     tool_result.metadata.setdefault("retry_errors", list(outcome.retry_errors))
                     if outcome.downgrade_reason is not None:
-                        tool_result.metadata.setdefault("downgrade_reason", outcome.downgrade_reason)
+                        tool_result.metadata.setdefault(
+                            "downgrade_reason", outcome.downgrade_reason
+                        )
                     if approval_metadata:
                         tool_result.metadata.update(approval_metadata)
             except ToolError as exc:
@@ -213,10 +231,16 @@ class ToolDispatcher:
         partial_summary = self.partial_success_handler.evaluate(results)
         self.last_execution_metadata["partial_success"] = partial_summary.partial_success
         if self.last_execution_metadata["failure_category"] is None:
-            approval_required = next((item for item in results if item.get("status") == "approval_required"), None)
+            approval_required = next(
+                (item for item in results if item.get("status") == "approval_required"), None
+            )
             if approval_required is not None:
-                self.last_execution_metadata["failure_category"] = approval_required.get("failure_category")
-            failed = next((item for item in results if item.get("status") in {"failed", "blocked"}), None)
+                self.last_execution_metadata["failure_category"] = approval_required.get(
+                    "failure_category"
+                )
+            failed = next(
+                (item for item in results if item.get("status") in {"failed", "blocked"}), None
+            )
             if failed is not None:
                 self.last_execution_metadata["failure_category"] = failed.get("failure_category")
         return results, trace
@@ -279,7 +303,11 @@ class ToolDispatcher:
             error=previous.get("error"),
             failure_category=previous.get("failure_category"),
             metadata=metadata,
-            status_override=str(previous.get("status")) if previous.get("status") not in {None, "success", "failed"} else None,
+            status_override=(
+                str(previous.get("status"))
+                if previous.get("status") not in {None, "success", "failed"}
+                else None
+            ),
         )
 
     def _build_default_registry(self) -> ToolRegistry:

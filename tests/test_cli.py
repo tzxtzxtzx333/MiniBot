@@ -167,7 +167,10 @@ def test_chat_command_persists_unicode_trace() -> None:
     matching_runs = []
     for run_path in (ROOT / ".minibot" / "runs").glob("*.json"):
         payload = json.loads(run_path.read_text(encoding="utf-8"))
-        if payload.get("user_input") == HELLO and payload.get("final_response") == f"MiniBot echo: {HELLO}":
+        if (
+            payload.get("user_input") == HELLO
+            and payload.get("final_response") == f"MiniBot echo: {HELLO}"
+        ):
             matching_runs.append((run_path, payload))
     assert matching_runs
     run_path, payload = max(matching_runs, key=lambda item: item[0].stat().st_mtime)
@@ -369,15 +372,22 @@ def test_benchmark_reports_safety_results_and_metrics() -> None:
     assert "avg_latency" in payload
     assert any(result["category"] == "safety" for result in payload["results"])
 
-    safety_result = next(result for result in payload["results"] if result["id"] == "safety_shell_block_001")
+    safety_result = next(
+        result for result in payload["results"] if result["id"] == "safety_shell_block_001"
+    )
     assert safety_result["status"] in {"passed", "failed"}
     assert safety_result["counted_in_pass_rate"] is True
     assert safety_result["failure_category"] == "blocked_by_policy"
-    assert any(trace["tool_name"] == "shell_exec" and trace["status"] == "blocked" for trace in safety_result["tool_trace"])
+    assert any(
+        trace["tool_name"] == "shell_exec" and trace["status"] == "blocked"
+        for trace in safety_result["tool_trace"]
+    )
 
 
 def test_benchmark_command_supports_explicit_fake_mode_report() -> None:
-    completed = run_cli("benchmark", "--mode", "fake", "--profile", "safety", "--report", "reports/run_fake_v1.json")
+    completed = run_cli(
+        "benchmark", "--mode", "fake", "--profile", "safety", "--report", "reports/run_fake_v1.json"
+    )
     assert completed.returncode == 0
     payload = json.loads(completed.stdout)
     assert payload["run_mode"] == "fake"
@@ -404,7 +414,9 @@ def test_benchmark_command_accepts_safety_profile_argument() -> None:
 
 
 def test_benchmark_parser_accepts_real_agent_profile() -> None:
-    args = minibot_cli.build_parser().parse_args(["benchmark", "--mode", "real", "--scope", "core", "--profile", "real-agent"])
+    args = minibot_cli.build_parser().parse_args(
+        ["benchmark", "--mode", "real", "--scope", "core", "--profile", "real-agent"]
+    )
     assert args.command == "benchmark"
     assert args.profile == "real-agent"
     assert args.mode == "real"
@@ -425,12 +437,16 @@ def test_benchmark_command_accepts_context_profiles() -> None:
     assert "avg_prompt_tokens" in optimized_payload
     assert optimized_payload["token_estimator"] == "ceil_len_div_4"
 
-    realistic_baseline = run_cli("benchmark", "--mode", "fake", "--profile", "context-realistic-baseline")
+    realistic_baseline = run_cli(
+        "benchmark", "--mode", "fake", "--profile", "context-realistic-baseline"
+    )
     assert realistic_baseline.returncode == 0
     realistic_baseline_payload = json.loads(realistic_baseline.stdout)
     assert realistic_baseline_payload["benchmark_profile"] == "context-realistic-baseline"
 
-    realistic_optimized = run_cli("benchmark", "--mode", "fake", "--profile", "context-realistic-optimized")
+    realistic_optimized = run_cli(
+        "benchmark", "--mode", "fake", "--profile", "context-realistic-optimized"
+    )
     assert realistic_optimized.returncode == 0
     realistic_optimized_payload = json.loads(realistic_optimized.stdout)
     assert realistic_optimized_payload["benchmark_profile"] == "context-realistic-optimized"
@@ -455,7 +471,9 @@ def test_benchmark_command_real_mode_missing_config_generates_report_and_fails()
     report_path = ROOT / "reports" / "run_real_v1.json"
     if report_path.exists():
         report_path.unlink()
-    completed = run_cli("benchmark", "--mode", "real", "--scope", "core", "--report", "reports/run_real_v1.json")
+    completed = run_cli(
+        "benchmark", "--mode", "real", "--scope", "core", "--report", "reports/run_real_v1.json"
+    )
     assert completed.returncode == 1
     payload = json.loads(completed.stdout)
     assert payload["run_mode"] == "real"
@@ -467,7 +485,9 @@ def test_benchmark_command_real_mode_missing_config_generates_report_and_fails()
     assert report_path.exists()
 
 
-def test_benchmark_command_real_mode_http_error_generates_report_without_traceback(monkeypatch, capsys) -> None:
+def test_benchmark_command_real_mode_http_error_generates_report_without_traceback(
+    monkeypatch, capsys
+) -> None:
     class _FakeHttpError(urllib.error.HTTPError):
         def __init__(self) -> None:
             super().__init__(
@@ -491,7 +511,15 @@ def test_benchmark_command_real_mode_http_error_generates_report_without_traceba
     monkeypatch.setattr("urllib.request.urlopen", fake_urlopen)
 
     exit_code = minibot_cli.main(
-        ["benchmark", "--mode", "real", "--scope", "core", "--report", "reports/run_real_http_error_v1.json"]
+        [
+            "benchmark",
+            "--mode",
+            "real",
+            "--scope",
+            "core",
+            "--report",
+            "reports/run_real_http_error_v1.json",
+        ]
     )
 
     captured = capsys.readouterr()
@@ -541,7 +569,10 @@ def test_chat_command_weather_mock_and_real_mode_are_distinct(monkeypatch) -> No
     after = {path.name for path in (ROOT / ".minibot" / "runs").glob("*.json")}
     new_files = after - before
     assert new_files
-    run_path = max((ROOT / ".minibot" / "runs" / name for name in new_files), key=lambda path: path.stat().st_mtime)
+    run_path = max(
+        (ROOT / ".minibot" / "runs" / name for name in new_files),
+        key=lambda path: path.stat().st_mtime,
+    )
     payload = json.loads(run_path.read_text(encoding="utf-8"))
     assert payload["tool_results"][0]["metadata"]["provider_status"] == "mock"
     assert payload["tool_results"][0]["metadata"]["mock_provider"] is True
@@ -580,8 +611,6 @@ def test_chat_command_routes_nearby_poi_queries_to_map_poi_search() -> None:
     assert payload["tool_calls"][0]["tool_name"] != "web_search"
 
 
-
-
 def test_status_command_reports_real_mode_config_error_without_fake_fallback() -> None:
     completed = run_cli_with_env(
         "status",
@@ -611,7 +640,9 @@ def test_chat_command_fails_in_real_mode_when_model_config_missing_without_fake_
     assert "MiniBot tool result: 8192" not in completed.stdout
 
 
-def test_new_command_fails_in_real_mode_when_model_config_missing_without_fake_summary_fallback() -> None:
+def test_new_command_fails_in_real_mode_when_model_config_missing_without_fake_summary_fallback() -> (
+    None
+):
     completed = run_cli_with_env(
         "chat",
         "--message",

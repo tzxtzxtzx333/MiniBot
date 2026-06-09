@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from .plan_schema import TaskPlan, Step
-from .task_executor import TaskExecutor
+from .plan_schema import Step, TaskPlan
 from .replanner_agent import ReplannerAgent
+from .task_executor import TaskExecutor
 
 
 class LongTaskRunner:
@@ -69,7 +69,9 @@ class LongTaskRunner:
             # Build context from prior completed steps
             accumulated = self._build_accumulated_context(plan, outcomes)
 
-            outcome = self._executor.execute_step(plan, step, session_id=session_id, accumulated_context=accumulated)
+            outcome = self._executor.execute_step(
+                plan, step, session_id=session_id, accumulated_context=accumulated
+            )
             outcomes.append(outcome)
 
             if outcome["status"] == "completed":
@@ -80,8 +82,11 @@ class LongTaskRunner:
                 plan.status = "waiting_approval"
                 self._executor.save_plan(plan)
                 if self._task_store:
-                    self._update_task(plan, "waiting_approval",
-                                      pending_approval_id=str(outcome.get("pending_approval_id") or ""))
+                    self._update_task(
+                        plan,
+                        "waiting_approval",
+                        pending_approval_id=str(outcome.get("pending_approval_id") or ""),
+                    )
                 stop_reason = "waiting_approval"
                 stopped = True
 
@@ -179,13 +184,17 @@ class LongTaskRunner:
         run_path = runs_dir / f"{step.run_id}.json"
         try:
             import json
+
             record = json.loads(run_path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
             return None
         for tr in record.get("tool_trace", []):
             meta = dict(tr.get("metadata", {}))
             if meta.get("approval_id"):
-                return {"tool_name": str(tr.get("tool_name", "")), "arguments": dict(tr.get("arguments", {}))}
+                return {
+                    "tool_name": str(tr.get("tool_name", "")),
+                    "arguments": dict(tr.get("arguments", {})),
+                }
         return None
 
     def _execute_approved_tool(self, step: Step, approved_args: dict[str, object]) -> None:
@@ -212,6 +221,7 @@ class LongTaskRunner:
         run_path = runs_dir / f"{step.run_id}.json"
         try:
             import json
+
             record = json.loads(run_path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
             return None

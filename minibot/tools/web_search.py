@@ -7,30 +7,10 @@ import os
 import urllib.error
 import urllib.request
 
-from .base import BaseTool, ToolResult, ToolSpec
+from .base import BaseTool, ToolResult, ToolSpec, provider_metadata
 
 TAVILY_ENDPOINT = "https://api.tavily.com/search"
 MAX_ERROR_SNIPPET = 500
-
-
-def _provider_metadata(
-    *,
-    provider: str,
-    provider_status: str,
-    mock_provider: bool,
-    real_provider: bool,
-    mcp_provider: bool = False,
-    **extra: object,
-) -> dict[str, object]:
-    metadata = {
-        "provider": provider,
-        "provider_status": provider_status,
-        "mock_provider": mock_provider,
-        "real_provider": real_provider,
-        "mcp_provider": mcp_provider,
-    }
-    metadata.update(extra)
-    return metadata
 
 
 class WebSearchTool(BaseTool):
@@ -69,7 +49,7 @@ class WebSearchTool(BaseTool):
                     }
                 ],
             },
-            metadata=_provider_metadata(
+            metadata=provider_metadata(
                 provider="web_search",
                 provider_status="mock",
                 mock_provider=True,
@@ -90,7 +70,7 @@ class WebSearchTool(BaseTool):
                 output=None,
                 error="tavily_config_missing",
                 failure_category="tavily_config_missing",
-                metadata=_provider_metadata(
+                metadata=provider_metadata(
                     provider="web_search",
                     provider_status="missing",
                     mock_provider=False,
@@ -117,7 +97,7 @@ class WebSearchTool(BaseTool):
             data=json.dumps(payload, ensure_ascii=False).encode("utf-8"),
             headers=headers,
         )
-        metadata = _provider_metadata(
+        metadata = provider_metadata(
             provider="web_search",
             provider_status="real",
             mock_provider=False,
@@ -127,7 +107,9 @@ class WebSearchTool(BaseTool):
             max_results=max_results,
         )
         try:
-            with urllib.request.urlopen(request, timeout=self.spec.timeout) as response:  # noqa: S310
+            with urllib.request.urlopen(
+                request, timeout=self.spec.timeout
+            ) as response:  # noqa: S310
                 raw = response.read().decode("utf-8", errors="replace")
                 body = json.loads(raw)
         except urllib.error.HTTPError as exc:
@@ -194,7 +176,11 @@ class WebSearchTool(BaseTool):
     @staticmethod
     def _read_error_body(exc: urllib.error.HTTPError, api_key: str) -> str:
         body = exc.read().decode("utf-8", errors="replace")
-        return body.replace(api_key, "***")[:MAX_ERROR_SNIPPET] if api_key else body[:MAX_ERROR_SNIPPET]
+        return (
+            body.replace(api_key, "***")[:MAX_ERROR_SNIPPET]
+            if api_key
+            else body[:MAX_ERROR_SNIPPET]
+        )
 
     @staticmethod
     def _to_float(value: object) -> float | None:

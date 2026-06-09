@@ -5,15 +5,18 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Callable
 
+from minibot.json_utils import JsonFileError, load_json_file
+
 from .actions import HookActionRegistry, HookResult
 from .matchers import ExactMatcher, RegexMatcher
-from minibot.json_utils import JsonFileError, load_json_file
 
 
 class HookManager:
     """Load hooks, match events, invoke registered actions, and return structured results."""
 
-    def __init__(self, config_path: Path, approval_prompt: Callable[[str], bool] | None = None) -> None:
+    def __init__(
+        self, config_path: Path, approval_prompt: Callable[[str], bool] | None = None
+    ) -> None:
         self.config_path = config_path
         self.approval_prompt = approval_prompt
         self.config = self._load_config()
@@ -30,7 +33,9 @@ class HookManager:
     def defaults(self) -> dict[str, object]:
         return dict(self.config.get("defaults", {}))
 
-    def trigger(self, event: str, match_value: str, context: dict[str, object] | None = None) -> list[HookResult]:
+    def trigger(
+        self, event: str, match_value: str, context: dict[str, object] | None = None
+    ) -> list[HookResult]:
         """Evaluate hooks for one event and return structured execution results."""
 
         runtime_context = dict(context or {})

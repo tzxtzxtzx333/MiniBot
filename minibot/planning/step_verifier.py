@@ -80,7 +80,11 @@ class StepVerifier:
             }
 
         # --- file_write verification ---
-        if step.expected_output and "文件" in step.expected_output and "file_write" in str(step.tool_hints):
+        if (
+            step.expected_output
+            and "文件" in step.expected_output
+            and "file_write" in str(step.tool_hints)
+        ):
             file_write_success = any(
                 tr.get("tool_name") == "file_write" and tr.get("status") == "success"
                 for tr in tool_results
@@ -101,9 +105,7 @@ class StepVerifier:
             }
 
         # --- fallback: if tool succeeded but response empty, still count as completed ---
-        any_success = any(
-            tr.get("status") == "success" for tr in tool_results
-        )
+        any_success = any(tr.get("status") == "success" for tr in tool_results)
         if any_success:
             return {
                 "status": "completed",

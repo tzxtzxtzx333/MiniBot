@@ -17,9 +17,16 @@ class VerifierAgent:
         """Return a lightweight verification decision and reason."""
 
         if expected_behavior:
-            matched = [item for item in expected_behavior if self._matches_behavior(final_response, tool_results or [], item)]
+            matched = [
+                item
+                for item in expected_behavior
+                if self._matches_behavior(final_response, tool_results or [], item)
+            ]
             if matched:
-                return {"verified": True, "verifier_reason": f"matched {len(matched)}/{len(expected_behavior)} expected behaviors"}
+                return {
+                    "verified": True,
+                    "verifier_reason": f"matched {len(matched)}/{len(expected_behavior)} expected behaviors",
+                }
             verified = bool(final_response.strip())
             reason = (
                 "non-empty response available for lightweight verifier"
@@ -28,12 +35,18 @@ class VerifierAgent:
             )
             return {"verified": verified, "verifier_reason": reason}
 
-        if "tool result" in final_response.lower() or "partial success" in final_response.lower() or "echo" in final_response.lower():
+        if (
+            "tool result" in final_response.lower()
+            or "partial success" in final_response.lower()
+            or "echo" in final_response.lower()
+        ):
             return {"verified": True, "verifier_reason": f"response addressed goal: {user_goal}"}
         return {"verified": False, "verifier_reason": f"response may not satisfy goal: {user_goal}"}
 
     @staticmethod
-    def _matches_behavior(final_response: str, tool_results: list[dict[str, object]], behavior: str) -> bool:
+    def _matches_behavior(
+        final_response: str, tool_results: list[dict[str, object]], behavior: str
+    ) -> bool:
         lowered = behavior.lower()
         if lowered in final_response.lower():
             return True

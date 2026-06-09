@@ -12,7 +12,6 @@ from minibot.harness.model_client import BaseModelClient, ModelPlan, ToolCall
 from minibot.json_utils import load_json_file
 from minibot.tools.base import BaseTool, ToolResult, ToolSpec
 
-
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -162,7 +161,11 @@ class MultiToolPlanModel(BaseModelClient):
         return ModelPlan(
             assistant_message=None,
             tool_calls=calls,
-            raw_plan={"mode": "tool_call", "reason": "partial_success_test", "tool_calls": [call.to_trace() for call in calls]},
+            raw_plan={
+                "mode": "tool_call",
+                "reason": "partial_success_test",
+                "tool_calls": [call.to_trace() for call in calls],
+            },
         )
 
 
@@ -189,7 +192,12 @@ def test_high_risk_tool_can_require_approval() -> None:
         )
         app = MiniBotApp(temp_root)
         results, _ = app.runtime.tool_dispatcher.dispatch(
-            [{"tool_name": "file_write", "arguments": {"path": "notes/approval.txt", "content": "blocked"}}],
+            [
+                {
+                    "tool_name": "file_write",
+                    "arguments": {"path": "notes/approval.txt", "content": "blocked"},
+                }
+            ],
             dispatch_context={"user_id": "tester", "session_id": "approval-dispatch"},
         )
         assert results[0]["status"] == "approval_required"
@@ -197,12 +205,18 @@ def test_high_risk_tool_can_require_approval() -> None:
         assert results[0]["metadata"]["approval_required"] is True
         assert results[0]["metadata"]["approval_status"] == "pending"
         pending_path = app.runtime.workspace.approvals_pending_file
-        lines = [json.loads(line) for line in pending_path.read_text(encoding="utf-8").splitlines() if line.strip()]
+        lines = [
+            json.loads(line)
+            for line in pending_path.read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        ]
         assert lines
         assert lines[0]["tool_name"] == "file_write"
         assert lines[0]["status"] == "pending"
         assert lines[0]["user_id"] == "tester"
-        assert not (temp_root / ".minibot" / "sandbox_workspace" / "notes" / "approval.txt").exists()
+        assert not (
+            temp_root / ".minibot" / "sandbox_workspace" / "notes" / "approval.txt"
+        ).exists()
     finally:
         shutil.rmtree(temp_root, ignore_errors=True)
 
@@ -219,7 +233,9 @@ def test_approval_store_list_pending_supports_utf8_bom() -> None:
             "arguments": {"path": "notes/demo.txt", "content": "hello"},
             "request_signature": "sig-1",
         }
-        store.pending_file.write_text("\ufeff" + json.dumps(payload, ensure_ascii=False) + "\n", encoding="utf-8")
+        store.pending_file.write_text(
+            "\ufeff" + json.dumps(payload, ensure_ascii=False) + "\n", encoding="utf-8"
+        )
         pending = store.list_pending()
         assert len(pending) == 1
         assert pending[0]["approval_id"] == "bom-pending"
@@ -236,7 +252,9 @@ def test_approval_store_counts_supports_utf8_bom_in_resolved_file() -> None:
             {"approval_id": "a2", "status": "rejected", "request_signature": "sig-b"},
         ]
         store.resolved_file.write_text(
-            "\ufeff" + "\n".join(json.dumps(line, ensure_ascii=False) for line in resolved_lines) + "\n",
+            "\ufeff"
+            + "\n".join(json.dumps(line, ensure_ascii=False) for line in resolved_lines)
+            + "\n",
             encoding="utf-8",
         )
         counts = store.counts()
@@ -282,7 +300,9 @@ def test_approved_request_can_execute_on_retry() -> None:
         first = app.runtime.agent_loop.handle_message(
             ChannelMessage(channel="test", user_id="tester", session_id="s1", content=message)
         )
-        first_run = json.loads((app.runtime.workspace.runs_dir / f"{first.run_id}.json").read_text(encoding="utf-8"))
+        first_run = json.loads(
+            (app.runtime.workspace.runs_dir / f"{first.run_id}.json").read_text(encoding="utf-8")
+        )
         approval_id = first_run["tool_results"][0]["metadata"]["approval_id"]
         store = ApprovalStore(app.runtime.workspace.approvals_dir)
         store.approve(approval_id)
@@ -290,7 +310,9 @@ def test_approved_request_can_execute_on_retry() -> None:
         second = app.runtime.agent_loop.handle_message(
             ChannelMessage(channel="test", user_id="tester", session_id="s2", content=message)
         )
-        second_run = json.loads((app.runtime.workspace.runs_dir / f"{second.run_id}.json").read_text(encoding="utf-8"))
+        second_run = json.loads(
+            (app.runtime.workspace.runs_dir / f"{second.run_id}.json").read_text(encoding="utf-8")
+        )
         assert second_run["tool_results"][0]["status"] == "success"
         assert second_run["tool_results"][0]["metadata"]["approval_status"] == "approved"
         assert second_run["tool_results"][0]["metadata"]["approval_required"] is False
@@ -315,7 +337,9 @@ def test_rejected_request_stays_blocked_on_retry() -> None:
         first = app.runtime.agent_loop.handle_message(
             ChannelMessage(channel="test", user_id="tester", session_id="s1", content=message)
         )
-        first_run = json.loads((app.runtime.workspace.runs_dir / f"{first.run_id}.json").read_text(encoding="utf-8"))
+        first_run = json.loads(
+            (app.runtime.workspace.runs_dir / f"{first.run_id}.json").read_text(encoding="utf-8")
+        )
         approval_id = first_run["tool_results"][0]["metadata"]["approval_id"]
         store = ApprovalStore(app.runtime.workspace.approvals_dir)
         store.reject(approval_id)
@@ -323,7 +347,9 @@ def test_rejected_request_stays_blocked_on_retry() -> None:
         second = app.runtime.agent_loop.handle_message(
             ChannelMessage(channel="test", user_id="tester", session_id="s2", content=message)
         )
-        second_run = json.loads((app.runtime.workspace.runs_dir / f"{second.run_id}.json").read_text(encoding="utf-8"))
+        second_run = json.loads(
+            (app.runtime.workspace.runs_dir / f"{second.run_id}.json").read_text(encoding="utf-8")
+        )
         assert second_run["tool_results"][0]["status"] == "failed"
         assert second_run["tool_results"][0]["failure_category"] == "approval_rejected"
         assert second_run["tool_results"][0]["metadata"]["approval_status"] == "rejected"
@@ -343,12 +369,18 @@ def test_blacklisted_command_cannot_be_approved_or_queued() -> None:
         )
         app = MiniBotApp(temp_root)
         result = app.runtime.agent_loop.handle_message(
-            ChannelMessage(channel="test", user_id="tester", session_id="blk1", content="shell_exec rm -rf /")
+            ChannelMessage(
+                channel="test", user_id="tester", session_id="blk1", content="shell_exec rm -rf /"
+            )
         )
-        run_record = json.loads((app.runtime.workspace.runs_dir / f"{result.run_id}.json").read_text(encoding="utf-8"))
+        run_record = json.loads(
+            (app.runtime.workspace.runs_dir / f"{result.run_id}.json").read_text(encoding="utf-8")
+        )
         assert run_record["tool_results"][0]["failure_category"] == "blocked_by_policy"
         assert run_record["tool_results"][0]["status"] == "blocked"
-        assert app.runtime.workspace.approvals_pending_file.read_text(encoding="utf-8").strip() == ""
+        assert (
+            app.runtime.workspace.approvals_pending_file.read_text(encoding="utf-8").strip() == ""
+        )
     finally:
         shutil.rmtree(temp_root, ignore_errors=True)
 
@@ -391,9 +423,16 @@ def test_memory_write_requires_approval_when_graylisted() -> None:
         )
         app = MiniBotApp(temp_root)
         result = app.runtime.agent_loop.handle_message(
-            ChannelMessage(channel="test", user_id="tester", session_id="mw1", content="remember approval gated memory")
+            ChannelMessage(
+                channel="test",
+                user_id="tester",
+                session_id="mw1",
+                content="remember approval gated memory",
+            )
         )
-        run_record = json.loads((app.runtime.workspace.runs_dir / f"{result.run_id}.json").read_text(encoding="utf-8"))
+        run_record = json.loads(
+            (app.runtime.workspace.runs_dir / f"{result.run_id}.json").read_text(encoding="utf-8")
+        )
         assert run_record["tool_results"][0]["tool_name"] == "memory_write"
         assert run_record["tool_results"][0]["status"] == "approval_required"
         assert run_record["tool_results"][0]["failure_category"] == "approval_required"
@@ -413,9 +452,16 @@ def test_python_exec_requires_approval_when_graylisted() -> None:
         )
         app = MiniBotApp(temp_root)
         result = app.runtime.agent_loop.handle_message(
-            ChannelMessage(channel="test", user_id="tester", session_id="py1", content="run python code print(1+1)")
+            ChannelMessage(
+                channel="test",
+                user_id="tester",
+                session_id="py1",
+                content="run python code print(1+1)",
+            )
         )
-        run_record = json.loads((app.runtime.workspace.runs_dir / f"{result.run_id}.json").read_text(encoding="utf-8"))
+        run_record = json.loads(
+            (app.runtime.workspace.runs_dir / f"{result.run_id}.json").read_text(encoding="utf-8")
+        )
         assert run_record["tool_results"][0]["tool_name"] == "python_exec"
         assert run_record["tool_results"][0]["status"] == "approval_required"
         assert run_record["tool_results"][0]["failure_category"] == "approval_required"
@@ -435,9 +481,13 @@ def test_shell_exec_requires_approval_when_graylisted() -> None:
         )
         app = MiniBotApp(temp_root)
         result = app.runtime.agent_loop.handle_message(
-            ChannelMessage(channel="test", user_id="tester", session_id="sh1", content="shell_exec echo hello")
+            ChannelMessage(
+                channel="test", user_id="tester", session_id="sh1", content="shell_exec echo hello"
+            )
         )
-        run_record = json.loads((app.runtime.workspace.runs_dir / f"{result.run_id}.json").read_text(encoding="utf-8"))
+        run_record = json.loads(
+            (app.runtime.workspace.runs_dir / f"{result.run_id}.json").read_text(encoding="utf-8")
+        )
         assert run_record["tool_results"][0]["tool_name"] == "shell_exec"
         assert run_record["tool_results"][0]["status"] == "approval_required"
         assert run_record["tool_results"][0]["failure_category"] == "approval_required"
@@ -532,17 +582,24 @@ def test_docker_unavailable_returns_structured_failure() -> None:
 def test_retry_manager_retries_and_recovers() -> None:
     app = MiniBotApp(ROOT)
     app.runtime.tool_dispatcher.registry.register(FlakyTool())
-    results, trace = app.runtime.tool_dispatcher.dispatch([{"tool_name": "flaky_tool", "arguments": {}}])
+    results, trace = app.runtime.tool_dispatcher.dispatch(
+        [{"tool_name": "flaky_tool", "arguments": {}}]
+    )
     assert results[0]["status"] == "success"
     assert results[0]["output"]["status"] == "recovered"
     assert trace[0]["metadata"]["retry_count"] == 2
-    assert trace[0]["metadata"]["retry_errors"] == ["temporary_network_error", "temporary_network_error"]
+    assert trace[0]["metadata"]["retry_errors"] == [
+        "temporary_network_error",
+        "temporary_network_error",
+    ]
 
 
 def test_retry_exhaustion_can_downgrade() -> None:
     app = MiniBotApp(ROOT)
     app.runtime.tool_dispatcher.registry.register(DowngradeTool())
-    results, trace = app.runtime.tool_dispatcher.dispatch([{"tool_name": "downgrade_tool", "arguments": {}}])
+    results, trace = app.runtime.tool_dispatcher.dispatch(
+        [{"tool_name": "downgrade_tool", "arguments": {}}]
+    )
     assert results[0]["status"] == "success"
     assert results[0]["metadata"]["downgraded"] is True
     assert trace[0]["metadata"]["downgrade_reason"] == "retry_exhausted"
@@ -574,7 +631,9 @@ def test_agent_loop_records_partial_success_for_mixed_tool_results() -> None:
     app = MiniBotApp(ROOT)
     app.runtime.agent_loop.model_client = MultiToolPlanModel()
     result = app.runtime.agent_loop.handle_message(
-        ChannelMessage(channel="test", user_id="tester", session_id="partial-success", content="run two tools")
+        ChannelMessage(
+            channel="test", user_id="tester", session_id="partial-success", content="run two tools"
+        )
     )
     run_path = app.runtime.workspace.runs_dir / f"{result.run_id}.json"
     record = json.loads(run_path.read_text(encoding="utf-8"))
@@ -596,7 +655,9 @@ def test_cli_style_multi_tool_plan_records_partial_success() -> None:
     app = MiniBotApp(ROOT)
     app.runtime.agent_loop.model_client = MultiToolPlanModel()
     result = app.runtime.agent_loop.handle_message(
-        ChannelMessage(channel="test", user_id="tester", session_id="partial-cli", content="stub tool plan")
+        ChannelMessage(
+            channel="test", user_id="tester", session_id="partial-cli", content="stub tool plan"
+        )
     )
     run_path = app.runtime.workspace.runs_dir / f"{result.run_id}.json"
     record = json.loads(run_path.read_text(encoding="utf-8"))
@@ -609,8 +670,6 @@ def test_cli_style_multi_tool_plan_records_partial_success() -> None:
     assert record["partial_success"] is True
     assert "calculator=5" in result.response
     assert "shell_exec=blacklisted_command" in result.response
-
-
 
 
 def test_english_python_exec_phrase_triggers_sandbox_failure() -> None:
@@ -641,6 +700,7 @@ def test_english_python_exec_phrase_triggers_sandbox_failure() -> None:
 
 # ── tool-level blacklist ──────────────────────────────────────────
 
+
 def test_tool_level_blacklist_blocks_before_execution() -> None:
     """ToolPolicyManager.validate() raises ToolError for blacklisted tools."""
     temp_root = _prepare_temp_root()
@@ -653,7 +713,10 @@ def test_tool_level_blacklist_blocks_before_execution() -> None:
         assert results[0]["status"] == "blocked"
         assert results[0]["success"] is False
         assert results[0]["failure_category"] == "blocked_by_policy"
-        assert "blacklisted" in results[0]["error"].lower() or "blocked_by_policy" in results[0]["error"]
+        assert (
+            "blacklisted" in results[0]["error"].lower()
+            or "blocked_by_policy" in results[0]["error"]
+        )
         assert results[0].get("output") is None or results[0].get("output") == ""
         assert trace[0]["status"] == "blocked"
     finally:
@@ -685,7 +748,12 @@ def test_tool_level_blacklist_recorded_in_run_record_via_agent_loop() -> None:
         _write_policy(temp_root, {"blacklist": ["memory_write"]})
         app = MiniBotApp(temp_root)
         result = app.runtime.agent_loop.handle_message(
-            ChannelMessage(channel="test", user_id="tester", session_id="tblk1", content="remember blacklisted tool")
+            ChannelMessage(
+                channel="test",
+                user_id="tester",
+                session_id="tblk1",
+                content="remember blacklisted tool",
+            )
         )
         run_record = json.loads(
             (app.runtime.workspace.runs_dir / f"{result.run_id}.json").read_text(encoding="utf-8")

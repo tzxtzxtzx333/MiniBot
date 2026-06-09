@@ -22,7 +22,7 @@ class MemoryAgent:
                 "memory_fact": None,
                 "reason": "history_only",
             }
-        fact = match.group(1).strip().strip("“”\"")
+        fact = match.group(1).strip().strip('“”"')
         return {
             "store_memory": bool(fact),
             "store_history": True,

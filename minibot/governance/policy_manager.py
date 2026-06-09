@@ -16,14 +16,20 @@ class ToolPolicyManager:
         raw = dict(load_json_file(project_root / "configs" / "policy.json"))
         self.policy = self._normalize_policy(raw)
 
-    def validate(self, tool_name: str, payload: dict[str, object], spec: ToolSpec | None = None) -> None:
+    def validate(
+        self, tool_name: str, payload: dict[str, object], spec: ToolSpec | None = None
+    ) -> None:
         """Raise a structured error when a tool call violates policy."""
 
         if tool_name in self.policy["blacklist"]:
             raise ToolError("blocked_by_policy", "blocked_by_policy")
         self._validate_shell_blacklist(payload)
         self._validate_parameter_limits(tool_name, payload)
-        if spec is not None and spec.sandbox_required and tool_name not in {"python_exec", "shell_exec"}:
+        if (
+            spec is not None
+            and spec.sandbox_required
+            and tool_name not in {"python_exec", "shell_exec"}
+        ):
             raise ToolError("sandbox_policy_misconfigured", "blocked_by_policy")
 
     def requires_approval(self, tool_name: str, spec: ToolSpec | None = None) -> bool:
@@ -31,7 +37,9 @@ class ToolPolicyManager:
 
         if tool_name in self.policy["graylist"]:
             return True
-        return bool(spec and spec.risk_level == "high" and tool_name not in self.policy["whitelist"])
+        return bool(
+            spec and spec.risk_level == "high" and tool_name not in self.policy["whitelist"]
+        )
 
     def _validate_shell_blacklist(self, payload: dict[str, object]) -> None:
         command = payload.get("command")

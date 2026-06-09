@@ -41,7 +41,8 @@ class ModelVerifier:
             return cls(mode="fake", provider="fake", model_name="fake", config_source="dedicated")
 
         dedicated = {
-            "provider": (merged.get("MINIBOT_VERIFIER_PROVIDER") or "deepseek").strip() or "deepseek",
+            "provider": (merged.get("MINIBOT_VERIFIER_PROVIDER") or "deepseek").strip()
+            or "deepseek",
             "base_url": (merged.get("MINIBOT_VERIFIER_BASE_URL") or "").strip(),
             "api_key": (merged.get("MINIBOT_VERIFIER_API_KEY") or "").strip(),
             "model_name": (merged.get("MINIBOT_VERIFIER_MODEL_NAME") or "").strip(),
@@ -58,8 +59,12 @@ class ModelVerifier:
 
         model_fallback = {
             "provider": (merged.get("MINIBOT_MODEL_PROVIDER") or "deepseek").strip() or "deepseek",
-            "base_url": (merged.get("MINIBOT_MODEL_BASE_URL") or merged.get("MINIBOT_BASE_URL") or "").strip(),
-            "api_key": (merged.get("MINIBOT_MODEL_API_KEY") or merged.get("MINIBOT_API_KEY") or "").strip(),
+            "base_url": (
+                merged.get("MINIBOT_MODEL_BASE_URL") or merged.get("MINIBOT_BASE_URL") or ""
+            ).strip(),
+            "api_key": (
+                merged.get("MINIBOT_MODEL_API_KEY") or merged.get("MINIBOT_API_KEY") or ""
+            ).strip(),
             "model_name": (merged.get("MINIBOT_MODEL_NAME") or "").strip(),
         }
         if all(model_fallback.values()):
@@ -112,7 +117,11 @@ class ModelVerifier:
             return {
                 "used_model": False,
                 "passed": passed,
-                "reason": "fake model verifier accepted structured response" if passed else "fake model verifier rejected response",
+                "reason": (
+                    "fake model verifier accepted structured response"
+                    if passed
+                    else "fake model verifier rejected response"
+                ),
                 "failure_category": None,
                 "confidence": 0.2,
                 "verifier_mode": "fake",
@@ -132,7 +141,11 @@ class ModelVerifier:
                 "verifier_config_source": self.config_source,
             }
 
-        payload = self._build_payload(final_response=final_response, expected_behavior=expected_behavior, run_record=run_record)
+        payload = self._build_payload(
+            final_response=final_response,
+            expected_behavior=expected_behavior,
+            run_record=run_record,
+        )
         request = urllib.request.Request(
             f"{self.base_url}/chat/completions",
             method="POST",
@@ -236,5 +249,11 @@ class ModelVerifier:
     @staticmethod
     def _load_env(project_root: Path) -> dict[str, str]:
         settings = _parse_dotenv(project_root / ".env")
-        settings.update({key: value for key, value in os.environ.items() if key.startswith(("MINIBOT_", "TAVILY_", "FEISHU_", "LARK_"))})
+        settings.update(
+            {
+                key: value
+                for key, value in os.environ.items()
+                if key.startswith(("MINIBOT_", "TAVILY_", "FEISHU_", "LARK_"))
+            }
+        )
         return settings

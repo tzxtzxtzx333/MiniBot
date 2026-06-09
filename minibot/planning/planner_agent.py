@@ -6,7 +6,7 @@ import json
 import urllib.request
 from uuid import uuid4
 
-from .plan_schema import TaskPlan, Step, plan_from_json, make_single_step_plan
+from .plan_schema import Step, TaskPlan, make_single_step_plan, plan_from_json
 
 
 class PlannerAgent:
@@ -131,7 +131,11 @@ class PlannerAgent:
             import re
 
             # Find the write-related portion of the goal
-            write_match = re.search(r"(?:写入|写到|write\s+(?:to\s+)?)\s*([\w./]+\.(?:md|txt|json))", goal, re.IGNORECASE)
+            write_match = re.search(
+                r"(?:写入|写到|write\s+(?:to\s+)?)\s*([\w./]+\.(?:md|txt|json))",
+                goal,
+                re.IGNORECASE,
+            )
             if write_match:
                 target_file = write_match.group(1)
             else:

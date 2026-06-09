@@ -8,11 +8,32 @@ import sys
 from pathlib import Path
 from uuid import uuid4
 
+import pytest
+
+from minibot.cli import _task_resume
 from minibot.governance.approval_store import ApprovalStore
 from minibot.tasks.store import TaskStore, TaskStoreError
-from minibot.cli import _task_resume
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+# ---------------------------------------------------------------------------
+# fixtures — project-local temp dir to avoid Windows tmp_path PermissionError
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def tmp_tasks_path() -> Path:
+    """Yield a unique temp directory under the project root.
+
+    Uses .tmp_test_roots/ (consistent with the rest of the test suite)
+    instead of pytest's tmp_path, which can hit PermissionError on Windows
+    when the system temp directory is locked by another process.
+    """
+    temp = ROOT / ".tmp_test_roots" / f"task-{uuid4()}"
+    temp.mkdir(parents=True, exist_ok=True)
+    yield temp
+    shutil.rmtree(temp, ignore_errors=True)
 
 MODEL_ENV_KEYS = (
     "MINIBOT_MODEL_MODE",
@@ -85,8 +106,8 @@ def _temp_tasks_dir() -> Path:
 
 
 class TestTaskStoreCreate:
-    def test_create_task_succeeds(self, tmp_path: Path) -> None:
-        store = TaskStore(tmp_path / "tasks")
+    def test_create_task_succeeds(self, tmp_tasks_path: Path) -> None:
+        store = TaskStore(tmp_tasks_path / "tasks")
         record = store.create("翻译这篇文档")
         assert record["task_id"]
         assert record["status"] == "pending"
@@ -94,36 +115,36 @@ class TestTaskStoreCreate:
         assert record["created_at"]
         assert record["updated_at"]
 
-    def test_create_task_with_session_and_user(self, tmp_path: Path) -> None:
-        store = TaskStore(tmp_path / "tasks")
+    def test_create_task_with_session_and_user(self, tmp_tasks_path: Path) -> None:
+        store = TaskStore(tmp_tasks_path / "tasks")
         record = store.create("写一封邮件", session_id="s1", user_id="u1")
         assert record["session_id"] == "s1"
         assert record["user_id"] == "u1"
 
-    def test_create_task_with_metadata(self, tmp_path: Path) -> None:
-        store = TaskStore(tmp_path / "tasks")
+    def test_create_task_with_metadata(self, tmp_tasks_path: Path) -> None:
+        store = TaskStore(tmp_tasks_path / "tasks")
         record = store.create("分析数据", metadata={"priority": "high"})
         assert record["metadata"] == {"priority": "high"}
 
 
 class TestTaskStoreList:
-    def test_list_returns_recent_tasks(self, tmp_path: Path) -> None:
-        store = TaskStore(tmp_path / "tasks")
+    def test_list_returns_recent_tasks(self, tmp_tasks_path: Path) -> None:
+        store = TaskStore(tmp_tasks_path / "tasks")
         store.create("task-a")
         store.create("task-b")
         store.create("task-c")
         result = store.list()
         assert len(result) == 3
 
-    def test_list_respects_limit(self, tmp_path: Path) -> None:
-        store = TaskStore(tmp_path / "tasks")
+    def test_list_respects_limit(self, tmp_tasks_path: Path) -> None:
+        store = TaskStore(tmp_tasks_path / "tasks")
         for i in range(10):
             store.create(f"task-{i}")
         result = store.list(limit=3)
         assert len(result) == 3
 
-    def test_list_filters_by_status(self, tmp_path: Path) -> None:
-        store = TaskStore(tmp_path / "tasks")
+    def test_list_filters_by_status(self, tmp_tasks_path: Path) -> None:
+        store = TaskStore(tmp_tasks_path / "tasks")
         r = store.create("pending-task")
         store.update(r["task_id"], status="running")
         store.create("another-pending")
@@ -132,55 +153,55 @@ class TestTaskStoreList:
         assert all(r["status"] == "pending" for r in pending)
         assert all(r["status"] == "running" for r in running)
 
-    def test_list_empty_on_fresh_store(self, tmp_path: Path) -> None:
-        store = TaskStore(tmp_path / "tasks")
+    def test_list_empty_on_fresh_store(self, tmp_tasks_path: Path) -> None:
+        store = TaskStore(tmp_tasks_path / "tasks")
         assert store.list() == []
 
 
 class TestTaskStoreGet:
-    def test_show_finds_task(self, tmp_path: Path) -> None:
-        store = TaskStore(tmp_path / "tasks")
+    def test_show_finds_task(self, tmp_tasks_path: Path) -> None:
+        store = TaskStore(tmp_tasks_path / "tasks")
         created = store.create("目标")
         found = store.get(created["task_id"])
         assert found is not None
         assert found["task_id"] == created["task_id"]
 
-    def test_show_returns_none_for_missing(self, tmp_path: Path) -> None:
-        store = TaskStore(tmp_path / "tasks")
+    def test_show_returns_none_for_missing(self, tmp_tasks_path: Path) -> None:
+        store = TaskStore(tmp_tasks_path / "tasks")
         assert store.get("nonexistent") is None
 
 
 class TestTaskStoreUpdate:
-    def test_update_modifies_status(self, tmp_path: Path) -> None:
-        store = TaskStore(tmp_path / "tasks")
+    def test_update_modifies_status(self, tmp_tasks_path: Path) -> None:
+        store = TaskStore(tmp_tasks_path / "tasks")
         r = store.create("task")
         updated = store.update(r["task_id"], status="running")
         assert updated["status"] == "running"
         # get should return the latest
         assert store.get(r["task_id"])["status"] == "running"
 
-    def test_update_modifies_last_run_id(self, tmp_path: Path) -> None:
-        store = TaskStore(tmp_path / "tasks")
+    def test_update_modifies_last_run_id(self, tmp_tasks_path: Path) -> None:
+        store = TaskStore(tmp_tasks_path / "tasks")
         r = store.create("task")
         updated = store.update(r["task_id"], last_run_id="run-001")
         assert updated["last_run_id"] == "run-001"
 
-    def test_update_updates_timestamp(self, tmp_path: Path) -> None:
-        store = TaskStore(tmp_path / "tasks")
+    def test_update_updates_timestamp(self, tmp_tasks_path: Path) -> None:
+        store = TaskStore(tmp_tasks_path / "tasks")
         r = store.create("task")
         updated = store.update(r["task_id"], status="running")
         assert updated["updated_at"] != r["updated_at"]
 
-    def test_update_raises_for_missing_task(self, tmp_path: Path) -> None:
-        store = TaskStore(tmp_path / "tasks")
+    def test_update_raises_for_missing_task(self, tmp_tasks_path: Path) -> None:
+        store = TaskStore(tmp_tasks_path / "tasks")
         try:
             store.update("no-such-id", status="running")
             assert False, "expected TaskStoreError"
         except TaskStoreError as exc:
             assert "task_not_found" in str(exc)
 
-    def test_update_rejects_invalid_status(self, tmp_path: Path) -> None:
-        store = TaskStore(tmp_path / "tasks")
+    def test_update_rejects_invalid_status(self, tmp_tasks_path: Path) -> None:
+        store = TaskStore(tmp_tasks_path / "tasks")
         r = store.create("task")
         try:
             store.update(r["task_id"], status="archived")
@@ -188,8 +209,8 @@ class TestTaskStoreUpdate:
         except TaskStoreError as exc:
             assert "invalid_status" in str(exc)
 
-    def test_update_multiple_fields_at_once(self, tmp_path: Path) -> None:
-        store = TaskStore(tmp_path / "tasks")
+    def test_update_multiple_fields_at_once(self, tmp_tasks_path: Path) -> None:
+        store = TaskStore(tmp_tasks_path / "tasks")
         r = store.create("task")
         updated = store.update(
             r["task_id"],
@@ -203,8 +224,8 @@ class TestTaskStoreUpdate:
 
 
 class TestTaskStoreCancel:
-    def test_cancel_sets_status_to_cancelled(self, tmp_path: Path) -> None:
-        store = TaskStore(tmp_path / "tasks")
+    def test_cancel_sets_status_to_cancelled(self, tmp_tasks_path: Path) -> None:
+        store = TaskStore(tmp_tasks_path / "tasks")
         r = store.create("task")
         cancelled = store.cancel(r["task_id"])
         assert cancelled["status"] == "cancelled"
@@ -212,13 +233,13 @@ class TestTaskStoreCancel:
 
 
 class TestTaskStoreJsonlSemantics:
-    def test_jsonl_empty_returns_empty_list(self, tmp_path: Path) -> None:
-        store = TaskStore(tmp_path / "tasks")
+    def test_jsonl_empty_returns_empty_list(self, tmp_tasks_path: Path) -> None:
+        store = TaskStore(tmp_tasks_path / "tasks")
         assert store.list() == []
 
-    def test_last_record_wins_for_same_task_id(self, tmp_path: Path) -> None:
+    def test_last_record_wins_for_same_task_id(self, tmp_tasks_path: Path) -> None:
         """Multiple updates to the same task_id — the latest record wins."""
-        store = TaskStore(tmp_path / "tasks")
+        store = TaskStore(tmp_tasks_path / "tasks")
         r = store.create("evolving task")
         store.update(r["task_id"], status="running")
         store.update(r["task_id"], status="completed", stop_reason="done")
@@ -230,10 +251,17 @@ class TestTaskStoreJsonlSemantics:
         tids = [t["task_id"] for t in all_tasks]
         assert tids.count(r["task_id"]) == 1
 
-    def test_all_valid_statuses_accepted(self, tmp_path: Path) -> None:
-        store = TaskStore(tmp_path / "tasks")
+    def test_all_valid_statuses_accepted(self, tmp_tasks_path: Path) -> None:
+        store = TaskStore(tmp_tasks_path / "tasks")
         r = store.create("status tour")
-        for status in ("pending", "running", "waiting_approval", "completed", "failed", "cancelled"):
+        for status in (
+            "pending",
+            "running",
+            "waiting_approval",
+            "completed",
+            "failed",
+            "cancelled",
+        ):
             store.update(r["task_id"], status=status)
             assert store.get(r["task_id"])["status"] == status
 
@@ -359,7 +387,9 @@ class TestTasksResume:
 
     def test_resume_approval_required_sets_waiting_approval(self) -> None:
         """A task that hits the graylist → approval_required → waiting_approval with pending_approval_id."""
-        created = run_cli("tasks", "create", "--goal", "write notes/task-resume-test.txt content hello")
+        created = run_cli(
+            "tasks", "create", "--goal", "write notes/task-resume-test.txt content hello"
+        )
         assert created.returncode == 0
         task_id = json.loads(created.stdout)["task_id"]
 
@@ -757,7 +787,17 @@ class TestTaskApprovalE2E:
     def test_isolated_temp_root_does_not_pollute_real_approvals(self) -> None:
         """Temp-root tests write to isolated .minibot/; real approvals untouched."""
         real_root_approvals = ROOT / ".minibot" / "approvals"
-        before_pending = len(list((real_root_approvals / "pending.jsonl").read_text(encoding="utf-8-sig").splitlines())) if (real_root_approvals / "pending.jsonl").exists() else 0
+        before_pending = (
+            len(
+                list(
+                    (real_root_approvals / "pending.jsonl")
+                    .read_text(encoding="utf-8-sig")
+                    .splitlines()
+                )
+            )
+            if (real_root_approvals / "pending.jsonl").exists()
+            else 0
+        )
 
         temp_root = _prepare_temp_task_root()
         try:
@@ -770,7 +810,17 @@ class TestTaskApprovalE2E:
             assert approval_store.counts()["pending_count"] == 1
 
             # Real store should be unchanged
-            after_pending = len(list((real_root_approvals / "pending.jsonl").read_text(encoding="utf-8-sig").splitlines())) if (real_root_approvals / "pending.jsonl").exists() else 0
+            after_pending = (
+                len(
+                    list(
+                        (real_root_approvals / "pending.jsonl")
+                        .read_text(encoding="utf-8-sig")
+                        .splitlines()
+                    )
+                )
+                if (real_root_approvals / "pending.jsonl").exists()
+                else 0
+            )
             assert after_pending == before_pending
         finally:
             shutil.rmtree(temp_root, ignore_errors=True)

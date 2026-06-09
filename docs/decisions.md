@@ -9,7 +9,7 @@
 ## 2. 为什么 fake / real 模式并存
 
 - fake 适合本地回归、开发与无外部依赖测试
-- real 适合真实联调、工具决策和简历证明
+- real 适合端到端验证（需配置外部 API key）、工具决策和简历证明
 - 两条路径必须显式区分，real 不能失败后伪装成 fake
 
 ## 3. 为什么真实模型使用 OpenAI-compatible / DeepSeek
@@ -35,7 +35,7 @@
 - 真实飞书接入依赖外部平台配置和 SDK
 - 本地开发与测试不能被外部平台阻塞
 - 因此保留真实路径，同时使用 `feishu-mock` 做回归
-- 即使已完成真实联调，默认 status 仍可能因为未配置环境变量而显示 `feishu_config_present=false`
+- 接入边界代码已完成；未配置环境变量时，默认 status 显示 `feishu_config_present=false`，不会假装成功
 
 ## 7. 为什么 `weather` 是 API provider、`map_route` 是 AMap MCP adapter
 
@@ -64,7 +64,7 @@
 ## 12. 为什么 `web_search` 接 Tavily 而不是继续 mock
 
 - `web_search` 和地图/POI 搜索是两类能力，不能混到 `map_poi_search`
-- Tavily 提供稳定的 HTTP 搜索接口，适合保持现有 ToolDispatcher 不变的前提下接真实 provider
+- Tavily 提供稳定的 HTTP 搜索接口，可在保持现有 ToolDispatcher 不变的前提下配置为真实搜索后端
 - 缺 key 时显式返回 `tavily_config_missing`，不允许 fallback mock 冒充成功
 
 ## 13. 为什么 `ModelVerifier` 独立支持 fake / real 模式

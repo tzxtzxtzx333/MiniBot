@@ -6,7 +6,6 @@ from pathlib import Path
 
 from minibot.evals.model_verifier import ModelVerifier
 
-
 ROOT = Path(__file__).resolve().parents[1]
 
 

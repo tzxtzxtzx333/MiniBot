@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import time
 from dataclasses import dataclass, field
 
@@ -85,7 +86,9 @@ class AgentLoop:
         downgrade_reason: str | None = None
         subagent_trace: list[dict[str, object]] = []
         verifier_reason: str | None = None
-        final_answer = ModelFinalAnswer(content="", final_answer_mode="fake", final_answer_used_tool_results=False)
+        final_answer = ModelFinalAnswer(
+            content="", final_answer_mode="fake", final_answer_used_tool_results=False
+        )
         actual_tool_rounds = 0
         multi_round = False
         tool_rounds_detail: list[dict[str, object]] = []
@@ -100,20 +103,32 @@ class AgentLoop:
         hook_results.extend(self._trigger_hooks("SessionStart", "SessionStart", {"run_id": run_id}))
         self._event(run_id, "UserMessageReceived")
         hook_results.extend(
-            self._trigger_hooks("UserMessageReceived", message.content, {"run_id": run_id, "value": message.content})
+            self._trigger_hooks(
+                "UserMessageReceived", message.content, {"run_id": run_id, "value": message.content}
+            )
         )
         self._event(run_id, "MemoryRecall")
         context = self.context_builder.build(message)
         recalled_text = "\n".join(str(item) for item in context.get("recalled_memories", []))
-        hook_results.extend(self._trigger_hooks("MemoryRecall", recalled_text, {"run_id": run_id, "value": recalled_text}))
+        hook_results.extend(
+            self._trigger_hooks(
+                "MemoryRecall", recalled_text, {"run_id": run_id, "value": recalled_text}
+            )
+        )
         self._event(run_id, "ContextBuild")
         cleaned_context = self.context_builder.clean(context)
         cleaned_context["tool_specs"] = self._tool_specs()
         context_metrics = self.context_builder.measure(cleaned_context)
         context_blob = cleaned_context.get("history", "")
-        hook_results.extend(self._trigger_hooks("ContextBuild", str(context_blob), {"run_id": run_id, "value": str(context_blob)}))
+        hook_results.extend(
+            self._trigger_hooks(
+                "ContextBuild", str(context_blob), {"run_id": run_id, "value": str(context_blob)}
+            )
+        )
         self._event(run_id, "PlaceholderClean")
-        cleaned_placeholders = list(cleaned_context.get("_clean_meta", {}).get("cleaned_placeholders", []))
+        cleaned_placeholders = list(
+            cleaned_context.get("_clean_meta", {}).get("cleaned_placeholders", [])
+        )
         context_summary = self.context_builder.summarize(cleaned_context)
         memory_decision = self.memory_agent.assess(message.content)
         subagent_trace.append(
@@ -182,7 +197,10 @@ class AgentLoop:
                     break
 
                 # --- total tool calls budget check ---
-                if actual_tool_calls_total + len(exec_round_tool_calls) > self.budget.max_tool_calls_total:
+                if (
+                    actual_tool_calls_total + len(exec_round_tool_calls)
+                    > self.budget.max_tool_calls_total
+                ):
                     stop_reason = "max_tool_calls_reached"
                     break
 
@@ -191,15 +209,25 @@ class AgentLoop:
                 pre_tool_hook_results = self._trigger_hooks(
                     "PreToolUse",
                     exec_round_tool_calls[0]["tool_name"],
-                    {"run_id": run_id, "tool_calls": exec_round_tool_calls, "value": exec_round_tool_calls[0]["tool_name"]},
+                    {
+                        "run_id": run_id,
+                        "tool_calls": exec_round_tool_calls,
+                        "value": exec_round_tool_calls[0]["tool_name"],
+                    },
                 )
                 hook_results.extend(pre_tool_hook_results)
                 blocked_by_hook = any(item.get("blocked") for item in pre_tool_hook_results)
                 if blocked_by_hook:
-                    blocking_hook = next((item for item in pre_tool_hook_results if item.get("blocked")), {})
+                    blocking_hook = next(
+                        (item for item in pre_tool_hook_results if item.get("blocked")), {}
+                    )
                     block_reason = str(blocking_hook.get("message") or "blocked_by_hook")
                     if failure_category is None:
-                        failure_category = "approval_denied" if block_reason == "approval_denied" else "blocked_by_hook"
+                        failure_category = (
+                            "approval_denied"
+                            if block_reason == "approval_denied"
+                            else "blocked_by_hook"
+                        )
                     round_tool_results = [
                         {
                             "tool_name": exec_round_tool_calls[0]["tool_name"],
@@ -258,16 +286,28 @@ class AgentLoop:
                     {"run_id": run_id, "value": post_tool_payload},
                 )
                 hook_results.extend(post_tool_results)
-                round_tool_results = self._apply_redactions_to_tool_results(round_tool_results, post_tool_results)
+                round_tool_results = self._apply_redactions_to_tool_results(
+                    round_tool_results, post_tool_results
+                )
                 self._event(run_id, "ToolResultAppend")
 
-                blocked_tool = next((item for item in round_tool_results if item.get("status") == "blocked"), None)
+                blocked_tool = next(
+                    (item for item in round_tool_results if item.get("status") == "blocked"), None
+                )
                 if blocked_tool is not None:
-                    failure_category = str(blocked_tool.get("failure_category") or blocked_tool.get("error") or "blocked")
-                failed_tool = next((item for item in round_tool_results if item.get("status") == "failed"), None)
+                    failure_category = str(
+                        blocked_tool.get("failure_category")
+                        or blocked_tool.get("error")
+                        or "blocked"
+                    )
+                failed_tool = next(
+                    (item for item in round_tool_results if item.get("status") == "failed"), None
+                )
                 if failed_tool is not None:
                     if failure_category is None:
-                        failure_category = str(failed_tool.get("failure_category") or "tool_execution_failed")
+                        failure_category = str(
+                            failed_tool.get("failure_category") or "tool_execution_failed"
+                        )
                     hook_results.extend(
                         self._trigger_hooks(
                             "ToolError",
@@ -278,7 +318,9 @@ class AgentLoop:
 
                 # --- check same-tool-call loop ---
                 for call in exec_round_tool_calls:
-                    key = self._canonical_call_key(call.get("tool_name", ""), dict(call.get("arguments", {})))
+                    key = self._canonical_call_key(
+                        call.get("tool_name", ""), dict(call.get("arguments", {}))
+                    )
                     same_tool_counter[key] = same_tool_counter.get(key, 0) + 1
                     if same_tool_counter[key] > self.budget.max_same_tool_calls:
                         stop_reason = "duplicate_loop_detected"
@@ -286,8 +328,12 @@ class AgentLoop:
 
                 # --- stop checks ---
                 any_blocked = any(r.get("status") == "blocked" for r in round_tool_results)
-                any_approval_required = any(r.get("status") == "approval_required" for r in round_tool_results)
-                any_approval_rejected = any(r.get("status") == "approval_rejected" for r in round_tool_results)
+                any_approval_required = any(
+                    r.get("status") == "approval_required" for r in round_tool_results
+                )
+                any_approval_rejected = any(
+                    r.get("status") == "approval_rejected" for r in round_tool_results
+                )
 
                 # Determine round_stop_reason
                 round_stop: str | None = None
@@ -392,7 +438,9 @@ class AgentLoop:
                 )
                 final_answer = ModelFinalAnswer(
                     content=final_response,
-                    final_answer_mode="fake" if dict(plan.raw_plan).get("model_mode") != "real" else "real",
+                    final_answer_mode=(
+                        "fake" if dict(plan.raw_plan).get("model_mode") != "real" else "real"
+                    ),
                     final_answer_used_tool_results=False,
                 )
             verification = self.verifier_agent.verify(
@@ -412,13 +460,17 @@ class AgentLoop:
             )
 
         hook_results.extend(
-            self._trigger_hooks("BeforeResponse", final_response, {"run_id": run_id, "value": final_response})
+            self._trigger_hooks(
+                "BeforeResponse", final_response, {"run_id": run_id, "value": final_response}
+            )
         )
         final_response = self._apply_redactions_to_value(final_response, hook_results)
         self._event(run_id, "FinalResponseGenerate")
 
         if bool(memory_decision.get("store_memory")) and memory_decision.get("memory_fact"):
-            stored = self.memory_store.write_memory_fact(str(memory_decision["memory_fact"]), include_timestamp=False)
+            stored = self.memory_store.write_memory_fact(
+                str(memory_decision["memory_fact"]), include_timestamp=False
+            )
             subagent_trace.append(
                 {
                     "agent": "MemoryAgent",
@@ -430,7 +482,10 @@ class AgentLoop:
         self.memory_store.append_history(message, final_response)
         if message.content.strip() != "/new":
             current_turn_count = self.memory_store.turn_count()
-            if self.auto_compact_enabled and current_turn_count > self.history_turn_compact_threshold:
+            if (
+                self.auto_compact_enabled
+                and current_turn_count > self.history_turn_compact_threshold
+            ):
                 compacted = self.memory_store.compact_history(
                     source_session_id=message.session_id,
                     compression_trigger="turn_threshold",
@@ -463,49 +518,12 @@ class AgentLoop:
                     )
         self._event(run_id, "HistoryPersist")
         hook_results.extend(
-            self._trigger_hooks("AfterResponse", final_response, {"run_id": run_id, "value": final_response})
+            self._trigger_hooks(
+                "AfterResponse", final_response, {"run_id": run_id, "value": final_response}
+            )
         )
         final_response = self._apply_redactions_to_value(final_response, hook_results)
 
-        self.recorder.finish_run(
-            run_id,
-            response=final_response,
-            model_plan=plan.raw_plan,
-            context_summary=context_summary,
-            tool_calls=tool_calls,
-            tool_results=tool_results,
-            tool_trace=tool_trace,
-            subagent_trace=subagent_trace,
-            hook_results=hook_results,
-            verifier_reason=verifier_reason,
-            failure_category=failure_category,
-            retry_count=retry_count,
-            retry_errors=retry_errors,
-            partial_success=partial_success,
-            downgrade_reason=downgrade_reason,
-            final_answer_mode=final_answer.final_answer_mode,
-            final_answer_model_provider=final_answer.model_provider,
-            final_answer_model_name=final_answer.model_name,
-            final_answer_used_tool_results=final_answer.final_answer_used_tool_results,
-            final_answer_error=final_answer.model_error,
-            raw_final_answer_output=final_answer.raw_final_output,
-            context_metrics=context_metrics,
-            cleaned_placeholders=cleaned_placeholders,
-            compression_events=compression_events,
-            max_tool_rounds=self.budget.max_tool_rounds,
-            actual_tool_rounds=actual_tool_rounds,
-            multi_round=multi_round,
-            tool_rounds_detail=tool_rounds_detail,
-            stop_reason=stop_reason,
-            max_tool_calls_total=self.budget.max_tool_calls_total,
-            actual_tool_calls_total=actual_tool_calls_total,
-            max_runtime_seconds=self.budget.max_runtime_seconds,
-            actual_runtime_seconds=actual_runtime_seconds,
-            max_same_tool_calls=self.budget.max_same_tool_calls,
-            evidence_ids=evidence_ids,
-            evidence_count=len(evidence_ids),
-            tool_output_compressed_to_evidence=tool_output_compressed_to_evidence,
-        )
         self._event(run_id, "RunReportPersist")
         self._event(run_id, "SessionEnd")
         hook_results.extend(self._trigger_hooks("SessionEnd", "SessionEnd", {"run_id": run_id}))
@@ -548,18 +566,28 @@ class AgentLoop:
             evidence_count=len(evidence_ids),
             tool_output_compressed_to_evidence=tool_output_compressed_to_evidence,
         )
-        return AgentLoopResult(run_id=run_id, response=final_response, tool_trace=tool_trace, verifier_reason=verifier_reason)
+        return AgentLoopResult(
+            run_id=run_id,
+            response=final_response,
+            tool_trace=tool_trace,
+            verifier_reason=verifier_reason,
+        )
 
     def _event(self, run_id: str, event: str) -> None:
         self.recorder.append_event(run_id, event)
 
-    def _trigger_hooks(self, event: str, match_value: str, context: dict[str, object]) -> list[dict[str, object]]:
+    def _trigger_hooks(
+        self, event: str, match_value: str, context: dict[str, object]
+    ) -> list[dict[str, object]]:
         return self.hook_manager.trigger(event=event, match_value=match_value, context=context)
 
     def _apply_redactions_to_value(self, value: str, hook_results: list[dict[str, object]]) -> str:
         updated = value
         for result in hook_results:
-            if result.get("redacted_fields") == ["value"] and result.get("updated_value") is not None:
+            if (
+                result.get("redacted_fields") == ["value"]
+                and result.get("updated_value") is not None
+            ):
                 updated = str(result["updated_value"])
         return updated
 
@@ -570,10 +598,11 @@ class AgentLoop:
     ) -> list[dict[str, object]]:
         updated_results = tool_results
         for result in hook_results:
-            if result.get("redacted_fields") == ["value"] and result.get("updated_value") is not None:
+            if (
+                result.get("redacted_fields") == ["value"]
+                and result.get("updated_value") is not None
+            ):
                 try:
-                    import json
-
                     updated_results = json.loads(str(result["updated_value"]))
                 except Exception:  # noqa: BLE001
                     return updated_results
@@ -605,8 +634,16 @@ class AgentLoop:
         evidence_ids: list[str] = []
         compressed = False
         evidence_results: list[dict[str, object]] = []
-        if not self.evidence_enabled or self.evidence_store is None or self.evidence_summarizer is None:
-            return tool_results, {"evidence_ids": evidence_ids, "compressed": compressed, "evidence_results": evidence_results}
+        if (
+            not self.evidence_enabled
+            or self.evidence_store is None
+            or self.evidence_summarizer is None
+        ):
+            return tool_results, {
+                "evidence_ids": evidence_ids,
+                "compressed": compressed,
+                "evidence_results": evidence_results,
+            }
 
         updated: list[dict[str, object]] = []
         for result in tool_results:
@@ -666,7 +703,6 @@ class AgentLoop:
             return output
         if output is None:
             return ""
-        import json
 
         try:
             return json.dumps(output, ensure_ascii=False)
@@ -681,16 +717,18 @@ class AgentLoop:
             source = str(output.get("url") or output.get("path") or output.get("expression") or "")
             if source:
                 return source
-        arguments = dict(result.get("arguments", {})) if isinstance(result.get("arguments"), dict) else {}
-        source = str(arguments.get("url") or arguments.get("path") or arguments.get("expression") or "")
+        arguments = (
+            dict(result.get("arguments", {})) if isinstance(result.get("arguments"), dict) else {}
+        )
+        source = str(
+            arguments.get("url") or arguments.get("path") or arguments.get("expression") or ""
+        )
         if source:
             return source
         return tool_name
 
     @staticmethod
     def _canonical_call_key(tool_name: str, arguments: dict[str, object]) -> str:
-        import json
-
         return json.dumps(
             {"tool_name": tool_name, "arguments": arguments},
             ensure_ascii=False,
@@ -724,6 +762,4 @@ class AgentLoop:
 
 
 def json_dumps(value: object) -> str:
-    import json
-
     return json.dumps(value, ensure_ascii=False)

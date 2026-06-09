@@ -42,11 +42,21 @@ class SummarizerAgent:
         }
 
     def _summarize_fake(self, *, history_text: str, memory_text: str = "") -> str:
-        user_lines = [line.removeprefix("user: ").strip() for line in history_text.splitlines() if line.startswith("user: ")]
-        assistant_lines = [
-            line.removeprefix("assistant: ").strip() for line in history_text.splitlines() if line.startswith("assistant: ")
+        user_lines = [
+            line.removeprefix("user: ").strip()
+            for line in history_text.splitlines()
+            if line.startswith("user: ")
         ]
-        memory_lines = [line.strip()[2:].strip() for line in memory_text.splitlines() if line.strip().startswith("- ")]
+        assistant_lines = [
+            line.removeprefix("assistant: ").strip()
+            for line in history_text.splitlines()
+            if line.startswith("assistant: ")
+        ]
+        memory_lines = [
+            line.strip()[2:].strip()
+            for line in memory_text.splitlines()
+            if line.strip().startswith("- ")
+        ]
         tool_lines = [line for line in assistant_lines if "tool " in line.lower()]
 
         def bullets(items: list[str], default: str, limit: int = 3) -> str:

@@ -29,7 +29,9 @@ from .workspace import WorkspaceManager
 def build_parser() -> argparse.ArgumentParser:
     """Build the top-level MiniBot CLI parser."""
 
-    parser = argparse.ArgumentParser(prog="python -m minibot", description="MiniBot local assistant")
+    parser = argparse.ArgumentParser(
+        prog="python -m minibot", description="MiniBot local assistant"
+    )
     parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     subparsers = parser.add_subparsers(dest="command")
 
@@ -42,13 +44,21 @@ def build_parser() -> argparse.ArgumentParser:
     http_parser.add_argument("--host", help="Host override")
     http_parser.add_argument("--port", type=int, help="Port override")
 
-    feishu_parser = subparsers.add_parser("feishu-mock", help="Run a mock Feishu event through AgentLoop")
+    feishu_parser = subparsers.add_parser(
+        "feishu-mock", help="Run a mock Feishu event through AgentLoop"
+    )
     feishu_parser.add_argument("event_path", nargs="?", help="Path to mock event JSON")
-    feishu_parser.add_argument("--event", default="examples/mock_feishu_event.json", help="Path to mock event JSON")
-    feishu_parser.add_argument("--message", help="Inline message text for quick testing (skips JSON file)")
+    feishu_parser.add_argument(
+        "--event", default="examples/mock_feishu_event.json", help="Path to mock event JSON"
+    )
+    feishu_parser.add_argument(
+        "--message", help="Inline message text for quick testing (skips JSON file)"
+    )
     subparsers.add_parser("feishu", help="Run the real Feishu WebSocket Bot adapter boundary")
 
-    approvals_parser = subparsers.add_parser("approvals", help="Manage pending human-review approvals")
+    approvals_parser = subparsers.add_parser(
+        "approvals", help="Manage pending human-review approvals"
+    )
     approvals_subparsers = approvals_parser.add_subparsers(dest="approvals_command")
     approvals_subparsers.add_parser("list", help="List pending approvals")
     approve_parser = approvals_subparsers.add_parser("approve", help="Approve one pending request")
@@ -67,7 +77,9 @@ def build_parser() -> argparse.ArgumentParser:
     tasks_show_parser.add_argument("task_id")
     tasks_cancel_parser = tasks_subparsers.add_parser("cancel", help="Cancel a task")
     tasks_cancel_parser.add_argument("task_id")
-    tasks_resume_parser = tasks_subparsers.add_parser("resume", help="Resume a task through AgentLoop")
+    tasks_resume_parser = tasks_subparsers.add_parser(
+        "resume", help="Resume a task through AgentLoop"
+    )
     tasks_resume_parser.add_argument("task_id")
 
     benchmark_parser = subparsers.add_parser("benchmark", help="Run JSON benchmark cases")
@@ -92,7 +104,9 @@ def build_parser() -> argparse.ArgumentParser:
         default="default",
         help="Optional benchmark profile",
     )
-    benchmark_parser.add_argument("--mode", choices=["fake", "real"], default="fake", help="Benchmark execution mode")
+    benchmark_parser.add_argument(
+        "--mode", choices=["fake", "real"], default="fake", help="Benchmark execution mode"
+    )
     benchmark_parser.add_argument("--report", help="Optional report path")
 
     compare_parser = subparsers.add_parser("compare", help="Compare two benchmark reports")
@@ -104,13 +118,17 @@ def build_parser() -> argparse.ArgumentParser:
     evidence_subparsers.add_parser("list", help="List recent evidence records")
     evidence_show_parser = evidence_subparsers.add_parser("show", help="Show one evidence record")
     evidence_show_parser.add_argument("evidence_id")
-    evidence_search_parser = evidence_subparsers.add_parser("search", help="Search evidence by keyword")
+    evidence_search_parser = evidence_subparsers.add_parser(
+        "search", help="Search evidence by keyword"
+    )
     evidence_search_parser.add_argument("query")
 
     plan_parser = subparsers.add_parser("plan", help="Task plan management")
     plan_subparsers = plan_parser.add_subparsers(dest="plan_command")
     plan_create_parser = plan_subparsers.add_parser("create", help="Create a new plan from a goal")
-    plan_create_parser.add_argument("--goal", required=True, help="User goal to decompose into steps")
+    plan_create_parser.add_argument(
+        "--goal", required=True, help="User goal to decompose into steps"
+    )
     plan_run_parser = plan_subparsers.add_parser("run", help="Execute a plan")
     plan_run_parser.add_argument("plan_id")
     plan_show_parser = plan_subparsers.add_parser("show", help="Show plan details")
@@ -122,16 +140,28 @@ def build_parser() -> argparse.ArgumentParser:
     experiments_subparsers = experiments_parser.add_subparsers(dest="experiments_command")
     experiments_subparsers.add_parser("list", help="List available experiments")
     exp_run_parser = experiments_subparsers.add_parser("run", help="Run an experiment")
-    exp_run_parser.add_argument("--name", required=True, help="Experiment name, e.g. context_ablation")
-    exp_run_parser.add_argument("--mode", choices=["fake", "real"], default="fake", help="Experiment mode")
+    exp_run_parser.add_argument(
+        "--name", required=True, help="Experiment name, e.g. context_ablation"
+    )
+    exp_run_parser.add_argument(
+        "--mode", choices=["fake", "real"], default="fake", help="Experiment mode"
+    )
     exp_run_parser.add_argument("--report", help="Output report path")
-    exp_summary_parser = experiments_subparsers.add_parser("summarize", help="Generate Markdown summary from reports")
-    exp_summary_parser.add_argument("--reports", nargs="+", required=True, help="One or more report JSON paths")
-    exp_summary_parser.add_argument("--output", default="docs/evidence/experiment_summary.md", help="Output Markdown path")
+    exp_summary_parser = experiments_subparsers.add_parser(
+        "summarize", help="Generate Markdown summary from reports"
+    )
+    exp_summary_parser.add_argument(
+        "--reports", nargs="+", required=True, help="One or more report JSON paths"
+    )
+    exp_summary_parser.add_argument(
+        "--output", default="docs/evidence/experiment_summary.md", help="Output Markdown path"
+    )
 
     providers_parser = subparsers.add_parser("providers", help="Provider smoke checks")
     providers_subparsers = providers_parser.add_subparsers(dest="providers_command")
-    prov_smoke_parser = providers_subparsers.add_parser("smoke", help="Run provider config smoke check")
+    prov_smoke_parser = providers_subparsers.add_parser(
+        "smoke", help="Run provider config smoke check"
+    )
     prov_smoke_parser.add_argument("--report", help="Output report path")
 
     return parser
@@ -267,7 +297,9 @@ def _run_feishu(app: MiniBotApp) -> int:
     return 0
 
 
-def _run_benchmark(category: str | None, scope: str | None, profile: str, mode: str, report_path: str | None) -> int:
+def _run_benchmark(
+    category: str | None, scope: str | None, profile: str, mode: str, report_path: str | None
+) -> int:
     try:
         app = _build_benchmark_app(mode)
         report = app.runtime.benchmark_runner.run(
@@ -407,9 +439,11 @@ def _run_providers(args: argparse.Namespace) -> int:
         return 1
     if command == "smoke":
         from minibot.evals.provider_smoke import run_provider_smoke
+
         report_path = Path(args.report) if getattr(args, "report", None) else None
         report = run_provider_smoke(report_path)
         import json as _json
+
         print(_json.dumps(report, ensure_ascii=False, indent=2))
         return 0
     print(f"unknown_providers_command: {command}", file=sys.stderr)
@@ -435,6 +469,7 @@ def _run_experiments(args: argparse.Namespace) -> int:
 
     if command == "summarize":
         from minibot.evals.experiment_report import summarize_reports
+
         report_paths = [_Path(p) for p in args.reports]
         output_path = _Path(args.output)
         md = summarize_reports(report_paths, output_path)
@@ -449,8 +484,10 @@ def _run_experiments(args: argparse.Namespace) -> int:
             return 1
 
         from minibot.evals.experiment_runner import ExperimentRunner
+
         runner = ExperimentRunner(
-            app.runtime.agent_loop, app.root,
+            app.runtime.agent_loop,
+            app.root,
             verifier_agent=app.runtime.verifier_agent,
             long_task_runner=app.runtime.long_task_runner,
             planner_agent=app.runtime.planner_agent,
@@ -458,6 +495,7 @@ def _run_experiments(args: argparse.Namespace) -> int:
         report_path = _Path(args.report) if args.report else None
         report = runner.run(args.name, mode=args.mode, report_path=report_path)
         import json
+
         print(json.dumps(report, ensure_ascii=False, indent=2))
         return 0
 
@@ -527,7 +565,10 @@ def _task_resume(store: TaskStore, task_id: str, root: Path | None = None) -> in
         return 1
 
     if task.get("status") == "cancelled":
-        print(json.dumps({"error": "task_is_cancelled", "task_id": task_id}, ensure_ascii=False), file=sys.stderr)
+        print(
+            json.dumps({"error": "task_is_cancelled", "task_id": task_id}, ensure_ascii=False),
+            file=sys.stderr,
+        )
         return 1
 
     # Mark running before dispatch
@@ -557,7 +598,9 @@ def _task_resume(store: TaskStore, task_id: str, root: Path | None = None) -> in
     try:
         run_record = json.loads(run_path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
-        store.update(task_id, status="failed", last_run_id=result.run_id, stop_reason="run_record_read_error")
+        store.update(
+            task_id, status="failed", last_run_id=result.run_id, stop_reason="run_record_read_error"
+        )
         _print_task(store, task_id)
         return 0
 

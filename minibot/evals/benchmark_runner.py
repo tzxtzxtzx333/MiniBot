@@ -53,8 +53,14 @@ REAL_TOOLS = {
 class BenchmarkRunner:
     """Run JSON benchmark cases through the current AgentLoop and write audit reports."""
 
-    def __init__(self, agent_loop, project_root: Path, verifier_agent=None,
-                 long_task_runner=None, planner_agent=None) -> None:
+    def __init__(
+        self,
+        agent_loop,
+        project_root: Path,
+        verifier_agent=None,
+        long_task_runner=None,
+        planner_agent=None,
+    ) -> None:
         self.agent_loop = agent_loop
         self.project_root = project_root
         self.rule_verifier = RuleVerifier()
@@ -79,7 +85,10 @@ class BenchmarkRunner:
         normalized_profile = self._normalize_profile(profile)
         if normalized_profile == "real-agent" and normalized_mode != "real":
             raise ValueError("real-agent profile requires --mode real")
-        cases = [self._normalize_case(case, normalized_mode) for case in self._load_cases(category, scope, normalized_profile)]
+        cases = [
+            self._normalize_case(case, normalized_mode)
+            for case in self._load_cases(category, scope, normalized_profile)
+        ]
         preflight = self._build_preflight(normalized_mode, normalized_profile)
         results: list[dict[str, object]] = []
         run_records: list[dict[str, object]] = []
@@ -106,7 +115,11 @@ class BenchmarkRunner:
                                         "retry_count": 0,
                                         "partial_success": False,
                                         "downgrade_reason": None,
-                                        "human_review": bool(dict(case.get("verifier", {})).get("human_optional", False)),
+                                        "human_review": bool(
+                                            dict(case.get("verifier", {})).get(
+                                                "human_optional", False
+                                            )
+                                        ),
                                     }
                                 )
                                 continue
@@ -140,17 +153,25 @@ class BenchmarkRunner:
                                                 resume_result["step_outcomes"] = []
                                             if first_trace:
                                                 resume_result["step_outcomes"].append(
-                                                    {"tool_trace": first_trace, "status": "completed",
-                                                     "final_response": "", "evidence_ids": [],
-                                                     "failure_category": None}
+                                                    {
+                                                        "tool_trace": first_trace,
+                                                        "status": "completed",
+                                                        "final_response": "",
+                                                        "evidence_ids": [],
+                                                        "failure_category": None,
+                                                    }
                                                 )
                                             plan_result = resume_result
                                         else:
                                             plan_result = first_result
-                                        run_record = self._planner_result_to_run_record(case, plan, plan_result)
+                                        run_record = self._planner_result_to_run_record(
+                                            case, plan, plan_result
+                                        )
                                     else:
                                         # Auto-approve graylisted tools during benchmark
-                                        approval_mgr = self.agent_loop.tool_dispatcher.approval_manager
+                                        approval_mgr = (
+                                            self.agent_loop.tool_dispatcher.approval_manager
+                                        )
                                         orig_config = dict(approval_mgr.approval_config)
                                         auto_config = dict(orig_config)
                                         auto_config["auto_approve"] = True
@@ -160,7 +181,9 @@ class BenchmarkRunner:
                                             plan_result = self.long_task_runner.run(plan)
                                         finally:
                                             approval_mgr.approval_config = orig_config
-                                        run_record = self._planner_result_to_run_record(case, plan, plan_result)
+                                        run_record = self._planner_result_to_run_record(
+                                            case, plan, plan_result
+                                        )
                                     run_records.append(run_record)
                                 else:
                                     expanded_case = self._expand_context_case(case)
@@ -176,8 +199,14 @@ class BenchmarkRunner:
                                                         "category": expanded_case["category"],
                                                         "benchmark_mode": normalized_mode,
                                                         "benchmark_scope": scope,
-                                                        "benchmark_context_tool_results": list(expanded_case.get("context_tool_results", [])),
-                                                        "benchmark_required_facts": list(expanded_case.get("required_facts", [])),
+                                                        "benchmark_context_tool_results": list(
+                                                            expanded_case.get(
+                                                                "context_tool_results", []
+                                                            )
+                                                        ),
+                                                        "benchmark_required_facts": list(
+                                                            expanded_case.get("required_facts", [])
+                                                        ),
                                                     },
                                                 )
                                             )
@@ -191,7 +220,9 @@ class BenchmarkRunner:
                                     model_errors.append("model_http_error")
                                     fallback_failure_category = "model_http_error"
                                 else:
-                                    recovered = self._try_recover_failure_category(str(expanded_case["id"]))
+                                    recovered = self._try_recover_failure_category(
+                                        str(expanded_case["id"])
+                                    )
                                     if recovered is not None:
                                         fallback_failure_category = recovered
                                     else:
@@ -212,7 +243,11 @@ class BenchmarkRunner:
                                         "retry_count": 0,
                                         "partial_success": False,
                                         "downgrade_reason": None,
-                                        "human_review": bool(dict(case.get("verifier", {})).get("human_optional", False)),
+                                        "human_review": bool(
+                                            dict(case.get("verifier", {})).get(
+                                                "human_optional", False
+                                            )
+                                        ),
                                     }
                                 )
                                 continue
@@ -222,7 +257,9 @@ class BenchmarkRunner:
                             rule_passed = True
                             rule_reason = "rule verifier disabled"
                             if rule_enabled:
-                                rule_passed, rule_reason = self.rule_verifier.verify(run_record, list(case["expected_behavior"]))
+                                rule_passed, rule_reason = self.rule_verifier.verify(
+                                    run_record, list(case["expected_behavior"])
+                                )
                             model_passed = True
                             model_reason = "model verifier disabled"
                             if model_enabled:
@@ -239,7 +276,9 @@ class BenchmarkRunner:
                                     "verifier_parse_error",
                                 }:
                                     model_passed = True
-                            verifier_reason = self._compose_verifier_reason(rule_reason, model_reason, run_record.get("verifier_reason"))
+                            verifier_reason = self._compose_verifier_reason(
+                                rule_reason, model_reason, run_record.get("verifier_reason")
+                            )
                             passed_case = rule_passed and model_passed
                             results.append(
                                 {
@@ -253,14 +292,34 @@ class BenchmarkRunner:
                                     "failure_category": run_record.get("failure_category"),
                                     "tool_trace": run_record.get("tool_trace", []),
                                     "verifier_reason": verifier_reason,
-                                    "verifier_mode": model_result.get("verifier_mode") if model_enabled else self.model_verifier.mode,
-                                    "fake_verifier": bool(model_result.get("fake_verifier")) if model_enabled else self.model_verifier.mode == "fake",
-                                    "verifier_failure_category": model_result.get("failure_category") if model_enabled else None,
-                                    "verifier_config_source": model_result.get("verifier_config_source") if model_enabled else self.model_verifier.config_source,
+                                    "verifier_mode": (
+                                        model_result.get("verifier_mode")
+                                        if model_enabled
+                                        else self.model_verifier.mode
+                                    ),
+                                    "fake_verifier": (
+                                        bool(model_result.get("fake_verifier"))
+                                        if model_enabled
+                                        else self.model_verifier.mode == "fake"
+                                    ),
+                                    "verifier_failure_category": (
+                                        model_result.get("failure_category")
+                                        if model_enabled
+                                        else None
+                                    ),
+                                    "verifier_config_source": (
+                                        model_result.get("verifier_config_source")
+                                        if model_enabled
+                                        else self.model_verifier.config_source
+                                    ),
                                     "retry_count": int(run_record.get("retry_count", 0)),
-                                    "partial_success": bool(run_record.get("partial_success", False)),
+                                    "partial_success": bool(
+                                        run_record.get("partial_success", False)
+                                    ),
                                     "downgrade_reason": run_record.get("downgrade_reason"),
-                                    "human_review": bool(dict(case.get("verifier", {})).get("human_optional", False)),
+                                    "human_review": bool(
+                                        dict(case.get("verifier", {})).get("human_optional", False)
+                                    ),
                                 }
                             )
 
@@ -279,10 +338,17 @@ class BenchmarkRunner:
         latest_path = self.project_root / "reports" / "latest.json"
         self.report_writer.write(latest_path, report)
         report["report_path"] = str(latest_path.relative_to(self.project_root)).replace("\\", "/")
-        normalized_report_path = self._normalize_report_path(report_path) if report_path is not None else None
-        if normalized_report_path is not None and normalized_report_path.resolve() != latest_path.resolve():
+        normalized_report_path = (
+            self._normalize_report_path(report_path) if report_path is not None else None
+        )
+        if (
+            normalized_report_path is not None
+            and normalized_report_path.resolve() != latest_path.resolve()
+        ):
             self.report_writer.write(normalized_report_path, report)
-            report["extra_report_path"] = str(normalized_report_path.relative_to(self.project_root)).replace("\\", "/")
+            report["extra_report_path"] = str(
+                normalized_report_path.relative_to(self.project_root)
+            ).replace("\\", "/")
         return report
 
     def _build_report(
@@ -317,7 +383,9 @@ class BenchmarkRunner:
         real_agent_summary = self._real_agent_summary(cases, results)
         safety_case_count = sum(1 for case in cases if str(case.get("category")) == "safety")
         safety_passed_count = sum(
-            1 for item in results if str(item.get("category")) == "safety" and bool(item.get("passed"))
+            1
+            for item in results
+            if str(item.get("category")) == "safety" and bool(item.get("passed"))
         )
         multiround_summary = self._multiround_summary(cases, results)
         planner_summary = self._planner_summary(cases, results, run_records)
@@ -330,7 +398,9 @@ class BenchmarkRunner:
             "benchmark_profile": profile,
             "benchmark_case_count": benchmark_catalog["benchmark_case_count"],
             "benchmark_case_count_by_profile": benchmark_catalog["benchmark_case_count_by_profile"],
-            "benchmark_case_count_by_category": benchmark_catalog["benchmark_case_count_by_category"],
+            "benchmark_case_count_by_category": benchmark_catalog[
+                "benchmark_case_count_by_category"
+            ],
             "total_cases": len(cases),
             "counted_cases": metric_summary["counted_cases"],
             "passed_cases": metric_summary["passed_cases"],
@@ -369,7 +439,9 @@ class BenchmarkRunner:
             "real_agent_pass_rate": real_agent_summary["real_agent_pass_rate"],
             "safety_case_count": safety_case_count,
             "safety_passed_count": safety_passed_count,
-            "safety_pass_rate": round(safety_passed_count / safety_case_count, 4) if safety_case_count else 0.0,
+            "safety_pass_rate": (
+                round(safety_passed_count / safety_case_count, 4) if safety_case_count else 0.0
+            ),
             "multiround_case_count": multiround_summary["multiround_case_count"],
             "multiround_passed_count": multiround_summary["multiround_passed_count"],
             "multiround_pass_rate": multiround_summary["multiround_pass_rate"],
@@ -422,16 +494,20 @@ class BenchmarkRunner:
             else:
                 by_profile = summary["benchmark_case_count_by_profile"]
                 by_profile["default"] = by_profile.get("default", 0) + 1
-        summary["benchmark_case_count_by_profile"] = dict(sorted(summary["benchmark_case_count_by_profile"].items()))
-        summary["benchmark_case_count_by_category"] = dict(sorted(summary["benchmark_case_count_by_category"].items()))
+        summary["benchmark_case_count_by_profile"] = dict(
+            sorted(summary["benchmark_case_count_by_profile"].items())
+        )
+        summary["benchmark_case_count_by_category"] = dict(
+            sorted(summary["benchmark_case_count_by_category"].items())
+        )
         return summary
 
     @staticmethod
-    def _real_agent_summary(cases: list[dict[str, object]], results: list[dict[str, object]]) -> dict[str, object]:
+    def _real_agent_summary(
+        cases: list[dict[str, object]], results: list[dict[str, object]]
+    ) -> dict[str, object]:
         real_agent_ids = {
-            str(case.get("id"))
-            for case in cases
-            if "real-agent" in list(case.get("profiles", []))
+            str(case.get("id")) for case in cases if "real-agent" in list(case.get("profiles", []))
         }
         if not real_agent_ids:
             return {
@@ -439,7 +515,11 @@ class BenchmarkRunner:
                 "real_agent_passed_count": 0,
                 "real_agent_pass_rate": 0.0,
             }
-        passed = sum(1 for item in results if str(item.get("id")) in real_agent_ids and bool(item.get("passed")))
+        passed = sum(
+            1
+            for item in results
+            if str(item.get("id")) in real_agent_ids and bool(item.get("passed"))
+        )
         count = len(real_agent_ids)
         return {
             "real_agent_case_count": count,
@@ -448,11 +528,11 @@ class BenchmarkRunner:
         }
 
     @staticmethod
-    def _multiround_summary(cases: list[dict[str, object]], results: list[dict[str, object]]) -> dict[str, object]:
+    def _multiround_summary(
+        cases: list[dict[str, object]], results: list[dict[str, object]]
+    ) -> dict[str, object]:
         multiround_ids = {
-            str(case.get("id"))
-            for case in cases
-            if "multiround" in list(case.get("profiles", []))
+            str(case.get("id")) for case in cases if "multiround" in list(case.get("profiles", []))
         }
         if not multiround_ids:
             return {
@@ -460,7 +540,11 @@ class BenchmarkRunner:
                 "multiround_passed_count": 0,
                 "multiround_pass_rate": 0.0,
             }
-        passed = sum(1 for item in results if str(item.get("id")) in multiround_ids and bool(item.get("passed")))
+        passed = sum(
+            1
+            for item in results
+            if str(item.get("id")) in multiround_ids and bool(item.get("passed"))
+        )
         count = len(multiround_ids)
         return {
             "multiround_case_count": count,
@@ -475,9 +559,7 @@ class BenchmarkRunner:
         run_records: list[dict[str, object]],
     ) -> dict[str, object]:
         planner_ids = {
-            str(case.get("id"))
-            for case in cases
-            if "planner" in list(case.get("profiles", []))
+            str(case.get("id")) for case in cases if "planner" in list(case.get("profiles", []))
         }
         if not planner_ids:
             return {
@@ -494,12 +576,18 @@ class BenchmarkRunner:
             }
         # Identify real planner cases (planner_mode == "real")
         real_planner_ids = {
-            str(case.get("id")) for case in cases
-            if case.get("planner_mode") == "real"
-            and "planner" in list(case.get("profiles", []))
+            str(case.get("id"))
+            for case in cases
+            if case.get("planner_mode") == "real" and "planner" in list(case.get("profiles", []))
         }
-        passed = sum(1 for item in results if str(item.get("id")) in planner_ids and bool(item.get("passed")))
-        real_passed = sum(1 for item in results if str(item.get("id")) in real_planner_ids and bool(item.get("passed")))
+        passed = sum(
+            1 for item in results if str(item.get("id")) in planner_ids and bool(item.get("passed"))
+        )
+        real_passed = sum(
+            1
+            for item in results
+            if str(item.get("id")) in real_planner_ids and bool(item.get("passed"))
+        )
         count = len(planner_ids)
         real_count = len(real_planner_ids)
         total_steps = 0
@@ -543,10 +631,17 @@ class BenchmarkRunner:
         verifier_info = self.model_verifier.describe()
         if profile == "real-agent" and verifier_info["verifier_mode"] != "real":
             missing_capabilities.append("verifier_config_missing")
-        if verifier_info["verifier_mode"] == "real" and verifier_info.get("verifier_error") == "verifier_config_missing":
+        if (
+            verifier_info["verifier_mode"] == "real"
+            and verifier_info.get("verifier_error") == "verifier_config_missing"
+        ):
             missing_capabilities.append("verifier_config_missing")
         external_integrations = {
-            "feishu": "configured" if (os.getenv("FEISHU_APP_ID") and os.getenv("FEISHU_APP_SECRET")) else "missing",
+            "feishu": (
+                "configured"
+                if (os.getenv("FEISHU_APP_ID") and os.getenv("FEISHU_APP_SECRET"))
+                else "missing"
+            ),
             "web_fetch": "real",
             "web_search": self._web_search_provider_status(),
             "weather": self._weather_provider_status(),
@@ -578,7 +673,8 @@ class BenchmarkRunner:
             env_values = self._read_model_env()
             return {
                 "can_execute": False,
-                "model_provider": env_values.get("MINIBOT_MODEL_PROVIDER", "deepseek") or "deepseek",
+                "model_provider": env_values.get("MINIBOT_MODEL_PROVIDER", "deepseek")
+                or "deepseek",
                 "model_name": env_values.get("MINIBOT_MODEL_NAME", ""),
                 "fake_model": False,
                 "verifier_mode": verifier_info["verifier_mode"],
@@ -593,7 +689,11 @@ class BenchmarkRunner:
             }
 
         return {
-            "can_execute": False if profile == "real-agent" and "verifier_config_missing" in missing_capabilities else True,
+            "can_execute": (
+                False
+                if profile == "real-agent" and "verifier_config_missing" in missing_capabilities
+                else True
+            ),
             "model_provider": settings["MINIBOT_MODEL_PROVIDER"],
             "model_name": settings["MINIBOT_MODEL_NAME"],
             "fake_model": False,
@@ -622,35 +722,65 @@ class BenchmarkRunner:
                 "real_model": "missing",
                 "real_tool_calling": "missing",
                 "llm_archive": "missing",
-                "model_verifier": "fake"
-                if preflight["verifier_mode"] == "fake"
-                else (
-                    "missing"
-                    if "verifier_config_missing" in missing
-                    else ("failed" if verifier_system_failed else "passed")
+                "model_verifier": (
+                    "fake"
+                    if preflight["verifier_mode"] == "fake"
+                    else (
+                        "missing"
+                        if "verifier_config_missing" in missing
+                        else ("failed" if verifier_system_failed else "passed")
+                    )
                 ),
-                "docker_sandbox": "passed" if self._has_docker_evidence(results) else ("unavailable" if "docker_unavailable" in missing else "failed"),
-                "partial_success": "passed" if any(bool(item.get("partial_success")) for item in results) else "failed",
+                "docker_sandbox": (
+                    "passed"
+                    if self._has_docker_evidence(results)
+                    else ("unavailable" if "docker_unavailable" in missing else "failed")
+                ),
+                "partial_success": (
+                    "passed"
+                    if any(bool(item.get("partial_success")) for item in results)
+                    else "failed"
+                ),
             }
-        real_model_status = "failed" if self._has_model_error(run_records, results) else ("missing" if "deepseek_config_missing" in missing else "passed")
+        real_model_status = (
+            "failed"
+            if self._has_model_error(run_records, results)
+            else ("missing" if "deepseek_config_missing" in missing else "passed")
+        )
         return {
             "real_model": real_model_status,
-            "real_tool_calling": "missing"
-            if "deepseek_config_missing" in missing
-            else ("passed" if self._has_real_tool_calling(run_records) else "failed"),
-            "llm_archive": "missing"
-            if "deepseek_config_missing" in missing
-            else ("passed" if self._has_real_archive(run_records) else "failed"),
-            "model_verifier": "missing"
-            if "verifier_config_missing" in missing
-            else ("failed" if verifier_system_failed else ("fake" if preflight["verifier_mode"] == "fake" else "passed")),
-            "docker_sandbox": "unavailable"
-            if "docker_unavailable" in missing
-            else ("passed" if self._has_docker_evidence(results) else "failed"),
-            "partial_success": "passed" if any(bool(item.get("partial_success")) for item in results) else "failed",
+            "real_tool_calling": (
+                "missing"
+                if "deepseek_config_missing" in missing
+                else ("passed" if self._has_real_tool_calling(run_records) else "failed")
+            ),
+            "llm_archive": (
+                "missing"
+                if "deepseek_config_missing" in missing
+                else ("passed" if self._has_real_archive(run_records) else "failed")
+            ),
+            "model_verifier": (
+                "missing"
+                if "verifier_config_missing" in missing
+                else (
+                    "failed"
+                    if verifier_system_failed
+                    else ("fake" if preflight["verifier_mode"] == "fake" else "passed")
+                )
+            ),
+            "docker_sandbox": (
+                "unavailable"
+                if "docker_unavailable" in missing
+                else ("passed" if self._has_docker_evidence(results) else "failed")
+            ),
+            "partial_success": (
+                "passed" if any(bool(item.get("partial_success")) for item in results) else "failed"
+            ),
         }
 
-    def _load_cases(self, category: str | None, scope: str | None, profile: str) -> list[dict[str, object]]:
+    def _load_cases(
+        self, category: str | None, scope: str | None, profile: str
+    ) -> list[dict[str, object]]:
         case_paths = list((self.project_root / "benchmarks").rglob("*.json"))
         cases = [load_json_file(path) for path in case_paths]
         if profile in PROFILE_SCOPES:
@@ -671,7 +801,9 @@ class BenchmarkRunner:
         if not isinstance(preload, dict):
             return
         tool_name = str(preload.get("tool_name", "")).strip()
-        arguments = dict(preload.get("arguments", {})) if isinstance(preload.get("arguments"), dict) else {}
+        arguments = (
+            dict(preload.get("arguments", {})) if isinstance(preload.get("arguments"), dict) else {}
+        )
         status = str(preload.get("status", "")).strip().lower()
         if not tool_name or status not in {"approved", "rejected"}:
             return
@@ -705,6 +837,7 @@ class BenchmarkRunner:
         """Copy files referenced in the case to the sandbox so file_read works."""
         import re
         import shutil
+
         sandbox = self.agent_loop.memory_store.workspace.sandbox_dir
         goal = str(case.get("input", ""))
         for match in re.finditer(r"[\w./-]+\.(?:md|txt|json)", goal):
@@ -725,6 +858,7 @@ class BenchmarkRunner:
     ) -> dict[str, object]:
         """Synthesize a run-record-compatible dict from a real planner execution."""
         from minibot.planning.plan_schema import TaskPlan
+
         tool_trace: list[dict[str, object]] = []
         evidence_ids: list[str] = []
         final_responses: list[str] = []
@@ -754,14 +888,26 @@ class BenchmarkRunner:
             "step_id": None,
             "step_description": str(case.get("input", "")),
             "user_input": str(case.get("input", "")),
-            "final_response": "\n".join(final_responses) if final_responses else str(plan_result.get("status", "")),
+            "final_response": (
+                "\n".join(final_responses)
+                if final_responses
+                else str(plan_result.get("status", ""))
+            ),
             "tool_trace": tool_trace,
-            "tool_calls": [{"tool_name": t.get("tool_name", ""), "arguments": t.get("arguments", {})} for t in tool_trace],
+            "tool_calls": [
+                {"tool_name": t.get("tool_name", ""), "arguments": t.get("arguments", {})}
+                for t in tool_trace
+            ],
             "tool_results": tool_trace,
             "evidence_ids": evidence_ids,
             "evidence_count": len(evidence_ids),
             "tool_output_compressed_to_evidence": len(evidence_ids) > 0,
-            "failure_category": failure_category or (None if plan_result.get("status") in {"completed", "waiting_approval"} else "plan_failed"),
+            "failure_category": failure_category
+            or (
+                None
+                if plan_result.get("status") in {"completed", "waiting_approval"}
+                else "plan_failed"
+            ),
             "retry_count": retry_total,
             "partial_success": False,
             "downgrade_reason": None,
@@ -850,7 +996,11 @@ class BenchmarkRunner:
         expected = list(case.get("expected_behavior", []))
         if mode == "real":
             normalized["expected_behavior"] = [
-                "final_response_not_empty" if item == "final_response_contains:MiniBot echo:" else item
+                (
+                    "final_response_not_empty"
+                    if item == "final_response_contains:MiniBot echo:"
+                    else item
+                )
                 for item in expected
             ]
         else:
@@ -957,7 +1107,9 @@ class BenchmarkRunner:
             yield
             return
         original_model_client = self.agent_loop.model_client
-        rounds_raw = dict(synthetic_plan_rounds) if isinstance(synthetic_plan_rounds, dict) else None
+        rounds_raw = (
+            dict(synthetic_plan_rounds) if isinstance(synthetic_plan_rounds, dict) else None
+        )
         # Convert string keys to int
         tool_calls_by_round: dict[int, list[dict[str, object]]] | None = None
         if rounds_raw:
@@ -1003,7 +1155,11 @@ class BenchmarkRunner:
         try:
             if isinstance(preload, dict):
                 tool_name = str(preload.get("tool_name", "")).strip()
-                arguments = dict(preload.get("arguments", {})) if isinstance(preload.get("arguments"), dict) else {}
+                arguments = (
+                    dict(preload.get("arguments", {}))
+                    if isinstance(preload.get("arguments"), dict)
+                    else {}
+                )
                 status = str(preload.get("status", "")).strip().lower()
                 if tool_name and status in {"approved", "rejected"}:
                     store = self.agent_loop.tool_dispatcher.approval_store
@@ -1031,7 +1187,11 @@ class BenchmarkRunner:
     @staticmethod
     def _expand_context_case(case: dict[str, object]) -> dict[str, object]:
         expanded = dict(case)
-        expansion = dict(case.get("context_expansion", {})) if isinstance(case.get("context_expansion"), dict) else {}
+        expansion = (
+            dict(case.get("context_expansion", {}))
+            if isinstance(case.get("context_expansion"), dict)
+            else {}
+        )
         if not expansion:
             return expanded
         placeholder_repeat = int(expansion.get("placeholder_repeat", 0) or 0)
@@ -1040,7 +1200,9 @@ class BenchmarkRunner:
             for index in range(max(placeholder_repeat, 0))
         )
 
-        context_seed = dict(case.get("context_seed", {})) if isinstance(case.get("context_seed"), dict) else {}
+        context_seed = (
+            dict(case.get("context_seed", {})) if isinstance(case.get("context_seed"), dict) else {}
+        )
         if context_seed:
             expanded_seed = dict(context_seed)
             for field_name, repeat_key, filler_key in (
@@ -1066,7 +1228,8 @@ class BenchmarkRunner:
                 repeat = int(expansion.get("archive_repeat", 0) or 0)
                 archives.append(
                     {
-                        "name": str(item.get("name", "")).strip() or f"archive-benchmark-{index}.md",
+                        "name": str(item.get("name", "")).strip()
+                        or f"archive-benchmark-{index}.md",
                         "content": BenchmarkRunner._expand_context_text(
                             base=base_content,
                             filler=filler_content,
@@ -1111,14 +1274,13 @@ class BenchmarkRunner:
         return expanded
 
     @staticmethod
-    def _expand_context_text(*, base: str, filler: str, repeat: int, placeholder_block: str, label: str) -> str:
+    def _expand_context_text(
+        *, base: str, filler: str, repeat: int, placeholder_block: str, label: str
+    ) -> str:
         if repeat <= 0 or not filler:
             suffix = f"\n{placeholder_block}" if placeholder_block else ""
             return f"{base}{suffix}".strip()
-        filler_lines = [
-            f"{filler} [segment={label}-{index:03d}]"
-            for index in range(repeat)
-        ]
+        filler_lines = [f"{filler} [segment={label}-{index:03d}]" for index in range(repeat)]
         parts = [base.strip(), "\n".join(filler_lines).strip()]
         if placeholder_block:
             parts.append(placeholder_block)
@@ -1143,14 +1305,23 @@ class BenchmarkRunner:
                 metadata = dict(trace.get("metadata", {}))
                 if not tool_name:
                     continue
-                if bool(metadata.get("mcp_provider")) and str(metadata.get("provider_status")) == "mcp":
+                if (
+                    bool(metadata.get("mcp_provider"))
+                    and str(metadata.get("provider_status")) == "mcp"
+                ):
                     mcp_tools.add(tool_name)
                     real_tools.add(tool_name)
                     continue
-                if bool(metadata.get("real_provider")) or str(metadata.get("provider_status")) == "real":
+                if (
+                    bool(metadata.get("real_provider"))
+                    or str(metadata.get("provider_status")) == "real"
+                ):
                     real_tools.add(tool_name)
                     continue
-                if bool(metadata.get("mock_provider")) or str(metadata.get("provider_status")) == "mock":
+                if (
+                    bool(metadata.get("mock_provider"))
+                    or str(metadata.get("provider_status")) == "mock"
+                ):
                     mock_tools.add(tool_name)
                     continue
                 if tool_name in REAL_TOOLS:
@@ -1164,7 +1335,9 @@ class BenchmarkRunner:
         }
 
     @staticmethod
-    def _context_metrics_summary(results: list[dict[str, object]], run_records: list[dict[str, object]]) -> dict[str, float | int]:
+    def _context_metrics_summary(
+        results: list[dict[str, object]], run_records: list[dict[str, object]]
+    ) -> dict[str, float | int]:
         metrics_by_id = {
             str(record.get("session_id")): dict(record.get("context_metrics", {}))
             for record in run_records
@@ -1192,14 +1365,34 @@ class BenchmarkRunner:
             }
         count = len(context_metrics)
         return {
-            "avg_prompt_tokens": round(sum(float(item.get("prompt_tokens", 0)) for item in context_metrics) / count, 4),
-            "avg_context_chars": round(sum(float(item.get("context_chars", 0)) for item in context_metrics) / count, 4),
-            "avg_dynamic_context_chars": round(sum(float(item.get("dynamic_context_chars", 0)) for item in context_metrics) / count, 4),
-            "avg_dynamic_context_tokens": round(sum(float(item.get("dynamic_context_tokens", 0)) for item in context_metrics) / count, 4),
-            "avg_history_chars": round(sum(float(item.get("history_chars", 0)) for item in context_metrics) / count, 4),
-            "avg_memory_chars": round(sum(float(item.get("memory_chars", 0)) for item in context_metrics) / count, 4),
-            "avg_archive_chars": round(sum(float(item.get("archive_chars", 0)) for item in context_metrics) / count, 4),
-            "avg_tool_specs_chars": round(sum(float(item.get("tool_specs_chars", 0)) for item in context_metrics) / count, 4),
+            "avg_prompt_tokens": round(
+                sum(float(item.get("prompt_tokens", 0)) for item in context_metrics) / count, 4
+            ),
+            "avg_context_chars": round(
+                sum(float(item.get("context_chars", 0)) for item in context_metrics) / count, 4
+            ),
+            "avg_dynamic_context_chars": round(
+                sum(float(item.get("dynamic_context_chars", 0)) for item in context_metrics)
+                / count,
+                4,
+            ),
+            "avg_dynamic_context_tokens": round(
+                sum(float(item.get("dynamic_context_tokens", 0)) for item in context_metrics)
+                / count,
+                4,
+            ),
+            "avg_history_chars": round(
+                sum(float(item.get("history_chars", 0)) for item in context_metrics) / count, 4
+            ),
+            "avg_memory_chars": round(
+                sum(float(item.get("memory_chars", 0)) for item in context_metrics) / count, 4
+            ),
+            "avg_archive_chars": round(
+                sum(float(item.get("archive_chars", 0)) for item in context_metrics) / count, 4
+            ),
+            "avg_tool_specs_chars": round(
+                sum(float(item.get("tool_specs_chars", 0)) for item in context_metrics) / count, 4
+            ),
             "context_case_count": count,
         }
 
@@ -1215,12 +1408,15 @@ class BenchmarkRunner:
     @staticmethod
     def _has_real_tool_calling(run_records: list[dict[str, object]]) -> bool:
         return any(
-            dict(record.get("model_plan", {})).get("model_mode") == "real" and bool(record.get("tool_calls"))
+            dict(record.get("model_plan", {})).get("model_mode") == "real"
+            and bool(record.get("tool_calls"))
             for record in run_records
         )
 
     @staticmethod
-    def _has_model_error(run_records: list[dict[str, object]], results: list[dict[str, object]]) -> bool:
+    def _has_model_error(
+        run_records: list[dict[str, object]], results: list[dict[str, object]]
+    ) -> bool:
         if any(dict(record.get("model_plan", {})).get("model_error") for record in run_records):
             return True
         return any(str(item.get("failure_category")) == "model_http_error" for item in results)
@@ -1228,7 +1424,10 @@ class BenchmarkRunner:
     @staticmethod
     def _has_real_archive(run_records: list[dict[str, object]]) -> bool:
         return any(
-            any(str(event.get("archive_mode")) == "real" for event in record.get("compression_events", []))
+            any(
+                str(event.get("archive_mode")) == "real"
+                for event in record.get("compression_events", [])
+            )
             for record in run_records
         )
 
@@ -1236,7 +1435,12 @@ class BenchmarkRunner:
     def _has_verifier_system_error(results: list[dict[str, object]]) -> bool:
         return any(
             str(item.get("verifier_failure_category"))
-            in {"verifier_http_error", "verifier_parse_error", "verifier_exception", "verifier_runtime_error"}
+            in {
+                "verifier_http_error",
+                "verifier_parse_error",
+                "verifier_exception",
+                "verifier_runtime_error",
+            }
             for item in results
         )
 
@@ -1250,7 +1454,12 @@ class BenchmarkRunner:
                     continue
                 key, value = line.split("=", 1)
                 values[key.strip()] = value.strip().strip('"').strip("'")
-        for key in ("MINIBOT_MODEL_PROVIDER", "MINIBOT_MODEL_BASE_URL", "MINIBOT_MODEL_API_KEY", "MINIBOT_MODEL_NAME"):
+        for key in (
+            "MINIBOT_MODEL_PROVIDER",
+            "MINIBOT_MODEL_BASE_URL",
+            "MINIBOT_MODEL_API_KEY",
+            "MINIBOT_MODEL_NAME",
+        ):
             if key in os.environ:
                 values[key] = os.environ[key]
         if not values.get("MINIBOT_MODEL_PROVIDER"):
@@ -1258,7 +1467,9 @@ class BenchmarkRunner:
         return values
 
     @staticmethod
-    def _pick_model_error(run_records: list[dict[str, object]], model_errors: list[str]) -> str | None:
+    def _pick_model_error(
+        run_records: list[dict[str, object]], model_errors: list[str]
+    ) -> str | None:
         for record in run_records:
             model_error = dict(record.get("model_plan", {})).get("model_error")
             if model_error:
@@ -1266,12 +1477,21 @@ class BenchmarkRunner:
         return model_errors[0] if model_errors else None
 
     @staticmethod
-    def _pick_verifier_error(results: list[dict[str, object]], preflight: dict[str, object]) -> str | None:
-        if "verifier_config_missing" in set(str(item) for item in preflight.get("missing_capabilities", [])):
+    def _pick_verifier_error(
+        results: list[dict[str, object]], preflight: dict[str, object]
+    ) -> str | None:
+        if "verifier_config_missing" in set(
+            str(item) for item in preflight.get("missing_capabilities", [])
+        ):
             return "verifier_config_missing"
         for item in results:
             category = item.get("verifier_failure_category")
-            if str(category) in {"verifier_http_error", "verifier_parse_error", "verifier_config_missing", "verifier_runtime_error"}:
+            if str(category) in {
+                "verifier_http_error",
+                "verifier_parse_error",
+                "verifier_config_missing",
+                "verifier_runtime_error",
+            }:
                 return str(category)
         return None
 
@@ -1309,7 +1529,11 @@ class BenchmarkRunner:
                 tool_name = str(trace.get("tool_name") or "")
                 metadata = dict(trace.get("metadata", {}))
                 status = str(metadata.get("provider_status") or "").strip()
-                if tool_name in {"web_fetch", "web_search", "weather", "map_route", "map_poi_search"} and status:
+                if (
+                    tool_name
+                    in {"web_fetch", "web_search", "weather", "map_route", "map_poi_search"}
+                    and status
+                ):
                     merged[tool_name] = status
         return merged
 
@@ -1344,8 +1568,7 @@ class _SyntheticBenchmarkModelClient:
         tool_calls_by_round: dict[int, list[dict[str, object]]] | None = None,
     ) -> None:
         self._tool_calls = [
-            ToolCall(str(item["tool_name"]), dict(item.get("arguments", {})))
-            for item in tool_calls
+            ToolCall(str(item["tool_name"]), dict(item.get("arguments", {}))) for item in tool_calls
         ]
         self._tool_calls_by_round: dict[int, list[ToolCall]] = {}
         if tool_calls_by_round is not None:
@@ -1356,7 +1579,9 @@ class _SyntheticBenchmarkModelClient:
                 ]
         self._plan_next_count = 0
 
-    def plan(self, message: ChannelMessage, context: dict[str, object]) -> ModelPlan:  # noqa: ARG002
+    def plan(
+        self, message: ChannelMessage, context: dict[str, object]
+    ) -> ModelPlan:  # noqa: ARG002
         return ModelPlan(
             assistant_message=None,
             tool_calls=self._tool_calls,

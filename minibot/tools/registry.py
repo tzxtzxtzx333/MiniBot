@@ -37,7 +37,9 @@ class ToolRegistry:
         if schema.get("type") != "object":
             return
         if not isinstance(payload, dict):
-            raise ToolValidationError(f"invalid_payload_type for {name}", "schema_validation_failed")
+            raise ToolValidationError(
+                f"invalid_payload_type for {name}", "schema_validation_failed"
+            )
 
         required = list(schema.get("required", []))
         properties = dict(schema.get("properties", {}))
@@ -59,7 +61,9 @@ class ToolRegistry:
                 continue
             self._validate_value(name=name, field=key, value=value, schema=properties[key])
 
-    def _validate_value(self, *, name: str, field: str, value: object, schema: dict[str, Any]) -> None:
+    def _validate_value(
+        self, *, name: str, field: str, value: object, schema: dict[str, Any]
+    ) -> None:
         expected_type = schema.get("type")
         if expected_type == "string" and not isinstance(value, str):
             raise ToolValidationError(f"{name}.{field} must be string", "schema_validation_failed")

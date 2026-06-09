@@ -6,7 +6,9 @@ from __future__ import annotations
 class RuleVerifier:
     """Check structured expectations against a persisted run record."""
 
-    def verify(self, run_record: dict[str, object], expected_behavior: list[str]) -> tuple[bool, str]:
+    def verify(
+        self, run_record: dict[str, object], expected_behavior: list[str]
+    ) -> tuple[bool, str]:
         """Return pass/fail plus a structured reason."""
 
         matched = 0
@@ -44,16 +46,22 @@ class RuleVerifier:
                     return False
             metrics = run_record.get("context_metrics", {})
             try:
-                return isinstance(metrics, dict) and float(metrics.get("prompt_tokens", -1)) >= float(payload)
+                return isinstance(metrics, dict) and float(
+                    metrics.get("prompt_tokens", -1)
+                ) >= float(payload)
             except (TypeError, ValueError):
                 return False
         if rule in {"key_fact_preserved", "key_facts_preserved"}:
             metrics = run_record.get("context_metrics", {})
             return bool(dict(metrics).get("key_facts_preserved")) is (payload.lower() == "true")
         if rule == "tool_call_contains":
-            return any(str(item.get("tool_name")) == payload for item in run_record.get("tool_calls", []))
+            return any(
+                str(item.get("tool_name")) == payload for item in run_record.get("tool_calls", [])
+            )
         if rule == "tool_trace_contains":
-            return any(str(item.get("tool_name")) == payload for item in run_record.get("tool_trace", []))
+            return any(
+                str(item.get("tool_name")) == payload for item in run_record.get("tool_trace", [])
+            )
         if rule == "failure_category":
             return str(run_record.get("failure_category")) == payload
         if rule == "retry_count_at_least":
@@ -81,9 +89,13 @@ class RuleVerifier:
                 return int(run_record.get("actual_tool_calls_total", 0)) >= int(payload[2:])
             return int(run_record.get("actual_tool_calls_total", 0)) >= int(payload)
         if rule == "final_answer_used_tool_results":
-            return bool(run_record.get("final_answer_used_tool_results")) is (payload.lower() == "true")
+            return bool(run_record.get("final_answer_used_tool_results")) is (
+                payload.lower() == "true"
+            )
         if rule == "subagent_trace_contains":
-            return any(str(item.get("agent")) == payload for item in run_record.get("subagent_trace", []))
+            return any(
+                str(item.get("agent")) == payload for item in run_record.get("subagent_trace", [])
+            )
         if rule == "tool_result_status":
             tool_name, status = payload.split(":", 1)
             return any(
@@ -93,7 +105,8 @@ class RuleVerifier:
         if rule == "tool_result_failure":
             tool_name, category = payload.split(":", 1)
             return any(
-                str(item.get("tool_name")) == tool_name and str(item.get("failure_category")) == category
+                str(item.get("tool_name")) == tool_name
+                and str(item.get("failure_category")) == category
                 for item in run_record.get("tool_results", [])
             )
         if rule == "tool_result_metadata":
@@ -116,9 +129,7 @@ class RuleVerifier:
     def _has_context_metrics(run_record: dict[str, object]) -> bool:
         metrics = run_record.get("context_metrics", {})
         return (
-            isinstance(metrics, dict)
-            and "prompt_tokens" in metrics
-            and "context_chars" in metrics
+            isinstance(metrics, dict) and "prompt_tokens" in metrics and "context_chars" in metrics
         )
 
     @staticmethod

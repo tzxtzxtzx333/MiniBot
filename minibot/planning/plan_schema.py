@@ -8,7 +8,9 @@ from datetime import datetime, timezone
 from uuid import uuid4
 
 _VALID_PLAN_STATUSES = frozenset({"pending", "running", "completed", "failed", "waiting_approval"})
-_VALID_STEP_STATUSES = frozenset({"pending", "running", "completed", "failed", "skipped", "waiting_approval"})
+_VALID_STEP_STATUSES = frozenset(
+    {"pending", "running", "completed", "failed", "skipped", "waiting_approval"}
+)
 
 
 @dataclass(slots=True)
@@ -51,7 +53,9 @@ class Step:
             depends_on=[str(d) for d in data.get("depends_on", []) if isinstance(d, (str,))],
             run_id=str(data["run_id"]) if data.get("run_id") else None,
             evidence_ids=[str(e) for e in data.get("evidence_ids", []) if isinstance(e, (str,))],
-            failure_category=str(data["failure_category"]) if data.get("failure_category") else None,
+            failure_category=(
+                str(data["failure_category"]) if data.get("failure_category") else None
+            ),
             retry_count=int(data.get("retry_count", 0)),
         )
 

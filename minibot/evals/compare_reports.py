@@ -19,20 +19,35 @@ class ReportComparator:
         new_failures = sorted(
             case_id
             for case_id, result in right_results.items()
-            if not bool(result.get("passed")) and bool(left_results.get(case_id, {}).get("passed", True))
+            if not bool(result.get("passed"))
+            and bool(left_results.get(case_id, {}).get("passed", True))
         )
         fixed_failures = sorted(
             case_id
             for case_id, result in right_results.items()
-            if bool(result.get("passed")) and not bool(left_results.get(case_id, {}).get("passed", True))
+            if bool(result.get("passed"))
+            and not bool(left_results.get(case_id, {}).get("passed", True))
         )
         metric_changes = {
             metric: {
                 "left": left_report.get(metric),
                 "right": right_report.get(metric),
-                "delta": round(float(right_report.get(metric, 0.0)) - float(left_report.get(metric, 0.0)), 4),
+                "delta": round(
+                    float(right_report.get(metric, 0.0)) - float(left_report.get(metric, 0.0)), 4
+                ),
             }
-            for metric in ("pass_rate", "avg_latency", "avg_tool_rounds", "tool_rounds", "retry_count", "partial_success", "planner_pass_rate", "avg_plan_steps", "avg_evidence_count", "replan_count")
+            for metric in (
+                "pass_rate",
+                "avg_latency",
+                "avg_tool_rounds",
+                "tool_rounds",
+                "retry_count",
+                "partial_success",
+                "planner_pass_rate",
+                "avg_plan_steps",
+                "avg_evidence_count",
+                "replan_count",
+            )
         }
         avg_prompt_tokens_before = left_report.get("avg_prompt_tokens", 0.0)
         avg_prompt_tokens_after = right_report.get("avg_prompt_tokens", 0.0)
@@ -66,9 +81,15 @@ class ReportComparator:
             "new_failures": new_failures,
             "fixed_failures": fixed_failures,
             "metric_changes": metric_changes,
-            "capability_status_changes": self._diff_mapping(left_report.get("capability_status", {}), right_report.get("capability_status", {})),
-            "mock_tools_used_changes": self._diff_list(left_report.get("mock_tools_used", []), right_report.get("mock_tools_used", [])),
-            "real_tools_used_changes": self._diff_list(left_report.get("real_tools_used", []), right_report.get("real_tools_used", [])),
+            "capability_status_changes": self._diff_mapping(
+                left_report.get("capability_status", {}), right_report.get("capability_status", {})
+            ),
+            "mock_tools_used_changes": self._diff_list(
+                left_report.get("mock_tools_used", []), right_report.get("mock_tools_used", [])
+            ),
+            "real_tools_used_changes": self._diff_list(
+                left_report.get("real_tools_used", []), right_report.get("real_tools_used", [])
+            ),
             "avg_prompt_tokens_before": avg_prompt_tokens_before,
             "avg_prompt_tokens_after": avg_prompt_tokens_after,
             "avg_context_chars_before": avg_context_chars_before,

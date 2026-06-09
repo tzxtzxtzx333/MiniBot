@@ -12,7 +12,6 @@ from minibot.harness.context_builder import ContextBuilder
 from minibot.json_utils import load_json_file
 from minibot.memory.recall import MemoryRecall
 
-
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -41,7 +40,11 @@ def _prepare_temp_root(
         config["context_token_budget"] = token_budget
     if archive_token_budget is not None:
         config["archive_token_budget"] = archive_token_budget
-    if auto_compact_enabled is not None or history_turn_compact_threshold is not None or history_compact_keep_recent is not None:
+    if (
+        auto_compact_enabled is not None
+        or history_turn_compact_threshold is not None
+        or history_compact_keep_recent is not None
+    ):
         memory = config.get("memory", {})
         if isinstance(memory, dict):
             memory = dict(memory)
@@ -144,7 +147,10 @@ def test_new_command_compacts_history_and_resets_recent_history() -> None:
         assert "compression_trigger: manual_new" in latest_archive
         history_text = app.runtime.workspace.read_history()
         assert "hello archive" not in history_text
-        assert result.response == "MiniBot archived the recent session and started a new history window."
+        assert (
+            result.response
+            == "MiniBot archived the recent session and started a new history window."
+        )
 
         run_path = app.runtime.workspace.runs_dir / f"{result.run_id}.json"
         record = json.loads(run_path.read_text(encoding="utf-8"))
@@ -190,13 +196,22 @@ def test_new_command_uses_real_summarizer_and_records_real_archive_metadata(monk
 
         app = MiniBotApp(temp_root)
         app.runtime.agent_loop.handle_message(
-            ChannelMessage(channel="test", user_id="tester", session_id="real-new-session", content="hello archive")
+            ChannelMessage(
+                channel="test",
+                user_id="tester",
+                session_id="real-new-session",
+                content="hello archive",
+            )
         )
         result = app.runtime.agent_loop.handle_message(
-            ChannelMessage(channel="test", user_id="tester", session_id="real-new-session", content="/new")
+            ChannelMessage(
+                channel="test", user_id="tester", session_id="real-new-session", content="/new"
+            )
         )
 
-        latest_archive = sorted(app.runtime.workspace.archives_dir.glob("*.md"))[-1].read_text(encoding="utf-8")
+        latest_archive = sorted(app.runtime.workspace.archives_dir.glob("*.md"))[-1].read_text(
+            encoding="utf-8"
+        )
         assert "archive_mode: real" in latest_archive
         assert "archive_model_provider: deepseek" in latest_archive
         assert "archive_model_name: deepseek-chat" in latest_archive
@@ -245,8 +260,12 @@ def test_context_builder_injects_memory_and_recalls_history_and_archives() -> No
     temp_root = _prepare_temp_root()
     try:
         app = MiniBotApp(temp_root)
-        app.runtime.workspace.memory_file.write_text("# MEMORY\n\n- project: alpha rollout\n", encoding="utf-8")
-        app.runtime.workspace.history_file.write_text("# HISTORY\n\nuser: alpha checklist\n", encoding="utf-8")
+        app.runtime.workspace.memory_file.write_text(
+            "# MEMORY\n\n- project: alpha rollout\n", encoding="utf-8"
+        )
+        app.runtime.workspace.history_file.write_text(
+            "# HISTORY\n\nuser: alpha checklist\n", encoding="utf-8"
+        )
         archive_path = app.runtime.workspace.archives_dir / "archive-alpha.md"
         archive_path.write_text(
             "# ARCHIVE\n\nsummary_by: SummarizerAgent\nsource_session_id: sess\ncreated_at: now\ntoken_before: 10\ntoken_after: 5\ncompression_trigger: user_new_command\n\n## 关键事实\n- alpha owner is Alice\n",
@@ -324,7 +343,9 @@ def test_agent_loop_records_cleaned_placeholders_in_trace() -> None:
     try:
         app = MiniBotApp(temp_root)
         app.runtime.agent_loop.context_builder.enable_history_retrieval = False
-        app.runtime.workspace.history_file.write_text("# HISTORY\n\nTODO\n<pending>\nreal history\n", encoding="utf-8")
+        app.runtime.workspace.history_file.write_text(
+            "# HISTORY\n\nTODO\n<pending>\nreal history\n", encoding="utf-8"
+        )
         result = app.runtime.agent_loop.handle_message(
             ChannelMessage(
                 channel="test",
@@ -402,7 +423,9 @@ def test_history_retriever_scores_relevant_turns_above_irrelevant() -> None:
     assert result["history_retrieval_mode"] == "relevance"
     assert result["retrieved_history_count"] >= 1
     # The deploy turn should be scored highest
-    assert "deploy" in result["history_text"].lower() or "python app" in result["history_text"].lower()
+    assert (
+        "deploy" in result["history_text"].lower() or "python app" in result["history_text"].lower()
+    )
     # Irrelevant weather turn should not appear in top_k
     # (it might appear if top_k is large enough, but our score should rank deploy above weather)
     retrieved = result["history_text"]
@@ -519,7 +542,9 @@ def test_auto_compact_triggers_on_turn_threshold_and_keeps_recent_turns() -> Non
         assert archives, "Expected at least one archive file"
 
         # Latest archive should have the new metadata fields
-        latest_archive = sorted(archives, key=lambda p: p.stat().st_mtime)[-1].read_text(encoding="utf-8")
+        latest_archive = sorted(archives, key=lambda p: p.stat().st_mtime)[-1].read_text(
+            encoding="utf-8"
+        )
         assert "history_turn_count_before:" in latest_archive
         assert "history_turn_count_after:" in latest_archive
 
@@ -527,7 +552,9 @@ def test_auto_compact_triggers_on_turn_threshold_and_keeps_recent_turns() -> Non
         run_path = app.runtime.workspace.runs_dir / f"{result.run_id}.json"
         record = json.loads(run_path.read_text(encoding="utf-8"))
         compression_events = record.get("compression_events", [])
-        turn_threshold_events = [e for e in compression_events if e.get("trigger") == "turn_threshold"]
+        turn_threshold_events = [
+            e for e in compression_events if e.get("trigger") == "turn_threshold"
+        ]
         assert turn_threshold_events, "Expected at least one turn_threshold compression event"
         event = turn_threshold_events[-1]
         assert event.get("compression_trigger") == "turn_threshold"
@@ -546,10 +573,17 @@ def test_new_command_trigger_is_manual_new() -> None:
     try:
         app = MiniBotApp(temp_root)
         app.runtime.agent_loop.handle_message(
-            ChannelMessage(channel="test", user_id="tester", session_id="manual-new-session", content="some chat")
+            ChannelMessage(
+                channel="test",
+                user_id="tester",
+                session_id="manual-new-session",
+                content="some chat",
+            )
         )
         result = app.runtime.agent_loop.handle_message(
-            ChannelMessage(channel="test", user_id="tester", session_id="manual-new-session", content="/new")
+            ChannelMessage(
+                channel="test", user_id="tester", session_id="manual-new-session", content="/new"
+            )
         )
         archives = list(app.runtime.workspace.archives_dir.glob("*.md"))
         assert archives
@@ -603,7 +637,9 @@ def test_summarizer_failure_preserves_history() -> None:
         # Monkey-patch summarizer to fail
         original_summarize = app.runtime.summarizer_agent.summarize
 
-        def failing_summarize(history_text: str = "", memory_text: str = "") -> dict[str, object]:  # noqa: ARG001
+        def failing_summarize(
+            history_text: str = "", memory_text: str = ""
+        ) -> dict[str, object]:  # noqa: ARG001
             raise RuntimeError("simulated summarizer failure")
 
         app.runtime.summarizer_agent.summarize = failing_summarize
@@ -625,8 +661,12 @@ def test_summarizer_failure_preserves_history() -> None:
 
         # HISTORY must still contain the original turns (not wiped)
         history_after = app.runtime.workspace.read_history()
-        assert "important turn 1" in history_after, "HISTORY should not be lost on summarizer failure"
-        assert "important turn 2" in history_after, "HISTORY should not be lost on summarizer failure"
+        assert (
+            "important turn 1" in history_after
+        ), "HISTORY should not be lost on summarizer failure"
+        assert (
+            "important turn 2" in history_after
+        ), "HISTORY should not be lost on summarizer failure"
     finally:
         shutil.rmtree(temp_root, ignore_errors=True)
 
@@ -638,19 +678,28 @@ def test_auto_compact_does_not_affect_safety_or_multiround() -> None:
         app = MiniBotApp(temp_root)
         # Normal chat
         result1 = app.runtime.agent_loop.handle_message(
-            ChannelMessage(channel="test", user_id="tester", session_id="safety-session", content="hello")
+            ChannelMessage(
+                channel="test", user_id="tester", session_id="safety-session", content="hello"
+            )
         )
         assert result1.response == "MiniBot echo: hello"
 
         # Tool call
         result2 = app.runtime.agent_loop.handle_message(
-            ChannelMessage(channel="test", user_id="tester", session_id="safety-session", content="calculate 1 + 1")
+            ChannelMessage(
+                channel="test",
+                user_id="tester",
+                session_id="safety-session",
+                content="calculate 1 + 1",
+            )
         )
         assert result2.response == "MiniBot tool result: 2"
 
         # /new still produces archive
         result3 = app.runtime.agent_loop.handle_message(
-            ChannelMessage(channel="test", user_id="tester", session_id="safety-session", content="/new")
+            ChannelMessage(
+                channel="test", user_id="tester", session_id="safety-session", content="/new"
+            )
         )
         assert "archived" in result3.response.lower()
         archives = list(app.runtime.workspace.archives_dir.glob("*.md"))

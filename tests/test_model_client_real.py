@@ -1,10 +1,10 @@
 from __future__ import annotations
 
+import json
 import shutil
+import urllib.error
 import uuid
 from pathlib import Path
-import json
-import urllib.error
 
 import pytest
 
@@ -96,7 +96,9 @@ def test_fake_mode_remains_available_without_real_settings(temp_project_root: Pa
     assert client.__class__.__name__ == "FakeModelClient"
 
 
-def test_real_mode_accepts_legacy_env_keys(temp_project_root: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_real_mode_accepts_legacy_env_keys(
+    temp_project_root: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     monkeypatch.setenv("MINIBOT_MODEL_PROVIDER", "deepseek")
     monkeypatch.setenv("MINIBOT_BASE_URL", "https://api.deepseek.com")
     monkeypatch.setenv("MINIBOT_API_KEY", "legacy-key")
@@ -120,7 +122,9 @@ def test_real_mode_does_not_fallback_to_fake_model(
         load_model_client(project_root=temp_project_root, mode="real")
 
 
-def test_config_env_real_mode_overrides_fake_file(temp_project_root: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_config_env_real_mode_overrides_fake_file(
+    temp_project_root: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     _write_config(temp_project_root, "fake")
     monkeypatch.setenv("MINIBOT_MODEL_MODE", "real")
 
@@ -143,7 +147,9 @@ class _FakeHttpResponse:
         return None
 
 
-def test_real_model_plan_parses_tool_plan_and_sends_tool_schema(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_real_model_plan_parses_tool_plan_and_sends_tool_schema(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     captured: dict[str, object] = {}
 
     def fake_urlopen(request, timeout: int = 0):  # noqa: ANN001
@@ -161,7 +167,10 @@ def test_real_model_plan_parses_tool_plan_and_sends_tool_schema(monkeypatch: pyt
                                     "type": "tool_plan",
                                     "content": "????????",
                                     "tool_calls": [
-                                        {"tool_name": "calculator", "arguments": {"expression": "2 + 3"}}
+                                        {
+                                            "tool_name": "calculator",
+                                            "arguments": {"expression": "2 + 3"},
+                                        }
                                     ],
                                 },
                                 ensure_ascii=False,
@@ -179,7 +188,9 @@ def test_real_model_plan_parses_tool_plan_and_sends_tool_schema(monkeypatch: pyt
         model="deepseek-chat",
         provider="deepseek",
     )
-    message = ChannelMessage(channel="cli", user_id="u1", session_id="s1", content="???? 2 + 3", metadata={})
+    message = ChannelMessage(
+        channel="cli", user_id="u1", session_id="s1", content="???? 2 + 3", metadata={}
+    )
     context = {
         "system_prompt": "You are MiniBot.",
         "tool_specs": [
@@ -236,18 +247,12 @@ def test_real_model_plan_parses_tool_plan_and_sends_tool_schema(monkeypatch: pyt
     assert plan.raw_plan["model_error"] is None
 
 
-def test_real_model_plan_records_tool_parse_error_for_invalid_json(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_real_model_plan_records_tool_parse_error_for_invalid_json(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     def fake_urlopen(request, timeout: int = 0):  # noqa: ANN001, ARG001
         return _FakeHttpResponse(
-            {
-                "choices": [
-                    {
-                        "message": {
-                            "content": "not-json-but-still-a-response"
-                        }
-                    }
-                ]
-            }
+            {"choices": [{"message": {"content": "not-json-but-still-a-response"}}]}
         )
 
     monkeypatch.setattr("urllib.request.urlopen", fake_urlopen)
@@ -257,7 +262,9 @@ def test_real_model_plan_records_tool_parse_error_for_invalid_json(monkeypatch: 
         model="deepseek-chat",
         provider="deepseek",
     )
-    message = ChannelMessage(channel="cli", user_id="u1", session_id="s1", content="请决定是否需要工具", metadata={})
+    message = ChannelMessage(
+        channel="cli", user_id="u1", session_id="s1", content="请决定是否需要工具", metadata={}
+    )
 
     plan = client.plan(message, {"system_prompt": "You are MiniBot.", "tool_specs": []})
 
@@ -268,7 +275,9 @@ def test_real_model_plan_records_tool_parse_error_for_invalid_json(monkeypatch: 
     assert plan.raw_plan["fake_model"] is False
 
 
-def test_real_model_plan_records_http_error_without_traceback(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_real_model_plan_records_http_error_without_traceback(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     class _FakeHttpError(urllib.error.HTTPError):
         def __init__(self) -> None:
             super().__init__(
@@ -292,7 +301,9 @@ def test_real_model_plan_records_http_error_without_traceback(monkeypatch: pytes
         model="deepseek-chat",
         provider="deepseek",
     )
-    message = ChannelMessage(channel="cli", user_id="u1", session_id="s1", content="calculate 2 + 3", metadata={})
+    message = ChannelMessage(
+        channel="cli", user_id="u1", session_id="s1", content="calculate 2 + 3", metadata={}
+    )
 
     plan = client.plan(message, {"system_prompt": "You are MiniBot.", "tool_specs": []})
 
@@ -300,18 +311,22 @@ def test_real_model_plan_records_http_error_without_traceback(monkeypatch: pytes
     assert plan.raw_plan["reason"] == "model_http_error"
     assert plan.raw_plan["model_error"] == "model_http_error"
     assert plan.raw_plan["status_code"] == 400
-    assert 'bad request' in plan.raw_plan["response_body"]
+    assert "bad request" in plan.raw_plan["response_body"]
     assert plan.assistant_message == "model_http_error status_code=400"
 
 
-def test_real_model_finalize_sends_tool_results_and_returns_natural_language(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_real_model_finalize_sends_tool_results_and_returns_natural_language(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     captured: dict[str, object] = {}
 
     def fake_urlopen(request, timeout: int = 0):  # noqa: ANN001
         captured["url"] = request.full_url
         captured["timeout"] = timeout
         captured["body"] = json.loads(request.data.decode("utf-8"))
-        return _FakeHttpResponse({"choices": [{"message": {"content": "根据工具结果，答案是 5。"}}]})
+        return _FakeHttpResponse(
+            {"choices": [{"message": {"content": "根据工具结果，答案是 5。"}}]}
+        )
 
     monkeypatch.setattr("urllib.request.urlopen", fake_urlopen)
     client = OpenAICompatibleModelClient(
@@ -321,7 +336,9 @@ def test_real_model_finalize_sends_tool_results_and_returns_natural_language(mon
         provider="deepseek",
     )
     final_answer = client.finalize(
-        message=ChannelMessage(channel="cli", user_id="u1", session_id="s1", content="请帮我算 2 + 3", metadata={}),
+        message=ChannelMessage(
+            channel="cli", user_id="u1", session_id="s1", content="请帮我算 2 + 3", metadata={}
+        ),
         context={"history": "user: 请帮我算 2 + 3", "memory": "", "archives": []},
         tool_calls=[{"tool_name": "calculator", "arguments": {"expression": "2 + 3"}}],
         tool_results=[{"tool_name": "calculator", "status": "success", "output": {"result": 5}}],

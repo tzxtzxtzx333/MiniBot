@@ -125,9 +125,15 @@ def load_config(path: Path) -> MiniBotConfig:
             if isinstance(value, dict):
                 agent_profiles[str(key)] = AgentBudgetProfile(
                     max_tool_rounds=int(value.get("max_tool_rounds", budget.max_tool_rounds)),
-                    max_tool_calls_total=int(value.get("max_tool_calls_total", budget.max_tool_calls_total)),
-                    max_runtime_seconds=int(value.get("max_runtime_seconds", budget.max_runtime_seconds)),
-                    max_same_tool_calls=int(value.get("max_same_tool_calls", budget.max_same_tool_calls)),
+                    max_tool_calls_total=int(
+                        value.get("max_tool_calls_total", budget.max_tool_calls_total)
+                    ),
+                    max_runtime_seconds=int(
+                        value.get("max_runtime_seconds", budget.max_runtime_seconds)
+                    ),
+                    max_same_tool_calls=int(
+                        value.get("max_same_tool_calls", budget.max_same_tool_calls)
+                    ),
                 )
     # History retrieval config
     retrieval_raw = data.get("history_retrieval", {})
@@ -146,7 +152,9 @@ def load_config(path: Path) -> MiniBotConfig:
     if isinstance(memory_raw, dict):
         memory_config = MemoryCompactConfig(
             auto_compact_enabled=bool(memory_raw.get("auto_compact_enabled", True)),
-            history_turn_compact_threshold=int(memory_raw.get("history_turn_compact_threshold", 20)),
+            history_turn_compact_threshold=int(
+                memory_raw.get("history_turn_compact_threshold", 20)
+            ),
             history_compact_keep_recent=int(memory_raw.get("history_compact_keep_recent", 6)),
         )
     else:

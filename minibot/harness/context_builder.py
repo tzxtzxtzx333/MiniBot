@@ -63,12 +63,18 @@ class ContextBuilder:
         else:
             history_text = raw_history_text
 
-        if self.enable_history_truncation and self.token_budget is not None and self.history_truncator is not None:
+        if (
+            self.enable_history_truncation
+            and self.token_budget is not None
+            and self.history_truncator is not None
+        ):
             history_budget = self.history_token_budget_override or self.context_token_budget
             if self.token_budget.is_over_budget(history_text, history_budget):
                 history_text = self.history_truncator.truncate(history_text, history_budget)
 
-        archive_context = self._read_full_archives(required_facts) if self.enable_archive_full_context else ""
+        archive_context = (
+            self._read_full_archives(required_facts) if self.enable_archive_full_context else ""
+        )
 
         recalled_memories = self.memory_recall.recall(
             message.content,
@@ -113,7 +119,11 @@ class ContextBuilder:
         retrieved_count = int(history_meta.get("retrieved_history_count", 0))
         retrieved_chars = int(history_meta.get("retrieved_history_chars", len(history)))
         tool_results = list(context.get("tool_results", []))
-        evidence_count = sum(1 for tr in tool_results if isinstance(tr.get("output"), dict) and tr["output"].get("_compressed"))
+        evidence_count = sum(
+            1
+            for tr in tool_results
+            if isinstance(tr.get("output"), dict) and tr["output"].get("_compressed")
+        )
         return (
             f"system_prompt={len(str(context.get('system_prompt', '')))} chars; "
             f"memory={len(memory)} chars; "
@@ -160,7 +170,9 @@ class ContextBuilder:
                 message,
             ]
         )
-        required_facts = [str(item) for item in context.get("_required_facts", []) if str(item).strip()]
+        required_facts = [
+            str(item) for item in context.get("_required_facts", []) if str(item).strip()
+        ]
         history_meta = context.get("_history_meta", {})
         # Compute evidence metrics from tool_results
         evidence_chars = 0
@@ -179,7 +191,9 @@ class ContextBuilder:
             "history_chars": len(history),
             "history_retrieval_mode": str(history_meta.get("history_retrieval_mode", "full")),
             "retrieved_history_count": int(history_meta.get("retrieved_history_count", 0)),
-            "retrieved_history_chars": int(history_meta.get("retrieved_history_chars", len(history))),
+            "retrieved_history_chars": int(
+                history_meta.get("retrieved_history_chars", len(history))
+            ),
             "memory_chars": len(memory),
             "archive_chars": archive_chars,
             "recalled_chars": recalled_chars,
@@ -187,7 +201,9 @@ class ContextBuilder:
             "tool_specs_chars": len(tool_specs_blob),
             "evidence_chars": evidence_chars,
             "evidence_count": evidence_count,
-            "key_facts_preserved": all(fact in prompt_text for fact in required_facts) if required_facts else True,
+            "key_facts_preserved": (
+                all(fact in prompt_text for fact in required_facts) if required_facts else True
+            ),
             "token_estimator": "ceil_len_div_4",
         }
 

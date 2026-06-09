@@ -37,7 +37,9 @@ class MemoryRecall:
                 except (PermissionError, UnicodeDecodeError, OSError, IsADirectoryError):
                     continue
                 candidates.extend(
-                    self._collect_scored_lines(archive_text, query_tokens, prefix=f"archive:{archive_path.name}")
+                    self._collect_scored_lines(
+                        archive_text, query_tokens, prefix=f"archive:{archive_path.name}"
+                    )
                 )
 
         ranked = sorted(candidates, key=lambda item: (-item[0], item[1]))
@@ -49,7 +51,9 @@ class MemoryRecall:
                 break
         return unique
 
-    def _collect_scored_lines(self, text: str, query_tokens: set[str], *, prefix: str) -> list[tuple[int, str]]:
+    def _collect_scored_lines(
+        self, text: str, query_tokens: set[str], *, prefix: str
+    ) -> list[tuple[int, str]]:
         scored: list[tuple[int, str]] = []
         for raw_line in text.splitlines():
             line = raw_line.strip()

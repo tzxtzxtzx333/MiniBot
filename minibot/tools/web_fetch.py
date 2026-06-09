@@ -6,30 +6,10 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-from .base import BaseTool, ToolResult, ToolSpec
+from .base import BaseTool, ToolResult, ToolSpec, provider_metadata
 
 MAX_RESPONSE_BYTES = 16000
 MAX_SNIPPET_CHARS = 4000
-
-
-def _provider_metadata(
-    *,
-    provider: str,
-    provider_status: str,
-    mock_provider: bool,
-    real_provider: bool,
-    mcp_provider: bool = False,
-    **extra: object,
-) -> dict[str, object]:
-    metadata = {
-        "provider": provider,
-        "provider_status": provider_status,
-        "mock_provider": mock_provider,
-        "real_provider": real_provider,
-        "mcp_provider": mcp_provider,
-    }
-    metadata.update(extra)
-    return metadata
 
 
 class WebFetchTool(BaseTool):
@@ -60,7 +40,7 @@ class WebFetchTool(BaseTool):
                 output=None,
                 error="unsupported_url_scheme",
                 failure_category="unsupported_url_scheme",
-                metadata=_provider_metadata(
+                metadata=provider_metadata(
                     provider="web_fetch",
                     provider_status="failed",
                     mock_provider=False,
@@ -73,12 +53,16 @@ class WebFetchTool(BaseTool):
             headers={"User-Agent": "MiniBot/0.1 (+https://example.com)"},
         )
         try:
-            with urllib.request.urlopen(request, timeout=self.spec.timeout) as response:  # noqa: S310
+            with urllib.request.urlopen(
+                request, timeout=self.spec.timeout
+            ) as response:  # noqa: S310
                 raw = response.read(MAX_RESPONSE_BYTES + 1)
                 content_type = str(getattr(response, "headers", {}).get("Content-Type", ""))
                 encoding = "utf-8"
                 if "charset=" in content_type:
-                    encoding = content_type.split("charset=", 1)[1].split(";", 1)[0].strip() or "utf-8"
+                    encoding = (
+                        content_type.split("charset=", 1)[1].split(";", 1)[0].strip() or "utf-8"
+                    )
                 text = raw[:MAX_RESPONSE_BYTES].decode(encoding, errors="replace")
                 truncated = len(raw) > MAX_RESPONSE_BYTES or len(text) > MAX_SNIPPET_CHARS
                 snippet = text[:MAX_SNIPPET_CHARS]
@@ -91,7 +75,7 @@ class WebFetchTool(BaseTool):
                         "content_type": content_type or "application/octet-stream",
                         "text_snippet": snippet,
                     },
-                    metadata=_provider_metadata(
+                    metadata=provider_metadata(
                         provider="web_fetch",
                         provider_status="real",
                         mock_provider=False,
@@ -107,7 +91,7 @@ class WebFetchTool(BaseTool):
                 output=None,
                 error=f"web_fetch_http_error: {exc.code}",
                 failure_category="web_fetch_http_error",
-                metadata=_provider_metadata(
+                metadata=provider_metadata(
                     provider="web_fetch",
                     provider_status="failed",
                     mock_provider=False,
@@ -123,11 +107,10 @@ class WebFetchTool(BaseTool):
                 output=None,
                 error=f"web_fetch_network_error: {exc.reason}",
                 failure_category="web_fetch_network_error",
-                metadata=_provider_metadata(
+                metadata=provider_metadata(
                     provider="web_fetch",
                     provider_status="failed",
                     mock_provider=False,
                     real_provider=True,
                 ),
             )
-

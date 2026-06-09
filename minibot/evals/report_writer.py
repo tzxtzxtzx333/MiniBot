@@ -70,11 +70,13 @@ class ReportWriter:
             lines.append(f"- profile.{name}: {count}")
         for name, count in dict(report.get("benchmark_case_count_by_category", {})).items():
             lines.append(f"- category.{name}: {count}")
-        lines.extend([
-            "",
-            "## Capability Status",
-            "",
-        ])
+        lines.extend(
+            [
+                "",
+                "## Capability Status",
+                "",
+            ]
+        )
         for capability, status in dict(report.get("capability_status", {})).items():
             lines.append(f"- {capability}: {status}")
         human_review = dict(report.get("human_review", {}))
@@ -88,7 +90,15 @@ class ReportWriter:
         lines.extend(["", "## External Integrations", ""])
         for name, status in dict(report.get("external_integrations", {})).items():
             lines.append(f"- {name}: {status}")
-        lines.extend(["", "## Results", "", "| id | category | status | verifier_reason |", "| --- | --- | --- | --- |"])
+        lines.extend(
+            [
+                "",
+                "## Results",
+                "",
+                "| id | category | status | verifier_reason |",
+                "| --- | --- | --- | --- |",
+            ]
+        )
         for item in report.get("results", []):
             lines.append(
                 f"| {item.get('id')} | {item.get('category')} | {item.get('status')} | {str(item.get('verifier_reason', '')).replace('|', '/')} |"

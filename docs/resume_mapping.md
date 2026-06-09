@@ -38,7 +38,7 @@ MiniBot 智能体｜核心开发者
 - 结构化记忆：设计 MEMORY.md / HISTORY.md / Archives 多层记忆结构，支持长期偏好写入、近期对话检索与 /new 触发的 LLM 压缩归档，在保持记忆连续性的同时控制上下文长度。
 - 上下文管理：参考 Claude Code 分级压缩思路，自建多层治理管线，覆盖历史消息截断、记忆压缩、占位清理、工具输出压缩、硬截断与子代理摘要固化等策略，保障长对话场景下上下文窗口稳定。
 - 工具安全与运行治理：实现三层治理机制（白名单自动执行 / 灰名单审批确认 / 黑名单阻断并审计），落地参数校验、Pending Approval Queue、Docker 沙箱隔离、敏感信息脱敏、重复调用去重与高风险命令黑名单阻断；支持 Partial Success 识别与自动重试降级，安全回归测试 8 个场景保持 100% 通过率（safety profile 8/8）。
-- 外部工具接入：接入 DeepSeek 作为真实模型后端，支持模型输出 tool_plan 驱动工具调用；支持 Feishu WebSocket、Tavily 搜索、QWeather 天气、AMap MCP 路线规划 / 周边 POI 等真实 provider 接入，并保留 mock / fake 模式用于本地回归测试。
+- 外部工具接入：接入 DeepSeek 作为真实模型后端，支持模型输出 tool_plan 驱动工具调用；实现 Feishu WebSocket、Tavily 搜索、QWeather 天气、AMap MCP 路线规划 / 周边 POI 等外部 provider 的接入边界，保留 mock / fake 模式用于本地回归测试。
 - 评测与审计闭环：构建 100+ Benchmark 任务集，覆盖记忆召回、上下文治理、工具安全、外部集成与多步推理等维度；支持 pass_rate / tool_rounds / avg_latency / failure_category / tool_trace / verifier_reason 等 6 项指标自动汇总与版本回归对比。real execution profile 5/5 case 通过，pass_rate 100%，平均延迟约 2.60s，平均工具轮次 1.2；real-agent profile 12/12；safety profile 8/8；multiround profile 2/2。
 ```
 
@@ -377,7 +377,7 @@ MiniBot 智能体｜核心开发者
 - `ModelVerifier`：支持 fake / real verifier；real 缺配置或错误必须写入 report
 - `weather`：可配置真实接入 / 默认 mock
 - `map_route`：可配置 MCP 接入 / 默认 mock
-- `feishu`：Feishu WebSocket 已完成真实联调，但默认 status 可能因未配置环境变量显示 `feishu_config_present=false`
+- `feishu`：Feishu WebSocket 接入边界代码已完成；真实联通依赖飞书开放平台配置，默认 status 因未配置环境变量显示 `feishu_config_present=false`
 ## Human Review Queue
 
 - Resume-safe wording:

@@ -17,12 +17,12 @@ class _WorkspacePathMixin:
             raise ToolError("invalid_path", "invalid_path")
         candidate = PurePath(cleaned)
         if candidate.is_absolute():
-            raise ToolError("absolute path blocked by policy", "blocked_by_policy")
+            raise ToolError("absolute path blocked by policy", "path_outside_workspace")
         if any(part == ".." for part in candidate.parts):
-            raise ToolError("path escape blocked by policy", "blocked_by_policy")
+            raise ToolError("path escape blocked by policy", "path_outside_workspace")
         target = (self.allowed_root / Path(*candidate.parts)).resolve()
         if self.allowed_root not in target.parents and target != self.allowed_root:
-            raise ToolError("path escape blocked by policy", "blocked_by_policy")
+            raise ToolError("path escape blocked by policy", "path_outside_workspace")
         return target
 
 

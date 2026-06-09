@@ -32,7 +32,9 @@ def test_fake_summarizer_returns_fake_archive_metadata() -> None:
     assert "summary" in result
 
 
-def test_real_summarizer_uses_model_client_and_returns_real_archive_metadata(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_real_summarizer_uses_model_client_and_returns_real_archive_metadata(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     def fake_urlopen(request, timeout: int = 0):  # noqa: ANN001, ARG001
         body = json.loads(request.data.decode("utf-8"))
         assert body["model"] == "deepseek-chat"

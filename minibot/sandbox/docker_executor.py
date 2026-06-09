@@ -32,7 +32,13 @@ class DockerSandboxExecutor:
             return False
         return result.returncode == 0
 
-    def execute(self, tool_name: str, payload: dict[str, object], workspace_root: Path, timeout: int | None = None) -> ToolResult:
+    def execute(
+        self,
+        tool_name: str,
+        payload: dict[str, object],
+        workspace_root: Path,
+        timeout: int | None = None,
+    ) -> ToolResult:
         """Run a supported high-risk tool in Docker or fail safely."""
 
         effective_timeout = timeout or self.policy.timeout_seconds
@@ -144,7 +150,8 @@ class DockerSandboxExecutor:
             "container_image": self.policy.image,
             "timeout": effective_timeout,
             "exit_code": result.returncode,
-            "output_truncated": len(result.stdout) > self.policy.max_output_chars or len(result.stderr) > self.policy.max_output_chars,
+            "output_truncated": len(result.stdout) > self.policy.max_output_chars
+            or len(result.stderr) > self.policy.max_output_chars,
             "blocked_by_policy": False,
         }
         if result.returncode != 0:

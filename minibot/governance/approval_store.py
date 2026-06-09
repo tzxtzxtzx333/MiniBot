@@ -48,7 +48,9 @@ class ApprovalStore:
         risk_level: str,
         reason: str,
     ) -> dict[str, object]:
-        signature = self.build_request_signature(user_id=user_id, tool_name=tool_name, arguments=arguments)
+        signature = self.build_request_signature(
+            user_id=user_id, tool_name=tool_name, arguments=arguments
+        )
         existing = self.find_pending_by_signature(signature)
         if existing is not None:
             return existing
@@ -68,7 +70,11 @@ class ApprovalStore:
         return record
 
     def list_pending(self) -> list[dict[str, object]]:
-        return [record for record in self._read_jsonl(self.pending_file) if str(record.get("status")) == "pending"]
+        return [
+            record
+            for record in self._read_jsonl(self.pending_file)
+            if str(record.get("status")) == "pending"
+        ]
 
     def approve(self, approval_id: str) -> dict[str, object]:
         return self._resolve(approval_id, action="approved")
@@ -76,8 +82,12 @@ class ApprovalStore:
     def reject(self, approval_id: str) -> dict[str, object]:
         return self._resolve(approval_id, action="rejected")
 
-    def find_resolution(self, *, user_id: str, tool_name: str, arguments: dict[str, object]) -> dict[str, object] | None:
-        signature = self.build_request_signature(user_id=user_id, tool_name=tool_name, arguments=arguments)
+    def find_resolution(
+        self, *, user_id: str, tool_name: str, arguments: dict[str, object]
+    ) -> dict[str, object] | None:
+        signature = self.build_request_signature(
+            user_id=user_id, tool_name=tool_name, arguments=arguments
+        )
         resolved = [
             record
             for record in self._read_jsonl(self.resolved_file)
@@ -97,7 +107,9 @@ class ApprovalStore:
         }
 
     @staticmethod
-    def build_request_signature(*, user_id: str, tool_name: str, arguments: dict[str, object]) -> str:
+    def build_request_signature(
+        *, user_id: str, tool_name: str, arguments: dict[str, object]
+    ) -> str:
         canonical = json.dumps(
             {
                 "user_id": user_id,
@@ -114,7 +126,8 @@ class ApprovalStore:
         pending = [
             record
             for record in self._read_jsonl(self.pending_file)
-            if str(record.get("request_signature")) == signature and str(record.get("status")) == "pending"
+            if str(record.get("request_signature")) == signature
+            and str(record.get("status")) == "pending"
         ]
         return pending[-1] if pending else None
 

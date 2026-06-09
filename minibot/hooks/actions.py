@@ -6,14 +6,15 @@ import re
 import sys
 from typing import Callable
 
-
 HookResult = dict[str, object]
 
 
 class HookAction:
     """Base class for hook actions."""
 
-    def __init__(self, hook_config: dict[str, object], approval_prompt: Callable[[str], bool] | None = None) -> None:
+    def __init__(
+        self, hook_config: dict[str, object], approval_prompt: Callable[[str], bool] | None = None
+    ) -> None:
         self.hook_config = hook_config
         self.approval_prompt = approval_prompt
 
@@ -53,9 +54,17 @@ class ApprovalAction(HookAction):
         if auto_approve is None:
             auto_approve = bool(context.get("default_auto_approve", False))
 
-        if self._can_prompt() and self.approval_prompt is not None and self.hook_config.get("interactive", True):
+        if (
+            self._can_prompt()
+            and self.approval_prompt is not None
+            and self.hook_config.get("interactive", True)
+        ):
             approved = self.approval_prompt(
-                str(self.hook_config.get("message", f"Approve hook {self.hook_config['name']}? [y/N] "))
+                str(
+                    self.hook_config.get(
+                        "message", f"Approve hook {self.hook_config['name']}? [y/N] "
+                    )
+                )
             )
         else:
             approved = bool(auto_approve)
@@ -67,7 +76,9 @@ class ApprovalAction(HookAction):
         return result
 
     def _can_prompt(self) -> bool:
-        return bool(getattr(sys.stdin, "isatty", lambda: False)()) and bool(getattr(sys.stdout, "isatty", lambda: False)())
+        return bool(getattr(sys.stdin, "isatty", lambda: False)()) and bool(
+            getattr(sys.stdout, "isatty", lambda: False)()
+        )
 
 
 class BlockAction(HookAction):

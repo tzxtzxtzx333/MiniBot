@@ -114,18 +114,24 @@ class BaseModelClient:
         tool_results: list[dict[str, object]],
     ) -> str:
         if tool_results:
-            first_approval_required = next((item for item in tool_results if item.get("status") == "approval_required"), None)
+            first_approval_required = next(
+                (item for item in tool_results if item.get("status") == "approval_required"), None
+            )
             if first_approval_required is not None:
                 metadata = dict(first_approval_required.get("metadata", {}))
                 return (
                     f"MiniBot tool approval required: {first_approval_required.get('tool_name', 'unknown_tool')} "
                     f"approval_id={metadata.get('approval_id', '')}"
                 ).strip()
-            first_approval_rejected = next((item for item in tool_results if item.get("status") == "approval_rejected"), None)
+            first_approval_rejected = next(
+                (item for item in tool_results if item.get("status") == "approval_rejected"), None
+            )
             if first_approval_rejected is not None:
                 return f"MiniBot tool blocked: {first_approval_rejected.get('tool_name', 'unknown_tool')} approval_rejected"
             success_items = [item for item in tool_results if item.get("status") == "success"]
-            failed_items = [item for item in tool_results if item.get("status") in {"failed", "blocked"}]
+            failed_items = [
+                item for item in tool_results if item.get("status") in {"failed", "blocked"}
+            ]
             if success_items and failed_items:
                 success_summaries: list[str] = []
                 for item in success_items:
@@ -142,15 +148,24 @@ class BaseModelClient:
                 )
             if len(success_items) > 1 and not failed_items:
                 return f"MiniBot tool results: {', '.join(self._summarize_success_item(item) for item in success_items)}"
-            first_blocked = next((item for item in tool_results if item.get("status") == "blocked"), None)
+            first_blocked = next(
+                (item for item in tool_results if item.get("status") == "blocked"), None
+            )
             if first_blocked is not None:
                 return f"MiniBot tool blocked: {first_blocked.get('tool_name', 'unknown_tool')} {first_blocked.get('error') or 'blocked_by_hook'}"
-            first_failure = next((item for item in tool_results if item.get("status") == "failed"), None)
+            first_failure = next(
+                (item for item in tool_results if item.get("status") == "failed"), None
+            )
             if first_failure is not None:
-                if first_failure.get("failure_category") in {"sandbox_required", "requires_sandbox_executor"}:
+                if first_failure.get("failure_category") in {
+                    "sandbox_required",
+                    "requires_sandbox_executor",
+                }:
                     return f"MiniBot tool blocked: {first_failure.get('tool_name', 'unknown_tool')} {first_failure.get('error') or 'unknown_error'}"
                 return f"MiniBot tool failed: {first_failure.get('tool_name', 'unknown_tool')} failed with {first_failure.get('error') or 'unknown_error'}"
-            first_success = next((item for item in tool_results if item.get("status") == "success"), None)
+            first_success = next(
+                (item for item in tool_results if item.get("status") == "success"), None
+            )
             if first_success is not None:
                 output = first_success.get("output") or {}
                 if bool(dict(first_success.get("metadata", {})).get("downgraded")):
@@ -176,17 +191,29 @@ class BaseModelClient:
 class FakeModelClient(BaseModelClient):
     """Deterministic model client for local development and tests."""
 
-    _calculator_pattern = re.compile(r"(?:计算|calculate|calculator)\s*[:：]?\s*([0-9\(\)\+\-\*/\.\s]+)", re.IGNORECASE)
-    _file_write_pattern = re.compile(r"(?:写入|write)\s+([^\s]+)\s+(?:内容|content)\s*[:：]?\s*(.+)$", re.IGNORECASE)
+    _calculator_pattern = re.compile(
+        r"(?:计算|calculate|calculator)\s*[:：]?\s*([0-9\(\)\+\-\*/\.\s]+)", re.IGNORECASE
+    )
+    _file_write_pattern = re.compile(
+        r"(?:写入|write)\s+([^\s]+)\s+(?:内容|content)\s*[:：]?\s*(.+)$", re.IGNORECASE
+    )
     _file_read_pattern = re.compile(r"(?:读取|read)\s+([^\s]+)$", re.IGNORECASE)
     _memory_write_pattern = re.compile(r"(?:记住|remember)\s*[“\"]?(.+?)[”\"]?$", re.IGNORECASE)
-    _memory_search_pattern = re.compile(r"(?:搜索记忆|search memory)\s*[“\"]?(.+?)[”\"]?$", re.IGNORECASE)
-    _doc_summarize_pattern = re.compile(r"(?:总结(?:这段文本)?|summarize)\s*[:：]?\s*(.+)$", re.IGNORECASE)
+    _memory_search_pattern = re.compile(
+        r"(?:搜索记忆|search memory)\s*[“\"]?(.+?)[”\"]?$", re.IGNORECASE
+    )
+    _doc_summarize_pattern = re.compile(
+        r"(?:总结(?:这段文本)?|summarize)\s*[:：]?\s*(.+)$", re.IGNORECASE
+    )
     _weather_pattern = re.compile(r"(?:查询天气|天气)\s+(.+)$", re.IGNORECASE)
     _web_search_pattern = re.compile(r"(?:搜索网页|web search)\s+(.+)$", re.IGNORECASE)
-    _map_route_pattern = re.compile(r"(?:规划路线|map route)\s+(.+?)\s+(?:到|to)\s+(.+)$", re.IGNORECASE)
+    _map_route_pattern = re.compile(
+        r"(?:规划路线|map route)\s+(.+?)\s+(?:到|to)\s+(.+)$", re.IGNORECASE
+    )
     _web_fetch_pattern = re.compile(r"(?:抓取网页|fetch)\s+(https?://\S+)$", re.IGNORECASE)
-    _python_exec_pattern = re.compile(r"(?:运行python代码|python_exec|run python code)\s+(.+)$", re.IGNORECASE)
+    _python_exec_pattern = re.compile(
+        r"(?:运行python代码|python_exec|run python code)\s+(.+)$", re.IGNORECASE
+    )
     _shell_exec_pattern = re.compile(r"(?:执行shell命令|shell_exec)\s+(.+)$", re.IGNORECASE)
     _multi_tool_pattern = re.compile(
         r"(?:同时)\s*(?:计算)\s*([0-9\(\)\+\-\*/\.\s]+?)\s*(?:并|and)\s*(?:运行python代码|执行python代码)\s+(.+)$",
@@ -220,39 +247,64 @@ class FakeModelClient(BaseModelClient):
             return ModelPlan(
                 assistant_message=None,
                 tool_calls=multi_tool,
-                raw_plan={"mode": "tool_call", "reason": "multi_tool_requested", "tool_calls": [call.to_trace() for call in multi_tool]},
+                raw_plan={
+                    "mode": "tool_call",
+                    "reason": "multi_tool_requested",
+                    "tool_calls": [call.to_trace() for call in multi_tool],
+                },
             )
         weather_failure = self._extract_weather_failure(content)
         if weather_failure is not None:
-            return self._tool_plan("weather_retry_downgrade_requested", ToolCall("weather", weather_failure))
+            return self._tool_plan(
+                "weather_retry_downgrade_requested", ToolCall("weather", weather_failure)
+            )
         expression = self._extract_expression(content)
         if expression is not None:
-            return self._tool_plan("calculation_expression_detected", ToolCall("calculator", {"expression": expression}))
+            return self._tool_plan(
+                "calculation_expression_detected",
+                ToolCall("calculator", {"expression": expression}),
+            )
         file_write = self._extract_file_write(content)
         if file_write is not None:
-            reason = "file_write_requested" if {"path", "content"} <= set(file_write.keys()) else "file_write_invalid_arguments"
+            reason = (
+                "file_write_requested"
+                if {"path", "content"} <= set(file_write.keys())
+                else "file_write_invalid_arguments"
+            )
             return self._tool_plan(reason, ToolCall("file_write", file_write))
         file_read = self._extract_file_read(content)
         if file_read is not None:
             return self._tool_plan("file_read_requested", ToolCall("file_read", file_read))
         memory_write = self._extract_memory_write(content)
         if memory_write is not None:
-            return self._tool_plan("memory_write_requested", ToolCall("memory_write", {"content": memory_write}))
+            return self._tool_plan(
+                "memory_write_requested", ToolCall("memory_write", {"content": memory_write})
+            )
         memory_search = self._extract_memory_search(content)
         if memory_search is not None:
-            return self._tool_plan("memory_search_requested", ToolCall("memory_search", {"query": memory_search}))
+            return self._tool_plan(
+                "memory_search_requested", ToolCall("memory_search", {"query": memory_search})
+            )
         doc_summarize = self._extract_doc_summarize(content)
         if doc_summarize is not None:
-            return self._tool_plan("doc_summarize_requested", ToolCall("doc_summarize", {"text": doc_summarize}))
+            return self._tool_plan(
+                "doc_summarize_requested", ToolCall("doc_summarize", {"text": doc_summarize})
+            )
         weather_query = self._extract_weather(content)
         if weather_query is not None:
-            return self._tool_plan("weather_requested", ToolCall("weather", {"location": weather_query}))
+            return self._tool_plan(
+                "weather_requested", ToolCall("weather", {"location": weather_query})
+            )
         poi_search = self._extract_map_poi_search(content)
         if poi_search is not None:
-            return self._tool_plan("map_poi_search_requested", ToolCall("map_poi_search", poi_search))
+            return self._tool_plan(
+                "map_poi_search_requested", ToolCall("map_poi_search", poi_search)
+            )
         web_query = self._extract_web_search(content)
         if web_query is not None:
-            return self._tool_plan("web_search_requested", ToolCall("web_search", {"query": web_query}))
+            return self._tool_plan(
+                "web_search_requested", ToolCall("web_search", {"query": web_query})
+            )
         route = self._extract_map_route(content)
         if route is not None:
             return self._tool_plan("map_route_requested", ToolCall("map_route", route))
@@ -261,10 +313,14 @@ class FakeModelClient(BaseModelClient):
             return self._tool_plan("web_fetch_requested", ToolCall("web_fetch", {"url": fetch_url}))
         python_code = self._extract_python_exec(content)
         if python_code is not None:
-            return self._tool_plan("python_exec_requested", ToolCall("python_exec", {"code": python_code}))
+            return self._tool_plan(
+                "python_exec_requested", ToolCall("python_exec", {"code": python_code})
+            )
         shell_command = self._extract_shell_exec(content)
         if shell_command is not None:
-            return self._tool_plan("shell_exec_requested", ToolCall("shell_exec", {"command": shell_command}))
+            return self._tool_plan(
+                "shell_exec_requested", ToolCall("shell_exec", {"command": shell_command})
+            )
         return ModelPlan(
             assistant_message=f"MiniBot echo: {message.content}",
             raw_plan={"mode": "chat", "reason": "no_tool_call_detected", "tool_calls": []},
@@ -285,7 +341,9 @@ class FakeModelClient(BaseModelClient):
         normalized = content.strip()
         lowered = normalized.lower()
         if normalized.startswith("写入") or lowered.startswith("write"):
-            remainder = normalized[2:].strip() if normalized.startswith("写入") else normalized[5:].strip()
+            remainder = (
+                normalized[2:].strip() if normalized.startswith("写入") else normalized[5:].strip()
+            )
             if not remainder:
                 return {}
             if remainder.startswith("内容"):
@@ -318,14 +376,14 @@ class FakeModelClient(BaseModelClient):
         match = self._memory_write_pattern.search(content)
         if match is None:
             return None
-        remembered = match.group(1).strip().strip("“”\"")
+        remembered = match.group(1).strip().strip('“”"')
         return remembered or None
 
     def _extract_memory_search(self, content: str) -> str | None:
         match = self._memory_search_pattern.search(content)
         if match is None:
             return None
-        query = match.group(1).strip().strip("“”\"")
+        query = match.group(1).strip().strip('“”"')
         return query or None
 
     def _extract_doc_summarize(self, content: str) -> str | None:
@@ -363,7 +421,9 @@ class FakeModelClient(BaseModelClient):
         keyword = next((item for item in keyword_candidates if item in normalized), None)
         if keyword is None:
             return None
-        prefix_removed = re.sub(r"^(帮我查一下|帮我查|查找|查询|搜索|帮忙查一下)\s*", "", normalized)
+        prefix_removed = re.sub(
+            r"^(帮我查一下|帮我查|查找|查询|搜索|帮忙查一下)\s*", "", normalized
+        )
         location_part, _, trailing = prefix_removed.partition("附近")
         location = location_part.strip(" ，,。.?？")
         keyword_text = re.sub(r"^(有什么|有啥|的)", "", trailing).strip(" ，,。.?？")
@@ -560,7 +620,11 @@ class OpenAICompatibleModelClient(BaseModelClient):
             tool_calls=tool_calls,
             raw_plan={
                 "mode": "openai_compatible",
-                "reason": "delegated_to_model_client" if plan_type != "message" else "message_from_model_client",
+                "reason": (
+                    "delegated_to_model_client"
+                    if plan_type != "message"
+                    else "message_from_model_client"
+                ),
                 "tool_calls": [call.to_trace() for call in tool_calls],
                 "tool_plan": maybe_json,
                 "raw_model_output": content,
@@ -594,8 +658,8 @@ class OpenAICompatibleModelClient(BaseModelClient):
                     "content": (
                         "You are continuing a tool-using agent run.\n"
                         "Review the original user request and prior tool results below.\n"
-                        "If the task is complete, return {\"type\":\"message\",\"content\":\"...\"}.\n"
-                        "If one more tool call is necessary, return {\"type\":\"tool_plan\",\"tool_calls\":[...]}.\n"
+                        'If the task is complete, return {"type":"message","content":"..."}.\n'
+                        'If one more tool call is necessary, return {"type":"tool_plan","tool_calls":[...]}.\n'
                         "Do not repeat identical tool calls.\n"
                         "Do not bypass approval_required, approval_rejected, or blocked_by_policy.\n"
                         "If a tool failed, either choose a safe alternative tool or explain the failure.\n"
@@ -690,7 +754,11 @@ class OpenAICompatibleModelClient(BaseModelClient):
             tool_calls=tool_calls_out,
             raw_plan={
                 "mode": "openai_compatible",
-                "reason": "replan_delegated_to_model_client" if plan_type != "message" else "replan_message_from_model_client",
+                "reason": (
+                    "replan_delegated_to_model_client"
+                    if plan_type != "message"
+                    else "replan_message_from_model_client"
+                ),
                 "tool_calls": [call.to_trace() for call in tool_calls_out],
                 "tool_plan": maybe_json,
                 "raw_model_output": content,
@@ -801,7 +869,9 @@ class OpenAICompatibleModelClient(BaseModelClient):
             if not name:
                 continue
             description = str(spec.get("description", "")).strip()
-            parameters = json.dumps(spec.get("input_schema", {}), ensure_ascii=False, sort_keys=True)
+            parameters = json.dumps(
+                spec.get("input_schema", {}), ensure_ascii=False, sort_keys=True
+            )
             tool_lines.append(f"- {name}: {description} parameters={parameters}")
         sections = [base_prompt.strip()] if base_prompt.strip() else []
         sections.extend(
@@ -860,14 +930,22 @@ def load_model_client(project_root: Path, mode: str):
 
 def _load_env_settings(project_root: Path) -> dict[str, str]:
     settings = _parse_dotenv(project_root / ".env")
-    merged = {**settings, **{key: value for key, value in os.environ.items() if key.startswith("MINIBOT_")}}
+    merged = {
+        **settings,
+        **{key: value for key, value in os.environ.items() if key.startswith("MINIBOT_")},
+    }
     if not merged.get("MINIBOT_MODEL_PROVIDER"):
         merged["MINIBOT_MODEL_PROVIDER"] = "deepseek"
     if not merged.get("MINIBOT_MODEL_BASE_URL") and merged.get("MINIBOT_BASE_URL"):
         merged["MINIBOT_MODEL_BASE_URL"] = merged["MINIBOT_BASE_URL"]
     if not merged.get("MINIBOT_MODEL_API_KEY") and merged.get("MINIBOT_API_KEY"):
         merged["MINIBOT_MODEL_API_KEY"] = merged["MINIBOT_API_KEY"]
-    required = ["MINIBOT_MODEL_PROVIDER", "MINIBOT_MODEL_BASE_URL", "MINIBOT_MODEL_API_KEY", "MINIBOT_MODEL_NAME"]
+    required = [
+        "MINIBOT_MODEL_PROVIDER",
+        "MINIBOT_MODEL_BASE_URL",
+        "MINIBOT_MODEL_API_KEY",
+        "MINIBOT_MODEL_NAME",
+    ]
     missing = [name for name in required if not merged.get(name)]
     if missing:
         raise RuntimeError(f"deepseek_config_missing: {', '.join(missing)}")

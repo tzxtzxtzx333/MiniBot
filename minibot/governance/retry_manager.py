@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+import time
 from collections.abc import Callable
 from dataclasses import dataclass
-import time
 
 from minibot.tools.base import ToolResult
 
@@ -30,7 +30,11 @@ class RetryManager:
         if isinstance(configured, list) and configured:
             self.retryable_categories = {str(item) for item in configured}
         else:
-            self.retryable_categories = {"tool_timeout", "temporary_network_error", "model_format_error"}
+            self.retryable_categories = {
+                "tool_timeout",
+                "temporary_network_error",
+                "model_format_error",
+            }
 
     def run(
         self,
@@ -46,16 +50,28 @@ class RetryManager:
         attempt = 0
         while True:
             result = execute()
-            if result.success or result.failure_category not in self.retryable_categories or attempt >= retries:
+            if (
+                result.success
+                or result.failure_category not in self.retryable_categories
+                or attempt >= retries
+            ):
                 break
             retry_errors.append(str(result.error or result.failure_category or "retryable_failure"))
             attempt += 1
             self._sleep(attempt)
 
-        if not result.success and result.failure_category in self.retryable_categories and attempt < retries:
+        if (
+            not result.success
+            and result.failure_category in self.retryable_categories
+            and attempt < retries
+        ):
             retry_errors.append(str(result.error or result.failure_category or "retryable_failure"))
 
-        if not result.success and result.failure_category in self.retryable_categories and attempt >= retries:
+        if (
+            not result.success
+            and result.failure_category in self.retryable_categories
+            and attempt >= retries
+        ):
             downgrade = getattr(tool, "downgrade", None)
             if callable(downgrade):
                 downgraded = downgrade(payload, result)

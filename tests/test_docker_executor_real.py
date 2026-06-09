@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-import subprocess
-from pathlib import Path
 import shutil
+import subprocess
 import uuid
+from pathlib import Path
 
 from minibot.sandbox.docker_executor import DockerSandboxExecutor
 from minibot.sandbox.policies import SandboxPolicy
@@ -21,6 +21,7 @@ def test_python_exec_runs_through_docker_and_returns_metadata(monkeypatch) -> No
     tmp_path = _temp_workspace()
     calls: list[list[str]] = []
     try:
+
         def fake_run(command, **kwargs):  # noqa: ANN001
             calls.append(command)
             if command[:2] == ["docker", "info"]:
@@ -48,6 +49,7 @@ def test_python_exec_runs_through_docker_and_returns_metadata(monkeypatch) -> No
 def test_shell_exec_runs_through_docker_and_returns_metadata(monkeypatch) -> None:
     tmp_path = _temp_workspace()
     try:
+
         def fake_run(command, **kwargs):  # noqa: ANN001, ARG001
             if command[:2] == ["docker", "info"]:
                 return subprocess.CompletedProcess(command, 0, stdout="ok", stderr="")
@@ -69,6 +71,7 @@ def test_shell_exec_runs_through_docker_and_returns_metadata(monkeypatch) -> Non
 def test_docker_unavailable_returns_structured_failure_metadata(monkeypatch) -> None:
     tmp_path = _temp_workspace()
     try:
+
         def fake_run(command, **kwargs):  # noqa: ANN001, ARG001
             raise FileNotFoundError("docker missing")
 
@@ -89,6 +92,7 @@ def test_output_is_truncated_and_marked(monkeypatch) -> None:
     tmp_path = _temp_workspace()
     long_output = "x" * 50
     try:
+
         def fake_run(command, **kwargs):  # noqa: ANN001, ARG001
             if command[:2] == ["docker", "info"]:
                 return subprocess.CompletedProcess(command, 0, stdout="ok", stderr="")
@@ -109,6 +113,7 @@ def test_output_is_truncated_and_marked(monkeypatch) -> None:
 def test_timeout_returns_structured_failure(monkeypatch) -> None:
     tmp_path = _temp_workspace()
     try:
+
         def fake_run(command, **kwargs):  # noqa: ANN001, ARG001
             if command[:2] == ["docker", "info"]:
                 return subprocess.CompletedProcess(command, 0, stdout="ok", stderr="")

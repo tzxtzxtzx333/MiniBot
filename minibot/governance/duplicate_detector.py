@@ -20,7 +20,9 @@ class DuplicateCallDetector:
     def signature(self, tool_name: str, arguments: dict[str, object]) -> str:
         """Build a stable dedupe signature."""
 
-        return json.dumps({"tool_name": tool_name, "arguments": arguments}, ensure_ascii=False, sort_keys=True)
+        return json.dumps(
+            {"tool_name": tool_name, "arguments": arguments}, ensure_ascii=False, sort_keys=True
+        )
 
     def lookup(self, signature: str) -> dict[str, object] | None:
         """Return the previous result for an identical call, if present."""

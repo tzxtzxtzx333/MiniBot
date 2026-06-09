@@ -39,8 +39,8 @@
 
 ## 外部接入口径
 
-- 支持 DeepSeek、Tavily、QWeather、AMap MCP、Feishu WebSocket 等真实 provider 接入；真实联通依赖环境变量配置，同时保留 mock / fake 模式用于本地回归测试。
-- Feishu WebSocket 已完成真实联调，但默认 status 中可能因为未配置环境变量而显示 `feishu_config_present=false`；`feishu-mock` 用于回归测试。
+- 支持 DeepSeek、Tavily、QWeather、AMap MCP、Feishu WebSocket 等外部 provider 接入边界；真实联通依赖环境变量配置，未配置时各 provider 返回明确错误或使用 mock，同时保留 fake 模式用于本地回归测试。
+- Feishu WebSocket Bot 接入边界代码已完成；真实联通依赖飞书开放平台配置和运行环境，默认 status 因未配置环境变量显示 `feishu_config_present=false`；`feishu-mock` 用于本地回归测试。
 
 ## 仍依赖外部配置的能力
 

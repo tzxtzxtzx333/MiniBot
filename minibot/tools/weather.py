@@ -11,7 +11,7 @@ import urllib.request
 import zlib
 from json import JSONDecodeError
 
-from .base import BaseTool, ToolResult, ToolSpec
+from .base import BaseTool, ToolResult, ToolSpec, provider_metadata
 
 
 def _weather_metadata(
@@ -21,15 +21,14 @@ def _weather_metadata(
     real_provider: bool,
     **extra: object,
 ) -> dict[str, object]:
-    metadata = {
-        "provider": "weather",
-        "provider_status": provider_status,
-        "mock_provider": mock_provider,
-        "real_provider": real_provider,
-        "mcp_provider": False,
-    }
-    metadata.update(extra)
-    return metadata
+    return provider_metadata(
+        provider="weather",
+        provider_status=provider_status,
+        mock_provider=mock_provider,
+        real_provider=real_provider,
+        mcp_provider=False,
+        **extra,
+    )
 
 
 class WeatherTool(BaseTool):
@@ -68,7 +67,9 @@ class WeatherTool(BaseTool):
                     output=None,
                     error="weather_config_missing",
                     failure_category="weather_config_missing",
-                    metadata=_weather_metadata(provider_status="missing", mock_provider=False, real_provider=True),
+                    metadata=_weather_metadata(
+                        provider_status="missing", mock_provider=False, real_provider=True
+                    ),
                 )
             return self._execute_real(payload, api_key)
 
@@ -94,10 +95,14 @@ class WeatherTool(BaseTool):
             tool_name=self.spec.name,
             success=True,
             output={"location": location, "forecast": "Mock sunny", "temperature_c": 24},
-            metadata=_weather_metadata(provider_status="mock", mock_provider=True, real_provider=False),
+            metadata=_weather_metadata(
+                provider_status="mock", mock_provider=True, real_provider=False
+            ),
         )
 
-    def downgrade(self, payload: dict[str, object], failure_result: ToolResult) -> ToolResult:  # noqa: ARG002
+    def downgrade(
+        self, payload: dict[str, object], failure_result: ToolResult
+    ) -> ToolResult:  # noqa: ARG002
         location = str(payload["location"])
         needs_advice = bool(payload.get("needs_advice", False))
         output: dict[str, object] = {
@@ -206,37 +211,55 @@ class WeatherTool(BaseTool):
         try:
             payload = json.loads(body)
         except JSONDecodeError as exc:
-            raise ValueError(f"QWeather returned non-JSON response: raw={self._summarize_non_json_body(body.encode('utf-8', errors='replace'))}") from exc
+            raise ValueError(
+                f"QWeather returned non-JSON response: raw={self._summarize_non_json_body(body.encode('utf-8', errors='replace'))}"
+            ) from exc
         if not isinstance(payload, dict):
-            raise ValueError(f"QWeather returned non-JSON response: raw={self._summarize_non_json_body(body.encode('utf-8', errors='replace'))}")
+            raise ValueError(
+                f"QWeather returned non-JSON response: raw={self._summarize_non_json_body(body.encode('utf-8', errors='replace'))}"
+            )
         return payload
 
-    def _lookup_city(self, location: str, api_key: str, api_host: str, timeout: int) -> dict[str, str]:
-        query = urllib.parse.urlencode({"location": location, "range": "cn", "number": 1, "lang": "zh"})
+    def _lookup_city(
+        self, location: str, api_key: str, api_host: str, timeout: int
+    ) -> dict[str, str]:
+        query = urllib.parse.urlencode(
+            {"location": location, "range": "cn", "number": 1, "lang": "zh"}
+        )
         payload = self._fetch_json(f"{api_host}/geo/v2/city/lookup?{query}", api_key, timeout)
         if str(payload.get("code", "")) != "200":
-            raise ValueError(f"QWeather API error: code={payload.get('code')}, body={json.dumps(payload, ensure_ascii=False)[:500]}")
+            raise ValueError(
+                f"QWeather API error: code={payload.get('code')}, body={json.dumps(payload, ensure_ascii=False)[:500]}"
+            )
         locations = payload.get("location", [])
         if not isinstance(locations, list) or not locations:
             raise ValueError("QWeather location not found")
         first = locations[0]
         if not isinstance(first, dict):
-            raise ValueError(f"QWeather API error: code={payload.get('code')}, body={json.dumps(payload, ensure_ascii=False)[:500]}")
+            raise ValueError(
+                f"QWeather API error: code={payload.get('code')}, body={json.dumps(payload, ensure_ascii=False)[:500]}"
+            )
         return {
             "id": str(first.get("id", "")).strip(),
             "name": str(first.get("name", location)).strip() or location,
         }
 
-    def _fetch_current_weather(self, location_id: str, api_key: str, api_host: str, timeout: int) -> dict[str, object]:
+    def _fetch_current_weather(
+        self, location_id: str, api_key: str, api_host: str, timeout: int
+    ) -> dict[str, object]:
         if not location_id:
             raise ValueError("QWeather location not found")
         query = urllib.parse.urlencode({"location": location_id, "lang": "zh", "unit": "m"})
         payload = self._fetch_json(f"{api_host}/v7/weather/now?{query}", api_key, timeout)
         if str(payload.get("code", "")) != "200":
-            raise ValueError(f"QWeather API error: code={payload.get('code')}, body={json.dumps(payload, ensure_ascii=False)[:500]}")
+            raise ValueError(
+                f"QWeather API error: code={payload.get('code')}, body={json.dumps(payload, ensure_ascii=False)[:500]}"
+            )
         now = payload.get("now", {})
         if not isinstance(now, dict) or not now:
-            raise ValueError(f"QWeather API error: code={payload.get('code')}, body={json.dumps(payload, ensure_ascii=False)[:500]}")
+            raise ValueError(
+                f"QWeather API error: code={payload.get('code')}, body={json.dumps(payload, ensure_ascii=False)[:500]}"
+            )
         return now
 
     @staticmethod
@@ -251,7 +274,9 @@ class WeatherTool(BaseTool):
         raw = response.read()
         if not isinstance(raw, bytes):
             raw = bytes(raw)
-        encoding = str(getattr(response, "headers", {}).get("Content-Encoding", "") or "").strip().lower()
+        encoding = (
+            str(getattr(response, "headers", {}).get("Content-Encoding", "") or "").strip().lower()
+        )
         decoded = cls._decode_raw_bytes(raw, encoding)
         return decoded.decode("utf-8", errors="replace")
 
@@ -274,7 +299,9 @@ class WeatherTool(BaseTool):
             except zlib.error:
                 return zlib.decompress(raw, -zlib.MAX_WBITS)
         if encoding == "br":
-            raise ValueError("QWeather returned brotli-compressed response; use Accept-Encoding: identity")
+            raise ValueError(
+                "QWeather returned brotli-compressed response; use Accept-Encoding: identity"
+            )
         return raw
 
     @staticmethod

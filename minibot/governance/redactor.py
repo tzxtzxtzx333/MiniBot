@@ -18,9 +18,15 @@ class SensitiveInfoRedactor:
         self._patterns = [
             re.compile(r"sk-[A-Za-z0-9_-]+", re.IGNORECASE),
             re.compile(r"Bearer\s+[A-Za-z0-9._-]+", re.IGNORECASE),
-            re.compile(r"\b(api[_-]?key|token|secret|password)\b\s*([=:])\s*([^\s,;，；]+)", re.IGNORECASE),
-            re.compile(r"\b(api[_-]?key|token|secret|password)\b\s+(is)\s+([^\s,;，；]+)", re.IGNORECASE),
-            re.compile(r"\b(api[_-]?key|token|secret|password)\b\s*(是)\s*([^\s,;，；]+)", re.IGNORECASE),
+            re.compile(
+                r"\b(api[_-]?key|token|secret|password)\b\s*([=:])\s*([^\s,;，；]+)", re.IGNORECASE
+            ),
+            re.compile(
+                r"\b(api[_-]?key|token|secret|password)\b\s+(is)\s+([^\s,;，；]+)", re.IGNORECASE
+            ),
+            re.compile(
+                r"\b(api[_-]?key|token|secret|password)\b\s*(是)\s*([^\s,;，；]+)", re.IGNORECASE
+            ),
         ]
 
     def redact_value(self, value: Any) -> tuple[Any, list[str]]:
@@ -74,5 +80,9 @@ class SensitiveInfoRedactor:
         if match.lastindex == 3:
             label = match.group(1)
             separator = match.group(2)
-            return f"{label} {separator} [REDACTED]" if separator.lower() == "is" else f"{label}{separator}[REDACTED]"
+            return (
+                f"{label} {separator} [REDACTED]"
+                if separator.lower() == "is"
+                else f"{label}{separator}[REDACTED]"
+            )
         return "[REDACTED]"

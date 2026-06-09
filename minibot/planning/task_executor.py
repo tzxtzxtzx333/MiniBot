@@ -72,8 +72,12 @@ class TaskExecutor:
         # full context (e.g. when a plan depends on prior conversation).
         cb = self._agent_loop.context_builder
         if self.lean_context:
-            saved = (cb.enable_history_retrieval, cb.enable_history_truncation,
-                     cb.enable_memory_compaction, cb.enable_archive_recall)
+            saved = (
+                cb.enable_history_retrieval,
+                cb.enable_history_truncation,
+                cb.enable_memory_compaction,
+                cb.enable_archive_recall,
+            )
             cb.enable_history_retrieval = False
             cb.enable_history_truncation = False
             cb.enable_memory_compaction = False
@@ -81,8 +85,12 @@ class TaskExecutor:
             try:
                 result = self._dispatch(plan, step, content, session_id)
             finally:
-                (cb.enable_history_retrieval, cb.enable_history_truncation,
-                 cb.enable_memory_compaction, cb.enable_archive_recall) = saved
+                (
+                    cb.enable_history_retrieval,
+                    cb.enable_history_truncation,
+                    cb.enable_memory_compaction,
+                    cb.enable_archive_recall,
+                ) = saved
         else:
             result = self._dispatch(plan, step, content, session_id)
 

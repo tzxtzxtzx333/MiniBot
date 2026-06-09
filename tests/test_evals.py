@@ -18,7 +18,6 @@ from minibot.evals.rule_verifier import RuleVerifier
 from minibot.governance.approval_store import ApprovalStore
 from minibot.harness.model_client import load_model_client
 
-
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -41,7 +40,9 @@ def test_rule_verifier_checks_structured_expectations() -> None:
     run_record = {
         "final_response": "MiniBot tool result: 5",
         "tool_calls": [{"tool_name": "calculator", "arguments": {"expression": "2 + 3"}}],
-        "tool_results": [{"tool_name": "calculator", "status": "success", "failure_category": None}],
+        "tool_results": [
+            {"tool_name": "calculator", "status": "success", "failure_category": None}
+        ],
         "failure_category": None,
         "retry_count": 0,
         "partial_success": False,
@@ -109,26 +110,34 @@ def test_rule_verifier_reports_missing_context_metric_requirements() -> None:
 
 def test_rule_verifier_supports_final_response_not_empty_from_final_response() -> None:
     verifier = RuleVerifier()
-    passed, reason = verifier.verify({"final_response": "MiniBot tool result: ok"}, ["final_response_not_empty"])
+    passed, reason = verifier.verify(
+        {"final_response": "MiniBot tool result: ok"}, ["final_response_not_empty"]
+    )
     assert passed is True
     assert "matched 1/1 rules" in reason
 
 
 def test_rule_verifier_supports_final_response_not_empty_from_response() -> None:
     verifier = RuleVerifier()
-    passed, _ = verifier.verify({"response": "MiniBot tool blocked: shell_exec"}, ["final_response_not_empty"])
+    passed, _ = verifier.verify(
+        {"response": "MiniBot tool blocked: shell_exec"}, ["final_response_not_empty"]
+    )
     assert passed is True
 
 
 def test_rule_verifier_supports_final_response_not_empty_for_tool_only_response() -> None:
     verifier = RuleVerifier()
-    passed, _ = verifier.verify({"response": "MiniBot tool approval required: file_write"}, ["final_response_not_empty"])
+    passed, _ = verifier.verify(
+        {"response": "MiniBot tool approval required: file_write"}, ["final_response_not_empty"]
+    )
     assert passed is True
 
 
 def test_rule_verifier_rejects_empty_final_response() -> None:
     verifier = RuleVerifier()
-    passed, reason = verifier.verify({"final_response": "   ", "response": ""}, ["final_response_not_empty"])
+    passed, reason = verifier.verify(
+        {"final_response": "   ", "response": ""}, ["final_response_not_empty"]
+    )
     assert passed is False
     assert "final_response_not_empty" in reason
 
@@ -190,8 +199,22 @@ def test_report_writer_outputs_json_and_markdown() -> None:
             "run_mode": "fake",
             "benchmark_scope": "core",
             "benchmark_case_count": 83,
-            "benchmark_case_count_by_profile": {"default": 63, "execution": 5, "all-integrations": 6, "approval": 1, "safety": 8},
-            "benchmark_case_count_by_category": {"channel": 7, "context": 12, "memory": 13, "reasoning": 9, "regression": 11, "safety": 13, "tools": 18},
+            "benchmark_case_count_by_profile": {
+                "default": 63,
+                "execution": 5,
+                "all-integrations": 6,
+                "approval": 1,
+                "safety": 8,
+            },
+            "benchmark_case_count_by_category": {
+                "channel": 7,
+                "context": 12,
+                "memory": 13,
+                "reasoning": 9,
+                "regression": 11,
+                "safety": 13,
+                "tools": 18,
+            },
             "context_case_count": 4,
             "avg_prompt_tokens": 1200.0,
             "avg_context_chars": 4800.0,
@@ -326,7 +349,9 @@ def test_benchmark_runner_writes_custom_report_and_metrics() -> None:
     temp_root = _prepare_temp_root()
     try:
         app = MiniBotApp(temp_root)
-        runner = BenchmarkRunner(app.runtime.agent_loop, temp_root, verifier_agent=app.runtime.verifier_agent)
+        runner = BenchmarkRunner(
+            app.runtime.agent_loop, temp_root, verifier_agent=app.runtime.verifier_agent
+        )
         report_path = temp_root / "reports" / "run_v1.json"
         report = runner.run(category="memory", report_path=report_path, mode="fake")
         assert report["report_path"] == "reports/latest.json"
@@ -360,11 +385,15 @@ def test_benchmark_runner_writes_custom_report_and_metrics() -> None:
         shutil.rmtree(temp_root, ignore_errors=True)
 
 
-def test_benchmark_runner_real_mode_missing_config_generates_report_without_fake_fallback(monkeypatch) -> None:
+def test_benchmark_runner_real_mode_missing_config_generates_report_without_fake_fallback(
+    monkeypatch,
+) -> None:
     temp_root = _prepare_temp_root()
     try:
         app = MiniBotApp(temp_root)
-        runner = BenchmarkRunner(app.runtime.agent_loop, temp_root, verifier_agent=app.runtime.verifier_agent)
+        runner = BenchmarkRunner(
+            app.runtime.agent_loop, temp_root, verifier_agent=app.runtime.verifier_agent
+        )
         for key in (
             "MINIBOT_MODEL_PROVIDER",
             "MINIBOT_MODEL_BASE_URL",
@@ -393,7 +422,9 @@ def test_benchmark_runner_real_mode_marks_docker_unavailable(monkeypatch) -> Non
     temp_root = _prepare_temp_root()
     try:
         app = MiniBotApp(temp_root)
-        runner = BenchmarkRunner(app.runtime.agent_loop, temp_root, verifier_agent=app.runtime.verifier_agent)
+        runner = BenchmarkRunner(
+            app.runtime.agent_loop, temp_root, verifier_agent=app.runtime.verifier_agent
+        )
         monkeypatch.setenv("MINIBOT_MODEL_PROVIDER", "deepseek")
         monkeypatch.setenv("MINIBOT_MODEL_BASE_URL", "https://api.deepseek.com")
         monkeypatch.setenv("MINIBOT_MODEL_API_KEY", "test-key")
@@ -418,7 +449,9 @@ def test_benchmark_runner_reports_external_provider_statuses(monkeypatch) -> Non
         monkeypatch.delenv("MINIBOT_AMAP_MCP_ENDPOINT", raising=False)
         monkeypatch.delenv("MINIBOT_AMAP_MCP_API_KEY", raising=False)
         app = MiniBotApp(temp_root)
-        runner = BenchmarkRunner(app.runtime.agent_loop, temp_root, verifier_agent=app.runtime.verifier_agent)
+        runner = BenchmarkRunner(
+            app.runtime.agent_loop, temp_root, verifier_agent=app.runtime.verifier_agent
+        )
         report = runner.run(category="tools", mode="fake")
         assert report["external_integrations"]["web_fetch"] == "real"
         assert report["external_integrations"]["web_search"] == "missing"
@@ -460,7 +493,9 @@ def test_benchmark_runner_reports_human_review_counts() -> None:
         )
         store.approve(str(approved["approval_id"]))
         store.reject(str(rejected["approval_id"]))
-        runner = BenchmarkRunner(app.runtime.agent_loop, temp_root, verifier_agent=app.runtime.verifier_agent)
+        runner = BenchmarkRunner(
+            app.runtime.agent_loop, temp_root, verifier_agent=app.runtime.verifier_agent
+        )
         report = runner.run(category="context", mode="fake")
         assert report["human_review"] == {
             "pending_count": 1,
@@ -484,7 +519,9 @@ def test_benchmark_runner_human_review_summary_ignores_malformed_jsonl() -> None
             '{"approval_id":"ok-2","status":"approved","request_signature":"sig-2"}\n{bad json\n',
             encoding="utf-8",
         )
-        runner = BenchmarkRunner(app.runtime.agent_loop, temp_root, verifier_agent=app.runtime.verifier_agent)
+        runner = BenchmarkRunner(
+            app.runtime.agent_loop, temp_root, verifier_agent=app.runtime.verifier_agent
+        )
         report = runner.run(category="context", mode="fake")
         assert report["human_review"]["pending_count"] == 1
         assert report["human_review"]["approved_count"] == 1
@@ -510,11 +547,17 @@ def test_benchmark_runner_execution_scope_temporarily_auto_approves_graylist() -
     temp_root = _prepare_temp_root()
     try:
         app = MiniBotApp(temp_root)
-        runner = BenchmarkRunner(app.runtime.agent_loop, temp_root, verifier_agent=app.runtime.verifier_agent)
+        runner = BenchmarkRunner(
+            app.runtime.agent_loop, temp_root, verifier_agent=app.runtime.verifier_agent
+        )
         with runner._benchmark_policy_override("execution"):
-            decision = app.runtime.tool_dispatcher.approval_manager.decide("file_write", requires_approval=True)
+            decision = app.runtime.tool_dispatcher.approval_manager.decide(
+                "file_write", requires_approval=True
+            )
             assert decision.approved is True
-        decision_after = app.runtime.tool_dispatcher.approval_manager.decide("file_write", requires_approval=True)
+        decision_after = app.runtime.tool_dispatcher.approval_manager.decide(
+            "file_write", requires_approval=True
+        )
         assert decision_after.approved is False
     finally:
         shutil.rmtree(temp_root, ignore_errors=True)
@@ -524,7 +567,9 @@ def test_benchmark_runner_filters_cases_by_profile() -> None:
     temp_root = _prepare_temp_root()
     try:
         app = MiniBotApp(temp_root)
-        runner = BenchmarkRunner(app.runtime.agent_loop, temp_root, verifier_agent=app.runtime.verifier_agent)
+        runner = BenchmarkRunner(
+            app.runtime.agent_loop, temp_root, verifier_agent=app.runtime.verifier_agent
+        )
         approval_cases = runner._load_cases(None, "core", "approval")
         execution_cases = runner._load_cases(None, "core", "execution")
         integration_cases = runner._load_cases(None, "core", "all-integrations")
@@ -539,16 +584,22 @@ def test_benchmark_runner_filters_cases_by_profile() -> None:
         assert execution_cases
         assert any("execution" in list(case.get("profiles", [])) for case in execution_cases)
         assert integration_cases
-        assert any("all-integrations" in list(case.get("profiles", [])) for case in integration_cases)
+        assert any(
+            "all-integrations" in list(case.get("profiles", [])) for case in integration_cases
+        )
         assert len(real_agent_cases) >= 10
         assert all("real-agent" in list(case.get("profiles", [])) for case in real_agent_cases)
         assert len(safety_cases) >= 7
         assert all("safety" in list(case.get("profiles", [])) for case in safety_cases)
         assert context_baseline_cases
         assert context_optimized_cases
-        assert {case["id"] for case in context_baseline_cases} == {case["id"] for case in context_optimized_cases}
+        assert {case["id"] for case in context_baseline_cases} == {
+            case["id"] for case in context_optimized_cases
+        }
         assert len(realistic_baseline_cases) >= 5
-        assert {case["id"] for case in realistic_baseline_cases} == {case["id"] for case in realistic_optimized_cases}
+        assert {case["id"] for case in realistic_baseline_cases} == {
+            case["id"] for case in realistic_optimized_cases
+        }
     finally:
         shutil.rmtree(temp_root, ignore_errors=True)
 
@@ -557,19 +608,30 @@ def test_benchmark_runner_real_agent_profile_marks_synthetic_and_preapproved_cas
     temp_root = _prepare_temp_root()
     try:
         app = MiniBotApp(temp_root)
-        runner = BenchmarkRunner(app.runtime.agent_loop, temp_root, verifier_agent=app.runtime.verifier_agent)
+        runner = BenchmarkRunner(
+            app.runtime.agent_loop, temp_root, verifier_agent=app.runtime.verifier_agent
+        )
         real_agent_cases = runner._load_cases(None, "core", "real-agent")
         ids = {case["id"] for case in real_agent_cases}
         assert "real_agent_partial_success_001" in ids
         assert "real_agent_python_exec_001" in ids
         assert "real_agent_file_write_read_001" in ids
-        partial_case = next(case for case in real_agent_cases if case["id"] == "real_agent_partial_success_001")
-        python_case = next(case for case in real_agent_cases if case["id"] == "real_agent_python_exec_001")
-        file_case = next(case for case in real_agent_cases if case["id"] == "real_agent_file_write_read_001")
+        partial_case = next(
+            case for case in real_agent_cases if case["id"] == "real_agent_partial_success_001"
+        )
+        python_case = next(
+            case for case in real_agent_cases if case["id"] == "real_agent_python_exec_001"
+        )
+        file_case = next(
+            case for case in real_agent_cases if case["id"] == "real_agent_file_write_read_001"
+        )
         assert partial_case["synthetic_tool_plan"]
         assert python_case["preloaded_approval"]["status"] == "approved"
         assert file_case["preloaded_approval"]["status"] == "approved"
-        assert "tool_result_metadata:file_write:approval_status:approved" in file_case["expected_behavior"]
+        assert (
+            "tool_result_metadata:file_write:approval_status:approved"
+            in file_case["expected_behavior"]
+        )
         assert "tool_result_metadata:file_write:risk_level:gray" in file_case["expected_behavior"]
     finally:
         shutil.rmtree(temp_root, ignore_errors=True)
@@ -579,11 +641,21 @@ def test_benchmark_runner_builds_real_agent_report_fields() -> None:
     temp_root = _prepare_temp_root()
     try:
         app = MiniBotApp(temp_root)
-        runner = BenchmarkRunner(app.runtime.agent_loop, temp_root, verifier_agent=app.runtime.verifier_agent)
+        runner = BenchmarkRunner(
+            app.runtime.agent_loop, temp_root, verifier_agent=app.runtime.verifier_agent
+        )
         report = runner._build_report(
             cases=[
-                {"id": "real_agent_search_summary_001", "category": "tools", "profiles": ["real-agent"]},
-                {"id": "real_agent_partial_success_001", "category": "reasoning", "profiles": ["real-agent"]},
+                {
+                    "id": "real_agent_search_summary_001",
+                    "category": "tools",
+                    "profiles": ["real-agent"],
+                },
+                {
+                    "id": "real_agent_partial_success_001",
+                    "category": "reasoning",
+                    "profiles": ["real-agent"],
+                },
             ],
             results=[
                 {
@@ -685,7 +757,9 @@ def test_benchmark_runner_reports_safety_counts() -> None:
     temp_root = _prepare_temp_root()
     try:
         app = MiniBotApp(temp_root)
-        runner = BenchmarkRunner(app.runtime.agent_loop, temp_root, verifier_agent=app.runtime.verifier_agent)
+        runner = BenchmarkRunner(
+            app.runtime.agent_loop, temp_root, verifier_agent=app.runtime.verifier_agent
+        )
         report = runner.run(category="safety", mode="fake", profile="safety")
         assert report["benchmark_profile"] == "safety"
         assert report["total_cases"] >= 7
@@ -700,7 +774,9 @@ def test_benchmark_runner_reports_context_metrics_for_context_optimized_profile(
     temp_root = _prepare_temp_root()
     try:
         app = MiniBotApp(temp_root)
-        runner = BenchmarkRunner(app.runtime.agent_loop, temp_root, verifier_agent=app.runtime.verifier_agent)
+        runner = BenchmarkRunner(
+            app.runtime.agent_loop, temp_root, verifier_agent=app.runtime.verifier_agent
+        )
         report = runner.run(mode="fake", profile="context-optimized")
         assert report["benchmark_profile"] == "context-optimized"
         assert report["context_case_count"] >= 1
@@ -715,7 +791,9 @@ def test_context_benchmark_profiles_share_cases_and_optimized_reduces_dynamic_to
     temp_root = _prepare_temp_root()
     try:
         app = MiniBotApp(temp_root)
-        runner = BenchmarkRunner(app.runtime.agent_loop, temp_root, verifier_agent=app.runtime.verifier_agent)
+        runner = BenchmarkRunner(
+            app.runtime.agent_loop, temp_root, verifier_agent=app.runtime.verifier_agent
+        )
         baseline = runner.run(mode="fake", profile="context-baseline")
         optimized = runner.run(mode="fake", profile="context-optimized")
         assert baseline["benchmark_profile"] == "context-baseline"
@@ -727,11 +805,15 @@ def test_context_benchmark_profiles_share_cases_and_optimized_reduces_dynamic_to
         shutil.rmtree(temp_root, ignore_errors=True)
 
 
-def test_realistic_context_benchmark_profiles_share_cases_and_optimized_reduces_dynamic_tokens() -> None:
+def test_realistic_context_benchmark_profiles_share_cases_and_optimized_reduces_dynamic_tokens() -> (
+    None
+):
     temp_root = _prepare_temp_root()
     try:
         app = MiniBotApp(temp_root)
-        runner = BenchmarkRunner(app.runtime.agent_loop, temp_root, verifier_agent=app.runtime.verifier_agent)
+        runner = BenchmarkRunner(
+            app.runtime.agent_loop, temp_root, verifier_agent=app.runtime.verifier_agent
+        )
         baseline = runner.run(mode="fake", profile="context-realistic-baseline")
         optimized = runner.run(mode="fake", profile="context-realistic-optimized")
         assert baseline["benchmark_profile"] == "context-realistic-baseline"
@@ -748,7 +830,9 @@ def test_realistic_context_profiles_pass_on_metrics_without_text_quality_depende
     temp_root = _prepare_temp_root()
     try:
         app = MiniBotApp(temp_root)
-        runner = BenchmarkRunner(app.runtime.agent_loop, temp_root, verifier_agent=app.runtime.verifier_agent)
+        runner = BenchmarkRunner(
+            app.runtime.agent_loop, temp_root, verifier_agent=app.runtime.verifier_agent
+        )
         baseline = runner.run(mode="fake", profile="context-realistic-baseline")
         optimized = runner.run(mode="fake", profile="context-realistic-optimized")
         assert baseline["benchmark_profile"] == "context-realistic-baseline"
@@ -765,7 +849,9 @@ def test_prepare_case_state_skips_unreadable_original_archives(monkeypatch) -> N
     temp_root = _prepare_temp_root()
     try:
         app = MiniBotApp(temp_root)
-        runner = BenchmarkRunner(app.runtime.agent_loop, temp_root, verifier_agent=app.runtime.verifier_agent)
+        runner = BenchmarkRunner(
+            app.runtime.agent_loop, temp_root, verifier_agent=app.runtime.verifier_agent
+        )
         workspace = app.runtime.workspace
         archive_path = workspace.archives_dir / "missing-archive.md"
         archive_path.write_text("stale archive", encoding="utf-8")
@@ -853,10 +939,22 @@ def test_benchmark_runner_uses_trace_metadata_for_external_integrations() -> Non
         results=[
             {
                 "tool_trace": [
-                    {"tool_name": "weather", "metadata": {"provider_status": "real", "real_provider": True}},
-                    {"tool_name": "web_search", "metadata": {"provider_status": "real", "real_provider": True}},
-                    {"tool_name": "map_route", "metadata": {"provider_status": "mcp", "mcp_provider": True}},
-                    {"tool_name": "map_poi_search", "metadata": {"provider_status": "mcp", "mcp_provider": True}},
+                    {
+                        "tool_name": "weather",
+                        "metadata": {"provider_status": "real", "real_provider": True},
+                    },
+                    {
+                        "tool_name": "web_search",
+                        "metadata": {"provider_status": "real", "real_provider": True},
+                    },
+                    {
+                        "tool_name": "map_route",
+                        "metadata": {"provider_status": "mcp", "mcp_provider": True},
+                    },
+                    {
+                        "tool_name": "map_poi_search",
+                        "metadata": {"provider_status": "mcp", "mcp_provider": True},
+                    },
                 ]
             }
         ],
@@ -871,7 +969,9 @@ def test_benchmark_runner_real_mode_marks_model_http_error_without_crashing(monk
     temp_root = _prepare_temp_root()
     try:
         app = MiniBotApp(temp_root)
-        runner = BenchmarkRunner(app.runtime.agent_loop, temp_root, verifier_agent=app.runtime.verifier_agent)
+        runner = BenchmarkRunner(
+            app.runtime.agent_loop, temp_root, verifier_agent=app.runtime.verifier_agent
+        )
         monkeypatch.setenv("MINIBOT_MODEL_PROVIDER", "deepseek")
         monkeypatch.setenv("MINIBOT_MODEL_BASE_URL", "https://api.deepseek.com")
         monkeypatch.setenv("MINIBOT_MODEL_API_KEY", "test-key")
@@ -910,7 +1010,9 @@ def test_benchmark_runner_uses_actual_run_trace_fields() -> None:
     try:
         app = MiniBotApp(temp_root)
         result = app.runtime.agent_loop.handle_message(
-            ChannelMessage(channel="test", user_id="tester", session_id="eval-trace", content="计算 2 + 3")
+            ChannelMessage(
+                channel="test", user_id="tester", session_id="eval-trace", content="计算 2 + 3"
+            )
         )
         run_path = app.runtime.workspace.runs_dir / f"{result.run_id}.json"
         run_record = json.loads(run_path.read_text(encoding="utf-8"))
@@ -926,7 +1028,9 @@ def test_benchmark_runner_real_verifier_missing_does_not_block_case_execution(mo
     try:
         monkeypatch.setenv("MINIBOT_VERIFIER_MODE", "real")
         app = MiniBotApp(temp_root)
-        runner = BenchmarkRunner(app.runtime.agent_loop, temp_root, verifier_agent=app.runtime.verifier_agent)
+        runner = BenchmarkRunner(
+            app.runtime.agent_loop, temp_root, verifier_agent=app.runtime.verifier_agent
+        )
         report = runner.run(category="memory", mode="fake")
         assert report["verifier_mode"] == "real"
         assert report["fake_verifier"] is False
@@ -937,7 +1041,9 @@ def test_benchmark_runner_real_verifier_missing_does_not_block_case_execution(mo
         shutil.rmtree(temp_root, ignore_errors=True)
 
 
-def test_benchmark_runner_real_verifier_http_error_marks_failed_without_crashing(monkeypatch) -> None:
+def test_benchmark_runner_real_verifier_http_error_marks_failed_without_crashing(
+    monkeypatch,
+) -> None:
     temp_root = _prepare_temp_root()
     try:
         monkeypatch.setenv("MINIBOT_VERIFIER_MODE", "real")
@@ -946,7 +1052,9 @@ def test_benchmark_runner_real_verifier_http_error_marks_failed_without_crashing
         monkeypatch.setenv("MINIBOT_VERIFIER_API_KEY", "verifier-key")
         monkeypatch.setenv("MINIBOT_VERIFIER_MODEL_NAME", "deepseek-chat")
         app = MiniBotApp(temp_root)
-        runner = BenchmarkRunner(app.runtime.agent_loop, temp_root, verifier_agent=app.runtime.verifier_agent)
+        runner = BenchmarkRunner(
+            app.runtime.agent_loop, temp_root, verifier_agent=app.runtime.verifier_agent
+        )
 
         class _FakeHttpError(urllib.error.HTTPError):
             def __init__(self) -> None:
@@ -975,7 +1083,9 @@ def test_benchmark_runner_real_verifier_http_error_marks_failed_without_crashing
         shutil.rmtree(temp_root, ignore_errors=True)
 
 
-def test_benchmark_runner_real_verifier_case_failure_does_not_set_top_level_verifier_error(monkeypatch) -> None:
+def test_benchmark_runner_real_verifier_case_failure_does_not_set_top_level_verifier_error(
+    monkeypatch,
+) -> None:
     temp_root = _prepare_temp_root()
     try:
         monkeypatch.setenv("MINIBOT_VERIFIER_MODE", "real")
@@ -984,10 +1094,14 @@ def test_benchmark_runner_real_verifier_case_failure_does_not_set_top_level_veri
         monkeypatch.setenv("MINIBOT_VERIFIER_API_KEY", "verifier-key")
         monkeypatch.setenv("MINIBOT_VERIFIER_MODEL_NAME", "deepseek-chat")
         app = MiniBotApp(temp_root)
-        runner = BenchmarkRunner(app.runtime.agent_loop, temp_root, verifier_agent=app.runtime.verifier_agent)
+        runner = BenchmarkRunner(
+            app.runtime.agent_loop, temp_root, verifier_agent=app.runtime.verifier_agent
+        )
         runner.model_verifier = ModelVerifier.from_project_root(temp_root)
 
-        def fake_verify(*, final_response: str, expected_behavior: list[str], run_record: dict[str, object]) -> dict[str, object]:  # noqa: ARG001
+        def fake_verify(
+            *, final_response: str, expected_behavior: list[str], run_record: dict[str, object]
+        ) -> dict[str, object]:  # noqa: ARG001
             return {
                 "used_model": True,
                 "passed": False,

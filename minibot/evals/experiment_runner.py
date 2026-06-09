@@ -20,8 +20,14 @@ from minibot.json_utils import load_json_file
 class ExperimentRunner:
     """Run an ablation experiment by toggling ContextBuilder features."""
 
-    def __init__(self, agent_loop, project_root: Path, verifier_agent=None,
-                 long_task_runner=None, planner_agent=None) -> None:
+    def __init__(
+        self,
+        agent_loop,
+        project_root: Path,
+        verifier_agent=None,
+        long_task_runner=None,
+        planner_agent=None,
+    ) -> None:
         self._agent_loop = agent_loop
         self._project_root = project_root
         self._verifier_agent = verifier_agent
@@ -41,8 +47,10 @@ class ExperimentRunner:
         # Real mode pre-check: if model key is missing, skip all cases
         if mode == "real":
             import os
-            api_key = (os.getenv("MINIBOT_MODEL_API_KEY", "") or
-                       os.getenv("MINIBOT_API_KEY", "").strip())
+
+            api_key = (
+                os.getenv("MINIBOT_MODEL_API_KEY", "") or os.getenv("MINIBOT_API_KEY", "").strip()
+            )
             if not api_key:
                 report = {
                     "experiment": experiment_name,
@@ -60,16 +68,31 @@ class ExperimentRunner:
                     "skipped_cases": len(cases),
                     "pass_rate": 0.0,
                     "engineering_pass_rate": 0.0,
-                    "summary": {"provider_mode": "real", "provider_usage_prompt_tokens": "unavailable",
-                                 "provider_usage_total_tokens": "unavailable", "model_name": "config_missing"},
-                    "results": [{"id": c["id"], "status": "skipped", "passed": False,
-                                 "skip_reason": "provider_config_missing",
-                                 "baseline_metrics": {}, "current_metrics": {}} for c in cases],
+                    "summary": {
+                        "provider_mode": "real",
+                        "provider_usage_prompt_tokens": "unavailable",
+                        "provider_usage_total_tokens": "unavailable",
+                        "model_name": "config_missing",
+                    },
+                    "results": [
+                        {
+                            "id": c["id"],
+                            "status": "skipped",
+                            "passed": False,
+                            "skip_reason": "provider_config_missing",
+                            "baseline_metrics": {},
+                            "current_metrics": {},
+                        }
+                        for c in cases
+                    ],
                 }
                 if report_path is not None:
                     report_path.parent.mkdir(parents=True, exist_ok=True)
                     import json as _json
-                    report_path.write_text(_json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+
+                    report_path.write_text(
+                        _json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8"
+                    )
                 return report
 
         baseline_config = config.get("baseline", {})
@@ -85,12 +108,19 @@ class ExperimentRunner:
         for case in cases:
             if case.get("status") == "pending":
                 skipped_count += 1
-                results.append({"id": case["id"], "status": "skipped", "passed": False,
-                                "baseline_metrics": {}, "current_metrics": {}})
+                results.append(
+                    {
+                        "id": case["id"],
+                        "status": "skipped",
+                        "passed": False,
+                        "baseline_metrics": {},
+                        "current_metrics": {},
+                    }
+                )
                 continue
 
             is_planner_case = bool(case.get("planner_mode") == "current")
-            is_evidence_case = (experiment_name == "evidence_compression_realistic")
+            is_evidence_case = experiment_name == "evidence_compression_realistic"
 
             # ── baseline run ──
             if is_evidence_case:
@@ -122,7 +152,8 @@ class ExperimentRunner:
 
             # ── Business-level pass check (mode-aware) ──
             case_status, is_passed, fail_reason = self._check_case_passed(
-                experiment_name, case, bm, cm, mode=mode)
+                experiment_name, case, bm, cm, mode=mode
+            )
 
             if case_status == "completed":
                 passed_count += 1
@@ -136,16 +167,18 @@ class ExperimentRunner:
             if ExperimentRunner._engineering_metrics_valid(experiment_name, case, bm, cm):
                 engineering_passed += 1
 
-            results.append({
-                "id": case["id"],
-                "status": case_status,
-                "passed": is_passed,
-                "category": str(case.get("category", "")),
-                "expected_policy_decision": str(case.get("expected_policy_decision", "")),
-                "baseline_metrics": bm,
-                "current_metrics": cm,
-                "_fail_reason": fail_reason,
-            })
+            results.append(
+                {
+                    "id": case["id"],
+                    "status": case_status,
+                    "passed": is_passed,
+                    "category": str(case.get("category", "")),
+                    "expected_policy_decision": str(case.get("expected_policy_decision", "")),
+                    "baseline_metrics": bm,
+                    "current_metrics": cm,
+                    "_fail_reason": fail_reason,
+                }
+            )
 
         extra_summary = self._compute_experiment_metrics(experiment_name, results)
         # Compute context deltas from valid pairs only
@@ -163,7 +196,9 @@ class ExperimentRunner:
             "failed_expectation": failed_expectation,
             "skipped_cases": skipped_count,
             "pass_rate": round(passed_count / max(len(results) - skipped_count, 1), 4),
-            "engineering_pass_rate": round(engineering_passed / max(len(results) - skipped_count, 1), 4),
+            "engineering_pass_rate": round(
+                engineering_passed / max(len(results) - skipped_count, 1), 4
+            ),
             "baseline_config": baseline_config,
             "current_config": current_config,
             "summary": {**ctx_deltas, **extra_summary},
@@ -172,7 +207,9 @@ class ExperimentRunner:
 
         if report_path is not None:
             report_path.parent.mkdir(parents=True, exist_ok=True)
-            report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+            report_path.write_text(
+                json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8"
+            )
 
         return report
 
@@ -237,7 +274,8 @@ class ExperimentRunner:
             temp_file.write_text(json.dumps(case, ensure_ascii=False), encoding="utf-8")
         try:
             runner = BenchmarkRunner(
-                self._agent_loop, self._project_root,
+                self._agent_loop,
+                self._project_root,
                 verifier_agent=self._verifier_agent,
                 long_task_runner=self._long_task_runner,
                 planner_agent=self._planner_agent,
@@ -254,19 +292,32 @@ class ExperimentRunner:
 
     def _run_agent_chat(self, case: dict[str, object], mode: str) -> dict[str, object]:
         from minibot.channels.base import ChannelMessage
+
         result = self._agent_loop.handle_message(
-            ChannelMessage(channel="experiment", user_id="experiment-runner",
-                           session_id=str(case.get("id", "")), content=str(case.get("input", ""))))
-        return self._enrich_from_run_record({
-            "id": case.get("id"), "status": "passed" if result.response else "failed",
-            "passed": bool(result.response),
-            "_raw_run_id": result.run_id,
-            "uses_real_file": str(case.get("uses_real_file", "")),
-            "tool_trace": [], "tool_rounds": 0,
-            "failure_category": None, "verifier_reason": result.verifier_reason or "",
-            "retry_count": 0, "partial_success": False,
-            "input": str(case.get("input", "")),
-        }, str(case.get("id", "")))
+            ChannelMessage(
+                channel="experiment",
+                user_id="experiment-runner",
+                session_id=str(case.get("id", "")),
+                content=str(case.get("input", "")),
+            )
+        )
+        return self._enrich_from_run_record(
+            {
+                "id": case.get("id"),
+                "status": "passed" if result.response else "failed",
+                "passed": bool(result.response),
+                "_raw_run_id": result.run_id,
+                "uses_real_file": str(case.get("uses_real_file", "")),
+                "tool_trace": [],
+                "tool_rounds": 0,
+                "failure_category": None,
+                "verifier_reason": result.verifier_reason or "",
+                "retry_count": 0,
+                "partial_success": False,
+                "input": str(case.get("input", "")),
+            },
+            str(case.get("id", "")),
+        )
 
     def _run_planner_path(self, case: dict[str, object], mode: str) -> dict[str, object]:
         if self._planner_agent is None or self._long_task_runner is None:
@@ -283,9 +334,12 @@ class ExperimentRunner:
                 failure_category = str(o["failure_category"])
         replan_events = []
         from minibot.planning.plan_schema import TaskPlan
+
         if isinstance(plan, TaskPlan):
             replan_events = list((plan.metadata or {}).get("replan_events", []))
-        response_text = "\n".join(final_responses) if final_responses else str(result.get("status", ""))
+        response_text = (
+            "\n".join(final_responses) if final_responses else str(result.get("status", ""))
+        )
         # Check output file existence
         output_exists = False
         sandbox = self._agent_loop.memory_store.workspace.sandbox_dir
@@ -295,13 +349,19 @@ class ExperimentRunner:
                     p = sandbox / str(t.get("arguments", {}).get("path", ""))
                     output_exists = p.exists()
         return {
-            "id": case.get("id"), "status": "passed" if result.get("status") in {"completed", "waiting_approval"} else "failed",
+            "id": case.get("id"),
+            "status": (
+                "passed" if result.get("status") in {"completed", "waiting_approval"} else "failed"
+            ),
             "passed": result.get("status") in {"completed", "waiting_approval"},
-            "tool_trace": tool_trace, "tool_rounds": len(tool_trace),
+            "tool_trace": tool_trace,
+            "tool_rounds": len(tool_trace),
             "failure_category": failure_category,
             "verifier_reason": f"plan_status={result.get('status')} steps={result.get('steps_completed',0)}/{result.get('total_steps',0)}",
-            "retry_count": 0, "partial_success": False,
-            "_plan_id": result.get("plan_id"), "_plan_steps": result.get("total_steps", 0),
+            "retry_count": 0,
+            "partial_success": False,
+            "_plan_id": result.get("plan_id"),
+            "_plan_steps": result.get("total_steps", 0),
             "_evidence_ids": evidence_ids,
             "_replan_events": replan_events,
             "_output_file_exists": output_exists,
@@ -320,7 +380,10 @@ class ExperimentRunner:
                     rec = json.loads(p.read_text(encoding="utf-8"))
                 except Exception:
                     continue
-                if str(rec.get("user_input", "")) == str(result.get("input", "")) or str(rec.get("session_id")) == case_id:
+                if (
+                    str(rec.get("user_input", "")) == str(result.get("input", ""))
+                    or str(rec.get("session_id")) == case_id
+                ):
                     run_id = p.stem
                     break
         if run_id:
@@ -330,7 +393,9 @@ class ExperimentRunner:
             except Exception:
                 rec = {}
             cm = rec.get("context_metrics", {}) or {}
-            result["context_chars"] = int(cm.get("dynamic_context_chars", cm.get("context_chars", 0)) or 0)
+            result["context_chars"] = int(
+                cm.get("dynamic_context_chars", cm.get("context_chars", 0)) or 0
+            )
             result["history_chars"] = int(cm.get("history_chars", 0) or 0)
             result["evidence_chars"] = int(cm.get("evidence_chars", 0) or 0)
             # evidence_count / evidence_ids from run record
@@ -369,9 +434,15 @@ class ExperimentRunner:
             result["raw_tool_output_chars"] = raw_chars
             result["prompt_chars"] = int(cm.get("prompt_tokens", cm.get("context_chars", 0)) or 0)
             result["tool_trace"] = result.get("tool_trace") or rec.get("tool_trace", [])
-            result["tool_rounds"] = result.get("tool_rounds") or int(rec.get("actual_tool_rounds", 0))
-            result["failure_category"] = result.get("failure_category") or rec.get("failure_category")
-            result["partial_success"] = result.get("partial_success") or bool(rec.get("partial_success"))
+            result["tool_rounds"] = result.get("tool_rounds") or int(
+                rec.get("actual_tool_rounds", 0)
+            )
+            result["failure_category"] = result.get("failure_category") or rec.get(
+                "failure_category"
+            )
+            result["partial_success"] = result.get("partial_success") or bool(
+                rec.get("partial_success")
+            )
             result["_raw_run_id"] = run_id
             result["_missing"] = False
         elif not result.get("context_chars") and not result.get("_planner_path"):
@@ -406,10 +477,13 @@ class ExperimentRunner:
         }
 
     @staticmethod
-    def _check_case_passed(experiment: str, case: dict[str, object],
-                           bm: dict[str, object], cm: dict[str, object],
-                           mode: str = "fake"
-                           ) -> tuple[str, bool, str | None]:
+    def _check_case_passed(
+        experiment: str,
+        case: dict[str, object],
+        bm: dict[str, object],
+        cm: dict[str, object],
+        mode: str = "fake",
+    ) -> tuple[str, bool, str | None]:
         """Return (status, passed, reason).
 
         In fake mode, engineering metrics (retrieval hits, evidence created,
@@ -440,8 +514,7 @@ class ExperimentRunner:
         return ("failed_expectation", False, "baseline or current did not pass")
 
     @staticmethod
-    def _tgov_check(case: dict[str, object], cm: dict[str, object]
-                     ) -> tuple[str, bool, str | None]:
+    def _tgov_check(case: dict[str, object], cm: dict[str, object]) -> tuple[str, bool, str | None]:
         """tool_governance: verify that expected_policy_decision was enforced."""
         epd = str(case.get("expected_policy_decision", ""))
         trace_str = str(cm.get("tool_trace", []))
@@ -482,8 +555,9 @@ class ExperimentRunner:
         return ("failed_expectation", False, f"unknown policy {epd}")
 
     @staticmethod
-    def _tplan_check(case: dict[str, object], bm: dict[str, object], cm: dict[str, object]
-                      ) -> tuple[str, bool, str | None]:
+    def _tplan_check(
+        case: dict[str, object], bm: dict[str, object], cm: dict[str, object]
+    ) -> tuple[str, bool, str | None]:
         """taskplan_execution: verify that business objectives were met."""
         cid = str(case.get("id", ""))
         # Baseline check: chat baseline only passes if it actually created output
@@ -506,7 +580,9 @@ class ExperimentRunner:
             else:
                 cur_passed = False
         elif cid == "tplan_evidence_001":
-            ev_ids = cm.get("_evidence_ids", []) if isinstance(cm.get("_evidence_ids"), list) else []
+            ev_ids = (
+                cm.get("_evidence_ids", []) if isinstance(cm.get("_evidence_ids"), list) else []
+            )
             if has_plan and len(ev_ids) >= 1 and cm.get("passed"):
                 cur_passed = True
             else:
@@ -562,10 +638,17 @@ class ExperimentRunner:
 
     def _apply_context_config(self, config: dict[str, object]) -> None:
         cb = self._agent_loop.context_builder
-        self._saved_context = {k: getattr(cb, k) for k in (
-            "enable_history_retrieval", "enable_history_truncation",
-            "enable_memory_compaction", "enable_archive_recall",
-            "enable_placeholder_clean", "enable_archive_full_context")}
+        self._saved_context = {
+            k: getattr(cb, k)
+            for k in (
+                "enable_history_retrieval",
+                "enable_history_truncation",
+                "enable_memory_compaction",
+                "enable_archive_recall",
+                "enable_placeholder_clean",
+                "enable_archive_full_context",
+            )
+        }
         for key in self._saved_context:
             setattr(cb, key, config.get(key, getattr(cb, key)))
 
@@ -580,9 +663,9 @@ class ExperimentRunner:
     # ------------------------------------------------------------------
 
     @staticmethod
-    def _engineering_retrieval_check(case: dict[str, object],
-                                      bm: dict[str, object], cm: dict[str, object]
-                                      ) -> tuple[str, bool, str | None]:
+    def _engineering_retrieval_check(
+        case: dict[str, object], bm: dict[str, object], cm: dict[str, object]
+    ) -> tuple[str, bool, str | None]:
         """Fake-mode retrieval check: context reduced AND expected keywords found in current context."""
         bl_ctx = int(bm.get("context_chars", 0) or 0)
         cur_ctx = int(cm.get("context_chars", 0) or 0)
@@ -599,8 +682,10 @@ class ExperimentRunner:
         cur_ctx_str = str(cur_ctx)
         history_hit = True
         if expected_ids and isinstance(expected_ids, list):
-            history_hit = any(eid.lower() in trace_str.lower() or eid.lower() in cur_ctx_str.lower()
-                              for eid in expected_ids)
+            history_hit = any(
+                eid.lower() in trace_str.lower() or eid.lower() in cur_ctx_str.lower()
+                for eid in expected_ids
+            )
         if expected_kw and isinstance(expected_kw, list) and not history_hit:
             history_hit = any(kw.lower() in trace_str.lower() for kw in expected_kw)
 
@@ -616,9 +701,9 @@ class ExperimentRunner:
         return ("failed_expectation", False, "; ".join(reasons))
 
     @staticmethod
-    def _engineering_evidence_check(case: dict[str, object],
-                                     bm: dict[str, object], cm: dict[str, object]
-                                     ) -> tuple[str, bool, str | None]:
+    def _engineering_evidence_check(
+        case: dict[str, object], bm: dict[str, object], cm: dict[str, object]
+    ) -> tuple[str, bool, str | None]:
         """Fake-mode evidence check: raw tool output captured AND context is measurable."""
         raw_chars = int(cm.get("raw_tool_output_chars", 0) or 0)
         cur_ctx = int(cm.get("context_chars", 0) or 0)
@@ -646,8 +731,9 @@ class ExperimentRunner:
         return ("failed_expectation", False, "; ".join(reasons))
 
     @staticmethod
-    def _engineering_metrics_valid(experiment: str, case: dict[str, object],
-                                    bm: dict[str, object], cm: dict[str, object]) -> bool:
+    def _engineering_metrics_valid(
+        experiment: str, case: dict[str, object], bm: dict[str, object], cm: dict[str, object]
+    ) -> bool:
         """Return True if engineering metrics were properly captured."""
         if experiment in {"context_robust_realistic", "history_retrieval_robust"}:
             bl = int(bm.get("context_chars", 0) or 0)
@@ -665,8 +751,9 @@ class ExperimentRunner:
         return bool(bm.get("context_chars") or cm.get("context_chars"))
 
     @staticmethod
-    def _required_keywords_check(case: dict[str, object], cm: dict[str, object]
-                                  ) -> tuple[str, bool, str | None]:
+    def _required_keywords_check(
+        case: dict[str, object], cm: dict[str, object]
+    ) -> tuple[str, bool, str | None]:
         """Check that required_keywords appear in the final_response."""
         required = case.get("required_keywords", [])
         if not isinstance(required, list) or not required:
@@ -689,8 +776,9 @@ class ExperimentRunner:
         return ("failed_expectation", False, "did not pass")
 
     @staticmethod
-    def _evidence_check(case: dict[str, object], bm: dict[str, object], cm: dict[str, object]
-                         ) -> tuple[str, bool, str | None]:
+    def _evidence_check(
+        case: dict[str, object], bm: dict[str, object], cm: dict[str, object]
+    ) -> tuple[str, bool, str | None]:
         """evidence_compression: check file read succeeded and (optionally) evidence store."""
         uses_file = str(case.get("uses_real_file", ""))
         check_evidence = bool(case.get("check_evidence_store", False))
@@ -705,7 +793,9 @@ class ExperimentRunner:
                 return ("failed_expectation", False, f"missing keywords in trace: {missing}")
 
         if check_evidence:
-            ev_ids = cm.get("_evidence_ids", []) if isinstance(cm.get("_evidence_ids"), list) else []
+            ev_ids = (
+                cm.get("_evidence_ids", []) if isinstance(cm.get("_evidence_ids"), list) else []
+            )
             if len(ev_ids) >= 1:
                 return ("completed", True, None)
             return ("failed_expectation", False, "expected evidence_ids but none found")
@@ -718,8 +808,12 @@ class ExperimentRunner:
         return ("failed_expectation", False, "case did not pass")
 
     @staticmethod
-    def _compute_experiment_metrics(name: str, results: list[dict[str, object]]) -> dict[str, object]:
-        counted = [r for r in results if r.get("status") not in {"skipped", "failed_metric_missing"}]
+    def _compute_experiment_metrics(
+        name: str, results: list[dict[str, object]]
+    ) -> dict[str, object]:
+        counted = [
+            r for r in results if r.get("status") not in {"skipped", "failed_metric_missing"}
+        ]
         if name == "tool_governance":
             return ExperimentRunner._tool_governance_metrics(counted)
         if name == "taskplan_execution":
@@ -735,6 +829,7 @@ class ExperimentRunner:
         def _rate(n: int, d: int):
             """Return float if denominator > 0, else None (unavailable)."""
             return round(n / d, 4) if d > 0 else None
+
         dangerous, dangerous_blocked = 0, 0
         gray, gray_approval = 0, 0
         approved, approved_ok = 0, 0
@@ -806,6 +901,7 @@ class ExperimentRunner:
     def _taskplan_metrics(results: list[dict[str, object]]) -> dict[str, object]:
         def _rate(n: int, d: int):
             return round(n / d, 4) if d > 0 else None
+
         bl_pass = cur_pass = bl_n = cur_n = 0
         file_ok = file_n = 0
         replan_trig = replan_ok = 0
@@ -848,7 +944,9 @@ class ExperimentRunner:
         return {
             "task_success_rate_baseline": _rate(bl_pass, bl_n),
             "task_success_rate_current": _rate(cur_pass, cur_n),
-            "task_success_improvement": round((_rate(cur_pass, cur_n) or 0.0) - (_rate(bl_pass, bl_n) or 0.0), 4),
+            "task_success_improvement": round(
+                (_rate(cur_pass, cur_n) or 0.0) - (_rate(bl_pass, bl_n) or 0.0), 4
+            ),
             "file_created_rate": _rate(file_ok, file_n),
             "avg_plan_steps": round(steps_sum / steps_n, 2) if steps_n else None,
             "approval_resume_success_rate": _rate(appr_ok, appr_n),
@@ -861,6 +959,7 @@ class ExperimentRunner:
     def _retrieval_metrics(results: list[dict[str, object]], name: str) -> dict[str, object]:
         def _rate(n: int, d: int):
             return round(n / d, 4) if d > 0 else None
+
         kw_hits = 0
         kw_total = len(results)
         passed = sum(1 for r in results if r.get("passed"))
@@ -877,6 +976,7 @@ class ExperimentRunner:
     def _ev_compression_metrics(results: list[dict[str, object]]) -> dict[str, object]:
         def _rate(n: int, d: int):
             return round(n / d, 4) if d > 0 else None
+
         ev_count = 0
         ev_cases = 0
         ev_total = len(results)
@@ -918,4 +1018,5 @@ class ExperimentRunner:
     @staticmethod
     def _now() -> str:
         from datetime import datetime, timezone
+
         return datetime.now(timezone.utc).isoformat()

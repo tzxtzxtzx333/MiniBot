@@ -8,7 +8,9 @@ from minibot.context.token_budget import TokenBudget
 class MemoryCompactor:
     """Create archive summaries and write them to `.minibot/archives/`."""
 
-    def __init__(self, summarizer_agent, archive_writer, token_budget: TokenBudget | None = None) -> None:
+    def __init__(
+        self, summarizer_agent, archive_writer, token_budget: TokenBudget | None = None
+    ) -> None:
         self.summarizer_agent = summarizer_agent
         self.archive_writer = archive_writer
         self.token_budget = token_budget or TokenBudget()
@@ -26,7 +28,9 @@ class MemoryCompactor:
         """Compact recent history into an archive file and return trace metadata."""
 
         token_before = self.token_budget.estimate_text(history_text)
-        summary_result = self.summarizer_agent.summarize(history_text=history_text, memory_text=memory_text)
+        summary_result = self.summarizer_agent.summarize(
+            history_text=history_text, memory_text=memory_text
+        )
         summary = str(summary_result["summary"])
         archive_mode = str(summary_result["archive_mode"])
         archive_model_provider = str(summary_result["archive_model_provider"])

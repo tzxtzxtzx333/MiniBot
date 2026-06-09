@@ -16,7 +16,6 @@ from minibot.channels.http_channel import HttpChannel
 from minibot.channels.mock_feishu_channel import MockFeishuChannel
 from minibot.evals.benchmark_runner import BenchmarkRunner
 
-
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -191,7 +190,11 @@ def test_http_channel_chat_accepts_text_field() -> None:
         chat_code, chat_payload = _http_request(
             "POST",
             f"{base_url}/chat",
-            {"user_id": "http-user", "session_id": "http-session-002", "text": "text field message"},
+            {
+                "user_id": "http-user",
+                "session_id": "http-session-002",
+                "text": "text field message",
+            },
         )
         assert chat_code == 200
         assert chat_payload["response"] == "MiniBot echo: text field message"
@@ -291,7 +294,12 @@ def test_http_channel_unsupported_method_returns_405_json() -> None:
     base_url = f"http://{host}:{port}"
 
     try:
-        request = urllib.request.Request(f"{base_url}/chat", method="PUT", data=b"{}", headers={"Content-Type": "application/json"})
+        request = urllib.request.Request(
+            f"{base_url}/chat",
+            method="PUT",
+            data=b"{}",
+            headers={"Content-Type": "application/json"},
+        )
         try:
             urllib.request.urlopen(request, timeout=5)  # noqa: S310
             raise AssertionError("expected HTTP 405")
@@ -373,7 +381,7 @@ def test_feishu_ws_channel_parses_message_payload_to_text_and_chat_id() -> None:
                 "message_id": "om_123",
                 "chat_id": "oc_456",
                 "chat_type": "p2p",
-                "content": "{\"text\":\"@MiniBot hello from feishu\"}",
+                "content": '{"text":"@MiniBot hello from feishu"}',
             },
         },
     }
@@ -437,8 +445,6 @@ def test_feishu_ws_channel_handles_event_through_agent_loop_when_configured() ->
     assert reply["reply_text"] == "MiniBot echo: 你好，MiniBot"
     assert reply["channel"] == "feishu_ws"
     assert reply["delivery_mode"] == "ws_adapter"
-
-
 
 
 def test_feishu_ws_channel_parses_high_level_sdk_message_object() -> None:
@@ -531,6 +537,7 @@ def test_feishu_ws_channel_sdk_handler_accepts_single_message_argument() -> None
 
     assert deliveries == [("oc_sdk_789", {"text": "MiniBot echo: hello from handler"})]
 
+
 def test_feishu_ws_channel_returns_sdk_missing_when_configured_without_sdk(monkeypatch) -> None:
     app = MiniBotApp(ROOT)
     channel = FeishuWebSocketChannel.from_env(
@@ -547,7 +554,13 @@ def test_feishu_ws_channel_returns_sdk_missing_when_configured_without_sdk(monke
     monkeypatch.setattr(
         FeishuWebSocketChannel,
         "_import_sdk",
-        staticmethod(lambda: {"status": "failed", "error": "feishu_sdk_not_installed", "channel": "feishu_ws"}),
+        staticmethod(
+            lambda: {
+                "status": "failed",
+                "error": "feishu_sdk_not_installed",
+                "channel": "feishu_ws",
+            }
+        ),
     )
     status = channel.run()
     assert status["status"] == "failed"
@@ -772,7 +785,11 @@ def test_cli_and_http_approvals_share_same_store() -> None:
             # Read via HTTP
             _, http_payload = _http_request("GET", f"{base_url}/approvals")
             match = next(
-                (a for a in http_payload["approvals"] if a["approval_id"] == pending["approval_id"]),
+                (
+                    a
+                    for a in http_payload["approvals"]
+                    if a["approval_id"] == pending["approval_id"]
+                ),
                 None,
             )
             assert match is not None
@@ -1132,4 +1149,3 @@ class TestHttpAuth:
             server.shutdown()
             server.server_close()
             thread.join(timeout=5)
-

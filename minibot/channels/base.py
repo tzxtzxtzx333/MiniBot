@@ -40,7 +40,7 @@ class BaseChannel:
         if not content.startswith("/plan"):
             return None
 
-        goal = content[len("/plan"):].strip()
+        goal = content[len("/plan") :].strip()
         if not goal:
             goal = content  # whole message is the goal
 

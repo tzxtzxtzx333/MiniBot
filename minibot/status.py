@@ -108,7 +108,8 @@ class MiniBotStatusService:
             archives_dir_exists=archive_info["archives_dir_exists"],
             archive_count=archive_info["archive_count"],
             latest_archive_path=archive_info["latest_archive_path"],
-            feishu_config_present=bool(os.getenv("FEISHU_APP_ID")) and bool(os.getenv("FEISHU_APP_SECRET")),
+            feishu_config_present=bool(os.getenv("FEISHU_APP_ID"))
+            and bool(os.getenv("FEISHU_APP_SECRET")),
             reports_dir_exists=(self.project_root / "reports").exists(),
             tasks_dir_exists=tasks_info["tasks_dir_exists"],
             task_count=tasks_info["task_count"],
@@ -150,8 +151,12 @@ def _benchmark_case_summary(benchmarks_root: Path) -> dict[str, object]:
         else:
             by_profile = summary["benchmark_case_count_by_profile"]
             by_profile["default"] = by_profile.get("default", 0) + 1
-    summary["benchmark_case_count_by_profile"] = dict(sorted(summary["benchmark_case_count_by_profile"].items()))
-    summary["benchmark_case_count_by_category"] = dict(sorted(summary["benchmark_case_count_by_category"].items()))
+    summary["benchmark_case_count_by_profile"] = dict(
+        sorted(summary["benchmark_case_count_by_profile"].items())
+    )
+    summary["benchmark_case_count_by_category"] = dict(
+        sorted(summary["benchmark_case_count_by_category"].items())
+    )
     return summary
 
 

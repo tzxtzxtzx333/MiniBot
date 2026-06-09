@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import sys
+from dataclasses import dataclass
 
 
 @dataclass(slots=True)
@@ -32,11 +32,15 @@ class ApprovalManager:
         global_default = self.approval_config.get("auto_approve")
         if isinstance(global_default, bool):
             if global_default:
-                return ApprovalDecision(approved=True, reason="auto_approved", requires_approval=True)
+                return ApprovalDecision(
+                    approved=True, reason="auto_approved", requires_approval=True
+                )
 
         override = self.tool_defaults.get(tool_name)
         if isinstance(override, bool):
-            return ApprovalDecision(approved=False, reason="approval_required", requires_approval=True)
+            return ApprovalDecision(
+                approved=False, reason="approval_required", requires_approval=True
+            )
 
         if self._can_prompt():
             approved = self._prompt(tool_name)

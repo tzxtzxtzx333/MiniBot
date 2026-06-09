@@ -12,7 +12,6 @@ from typing import Any
 
 from .base import BaseChannel, ChannelMessage
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -43,9 +42,12 @@ class FeishuWebSocketChannel(BaseChannel):
         source = env or os.environ
         return FeishuWebSocketConfig(
             app_id=(source.get("FEISHU_APP_ID", "") or source.get("LARK_APP_ID", "")).strip(),
-            app_secret=(source.get("FEISHU_APP_SECRET", "") or source.get("LARK_APP_SECRET", "")).strip(),
+            app_secret=(
+                source.get("FEISHU_APP_SECRET", "") or source.get("LARK_APP_SECRET", "")
+            ).strip(),
             bot_name=(source.get("FEISHU_BOT_NAME", "MiniBot") or "MiniBot").strip(),
-            ws_enabled=(source.get("FEISHU_WS_ENABLED", "true") or "true").strip().lower() == "true",
+            ws_enabled=(source.get("FEISHU_WS_ENABLED", "true") or "true").strip().lower()
+            == "true",
         )
 
     @classmethod
@@ -87,15 +89,22 @@ class FeishuWebSocketChannel(BaseChannel):
         event = dict(payload.get("event", {}))
         message_payload = dict(event.get("message", {}))
         sender = dict(dict(event.get("sender", {})).get("sender_id", {}))
-        content_blob = message_payload.get("content", "{\"text\": \"\"}")
+        content_blob = message_payload.get("content", '{"text": ""}')
         text = self._extract_text(content_blob)
         chat_id = str(message_payload.get("chat_id", ""))
         return {
-            "event_type": dict(payload.get("header", {})).get("event_type", "im.message.receive_v1"),
+            "event_type": dict(payload.get("header", {})).get(
+                "event_type", "im.message.receive_v1"
+            ),
             "chat_id": chat_id,
             "message_id": str(message_payload.get("message_id", "")),
             "chat_type": str(message_payload.get("chat_type", "")),
-            "user_id": str(sender.get("user_id") or sender.get("open_id") or sender.get("union_id") or "feishu-user"),
+            "user_id": str(
+                sender.get("user_id")
+                or sender.get("open_id")
+                or sender.get("union_id")
+                or "feishu-user"
+            ),
             "text": self._strip_bot_mention(text),
             "raw_text": text,
             "content": content_blob,
@@ -134,7 +143,9 @@ class FeishuWebSocketChannel(BaseChannel):
             "message": {"text": response_text},
         }
 
-    async def deliver_reply(self, sdk_channel: object, reply: dict[str, object]) -> dict[str, object]:
+    async def deliver_reply(
+        self, sdk_channel: object, reply: dict[str, object]
+    ) -> dict[str, object]:
         """Send a reply back through the SDK channel."""
 
         await sdk_channel.send(str(reply["chat_id"]), dict(reply["message"]))
@@ -235,7 +246,7 @@ class FeishuWebSocketChannel(BaseChannel):
         if isinstance(content_blob, dict):
             payload = content_blob
         else:
-            raw = str(content_blob or "").strip() or "{\"text\": \"\"}"
+            raw = str(content_blob or "").strip() or '{"text": ""}'
             try:
                 payload = json.loads(raw)
             except json.JSONDecodeError:

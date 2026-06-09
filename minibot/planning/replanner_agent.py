@@ -13,11 +13,13 @@ class ReplannerAgent:
     """
 
     # Failure categories that should NOT be re-planned
-    _NO_REPLAN_CATEGORIES = frozenset({
-        "approval_required",
-        "approval_rejected",
-        "blocked_by_policy",
-    })
+    _NO_REPLAN_CATEGORIES = frozenset(
+        {
+            "approval_required",
+            "approval_rejected",
+            "blocked_by_policy",
+        }
+    )
 
     def __init__(self, *, mode: str = "fake") -> None:
         self.mode = mode
@@ -51,7 +53,9 @@ class ReplannerAgent:
         strategy = "retry"
 
         if fc == "file_not_found" and "file_read" in failed_step.tool_hints:
-            new_description = f"读取 README.md（原文件 {failed_step.description} 不存在，改用 README.md）"
+            new_description = (
+                f"读取 README.md（原文件 {failed_step.description} 不存在，改用 README.md）"
+            )
             new_tool_hints = ["file_read"]
             strategy = "fallback_to_readme"
 
@@ -67,6 +71,7 @@ class ReplannerAgent:
 
         # Record replan event in plan metadata
         from datetime import datetime, timezone
+
         replan_events = plan.metadata.get("replan_events", [])
         if not isinstance(replan_events, list):
             replan_events = []

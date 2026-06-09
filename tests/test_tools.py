@@ -13,7 +13,6 @@ from minibot.json_utils import load_json_file
 from minibot.tools.base import BaseTool, ToolResult, ToolSpec
 from minibot.tools.registry import ToolNotFoundError, ToolValidationError
 
-
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -91,7 +90,9 @@ def test_tool_registry_schema_validation_success_and_failure() -> None:
 
 def test_calculator_tool_dispatch_succeeds() -> None:
     app = MiniBotApp(ROOT)
-    results, trace = app.runtime.tool_dispatcher.dispatch([{"tool_name": "calculator", "arguments": {"expression": "128 * 64"}}])
+    results, trace = app.runtime.tool_dispatcher.dispatch(
+        [{"tool_name": "calculator", "arguments": {"expression": "128 * 64"}}]
+    )
     assert results[0]["status"] == "success"
     assert results[0]["output"]["result"] == 8192
     assert trace[0]["status"] == "success"
@@ -100,12 +101,19 @@ def test_calculator_tool_dispatch_succeeds() -> None:
 def test_file_write_relative_path_uses_sandbox_workspace_and_file_read_reads_it() -> None:
     temp_root = _prepare_temp_root()
     try:
-        _write_policy(temp_root, {"approval": {"auto_approve": True, "tool_defaults": {"file_write": True}}})
+        _write_policy(
+            temp_root, {"approval": {"auto_approve": True, "tool_defaults": {"file_write": True}}}
+        )
         app = MiniBotApp(temp_root)
         sandbox_path = app.runtime.workspace.sandbox_dir / "notes" / "result.txt"
         root_path = temp_root / "notes" / "result.txt"
         write_results, _ = app.runtime.tool_dispatcher.dispatch(
-            [{"tool_name": "file_write", "arguments": {"path": "notes/result.txt", "content": "128 * 64 = 8192"}}]
+            [
+                {
+                    "tool_name": "file_write",
+                    "arguments": {"path": "notes/result.txt", "content": "128 * 64 = 8192"},
+                }
+            ]
         )
         assert write_results[0]["success"] is True
         assert write_results[0]["output"]["path"] == str(sandbox_path)
@@ -138,10 +146,20 @@ def test_file_write_blocks_path_escape() -> None:
     temp_root = _prepare_temp_root()
     try:
         app = MiniBotApp(temp_root)
-        blocked_paths = ["../outside.txt", "..\\outside.txt", "C:\\temp\\outside.txt", "/tmp/outside.txt"]
+        blocked_paths = [
+            "../outside.txt",
+            "..\\outside.txt",
+            "C:\\temp\\outside.txt",
+            "/tmp/outside.txt",
+        ]
         for blocked_path in blocked_paths:
             results, _ = app.runtime.tool_dispatcher.dispatch(
-                [{"tool_name": "file_write", "arguments": {"path": blocked_path, "content": "blocked"}}]
+                [
+                    {
+                        "tool_name": "file_write",
+                        "arguments": {"path": blocked_path, "content": "blocked"},
+                    }
+                ]
             )
             assert results[0]["success"] is False
             assert results[0]["failure_category"] == "path_outside_workspace"
@@ -152,7 +170,9 @@ def test_file_write_blocks_path_escape() -> None:
 def test_fake_model_invalid_file_write_requests_fail_schema_and_create_no_file() -> None:
     temp_root = _prepare_temp_root()
     try:
-        _write_policy(temp_root, {"approval": {"auto_approve": True, "tool_defaults": {"file_write": True}}})
+        _write_policy(
+            temp_root, {"approval": {"auto_approve": True, "tool_defaults": {"file_write": True}}}
+        )
         app = MiniBotApp(temp_root)
         invalid_messages = [
             "写入 内容缺少路径",
@@ -161,7 +181,9 @@ def test_fake_model_invalid_file_write_requests_fail_schema_and_create_no_file()
         ]
         for content in invalid_messages:
             result = app.runtime.agent_loop.handle_message(
-                ChannelMessage(channel="test", user_id="tester", session_id="invalid-write", content=content)
+                ChannelMessage(
+                    channel="test", user_id="tester", session_id="invalid-write", content=content
+                )
             )
             run_path = app.runtime.workspace.runs_dir / f"{result.run_id}.json"
             record = json.loads(run_path.read_text(encoding="utf-8"))
@@ -178,7 +200,9 @@ def test_fake_model_invalid_file_write_requests_fail_schema_and_create_no_file()
 def test_memory_write_and_memory_search_tools() -> None:
     temp_root = _prepare_temp_root()
     try:
-        _write_policy(temp_root, {"approval": {"auto_approve": True, "tool_defaults": {"memory_write": True}}})
+        _write_policy(
+            temp_root, {"approval": {"auto_approve": True, "tool_defaults": {"memory_write": True}}}
+        )
         app = MiniBotApp(temp_root)
         write_results, _ = app.runtime.tool_dispatcher.dispatch(
             [{"tool_name": "memory_write", "arguments": {"content": "我喜欢中文回答"}}]
@@ -197,7 +221,14 @@ def test_memory_write_and_memory_search_tools() -> None:
 def test_doc_summarize_tool() -> None:
     app = MiniBotApp(ROOT)
     results, _ = app.runtime.tool_dispatcher.dispatch(
-        [{"tool_name": "doc_summarize", "arguments": {"text": "这是一段很长的文本，用于测试摘要工具是否能够返回结构化摘要。"}}]
+        [
+            {
+                "tool_name": "doc_summarize",
+                "arguments": {
+                    "text": "这是一段很长的文本，用于测试摘要工具是否能够返回结构化摘要。"
+                },
+            }
+        ]
     )
     assert results[0]["success"] is True
     assert "Summary:" in results[0]["output"]["summary"]
@@ -210,7 +241,14 @@ def test_mock_tools_return_mock_metadata() -> None:
             {"tool_name": "web_search", "arguments": {"query": "MiniBot"}},
             {"tool_name": "weather", "arguments": {"location": "Shanghai"}},
             {"tool_name": "map_route", "arguments": {"origin": "A", "destination": "B"}},
-            {"tool_name": "map_poi_search", "arguments": {"query": "厦门大学附近医院", "location": "厦门大学", "keyword": "医院"}},
+            {
+                "tool_name": "map_poi_search",
+                "arguments": {
+                    "query": "厦门大学附近医院",
+                    "location": "厦门大学",
+                    "keyword": "医院",
+                },
+            },
         ]
     )
     assert all(result["metadata"].get("provider_status") == "mock" for result in results)
@@ -664,10 +702,15 @@ def test_map_route_mcp_geocodes_text_then_calls_driving_route(monkeypatch) -> No
                     "id": body["id"],
                     "result": {
                         "tools": [
-                            {"name": "maps_geo", "inputSchema": {"properties": {"address": {}, "city": {}}}},
+                            {
+                                "name": "maps_geo",
+                                "inputSchema": {"properties": {"address": {}, "city": {}}},
+                            },
                             {
                                 "name": "maps_direction_driving",
-                                "inputSchema": {"properties": {"origin": {}, "destination": {}, "city": {}}},
+                                "inputSchema": {
+                                    "properties": {"origin": {}, "destination": {}, "city": {}}
+                                },
                             },
                         ]
                     },
@@ -704,7 +747,12 @@ def test_map_route_mcp_geocodes_text_then_calls_driving_route(monkeypatch) -> No
 
     app = MiniBotApp(ROOT)
     results, _ = app.runtime.tool_dispatcher.dispatch(
-        [{"tool_name": "map_route", "arguments": {"origin": "厦门大学", "destination": "厦门站", "city": "厦门"}}]
+        [
+            {
+                "tool_name": "map_route",
+                "arguments": {"origin": "厦门大学", "destination": "厦门站", "city": "厦门"},
+            }
+        ]
     )
 
     assert results[0]["success"] is True
@@ -782,7 +830,9 @@ def test_map_route_mcp_coordinates_call_driving_directly(monkeypatch) -> None:
     assert calls[1]["params"]["name"] == "maps_direction_driving"
 
 
-def test_map_route_mcp_geocode_content_text_results_location_parses_successfully(monkeypatch) -> None:
+def test_map_route_mcp_geocode_content_text_results_location_parses_successfully(
+    monkeypatch,
+) -> None:
     calls: list[dict[str, object]] = []
 
     class _FakeResponse:
@@ -811,10 +861,15 @@ def test_map_route_mcp_geocode_content_text_results_location_parses_successfully
                     "id": body["id"],
                     "result": {
                         "tools": [
-                            {"name": "maps_geo", "inputSchema": {"properties": {"address": {}, "city": {}}}},
+                            {
+                                "name": "maps_geo",
+                                "inputSchema": {"properties": {"address": {}, "city": {}}},
+                            },
                             {
                                 "name": "maps_direction_driving",
-                                "inputSchema": {"properties": {"origin": {}, "destination": {}, "city": {}}},
+                                "inputSchema": {
+                                    "properties": {"origin": {}, "destination": {}, "city": {}}
+                                },
                             },
                         ]
                     },
@@ -862,7 +917,12 @@ def test_map_route_mcp_geocode_content_text_results_location_parses_successfully
 
     app = MiniBotApp(ROOT)
     results, _ = app.runtime.tool_dispatcher.dispatch(
-        [{"tool_name": "map_route", "arguments": {"origin": "厦门大学", "destination": "厦门站", "city": "厦门"}}]
+        [
+            {
+                "tool_name": "map_route",
+                "arguments": {"origin": "厦门大学", "destination": "厦门站", "city": "厦门"},
+            }
+        ]
     )
 
     assert results[0]["success"] is True
@@ -914,7 +974,12 @@ def test_map_route_mcp_error_code_without_message_returns_structured_failure(mon
 
     app = MiniBotApp(ROOT)
     results, _ = app.runtime.tool_dispatcher.dispatch(
-        [{"tool_name": "map_route", "arguments": {"origin": "118.1,24.4", "destination": "118.2,24.5"}}]
+        [
+            {
+                "tool_name": "map_route",
+                "arguments": {"origin": "118.1,24.4", "destination": "118.2,24.5"},
+            }
+        ]
     )
 
     assert results[0]["success"] is False
@@ -938,7 +1003,9 @@ def test_map_route_mcp_parses_json_string_route_content() -> None:
                                 "duration": "696",
                                 "steps": [
                                     {"instruction": "沿演武路向西南行驶199米靠右"},
-                                    {"instruction": "沿演武大桥向西北行驶1.1千米向右前方行驶进入匝道"},
+                                    {
+                                        "instruction": "沿演武大桥向西北行驶1.1千米向右前方行驶进入匝道"
+                                    },
                                 ],
                             }
                         ],
@@ -996,7 +1063,9 @@ def test_map_poi_search_mcp_provider_returns_structured_results(monkeypatch) -> 
 
     def fake_urlopen(request, timeout: int = 0):  # noqa: ANN001, ARG001
         body = json.loads(request.data.decode("utf-8"))
-        requests.append({"url": request.full_url, "headers": dict(request.header_items()), "body": body})
+        requests.append(
+            {"url": request.full_url, "headers": dict(request.header_items()), "body": body}
+        )
         if body["method"] == "tools/list":
             return _FakeResponse(
                 {
@@ -1011,7 +1080,12 @@ def test_map_poi_search_mcp_provider_returns_structured_results(monkeypatch) -> 
                             {
                                 "name": "maps_around_search",
                                 "inputSchema": {
-                                    "properties": {"location": {}, "keywords": {}, "city": {}, "radius": {}}
+                                    "properties": {
+                                        "location": {},
+                                        "keywords": {},
+                                        "city": {},
+                                        "radius": {},
+                                    }
                                 },
                             },
                         ]
@@ -1023,7 +1097,9 @@ def test_map_poi_search_mcp_provider_returns_structured_results(monkeypatch) -> 
                 {
                     "jsonrpc": "2.0",
                     "id": body["id"],
-                    "result": {"structuredContent": {"location": "118.092194,24.435484", "city": "厦门"}},
+                    "result": {
+                        "structuredContent": {"location": "118.092194,24.435484", "city": "厦门"}
+                    },
                 }
             )
         if body["method"] == "tools/call" and body["params"]["name"] == "maps_around_search":
@@ -1378,7 +1454,9 @@ def test_fake_model_triggers_mock_provider_tools() -> None:
         ]
         for content, tool_name in messages:
             result = app.runtime.agent_loop.handle_message(
-                ChannelMessage(channel="test", user_id="tester", session_id="mock-tools", content=content)
+                ChannelMessage(
+                    channel="test", user_id="tester", session_id="mock-tools", content=content
+                )
             )
             run_path = app.runtime.workspace.runs_dir / f"{result.run_id}.json"
             record = json.loads(run_path.read_text(encoding="utf-8"))
@@ -1401,7 +1479,9 @@ def test_fake_model_routes_nearby_poi_queries_to_map_poi_search() -> None:
         ]
         for content in messages:
             result = app.runtime.agent_loop.handle_message(
-                ChannelMessage(channel="test", user_id="tester", session_id="poi-tools", content=content)
+                ChannelMessage(
+                    channel="test", user_id="tester", session_id="poi-tools", content=content
+                )
             )
             run_path = app.runtime.workspace.runs_dir / f"{result.run_id}.json"
             record = json.loads(run_path.read_text(encoding="utf-8"))
@@ -1419,7 +1499,12 @@ def test_python_and_shell_exec_do_not_run_host_commands() -> None:
     try:
         _write_policy(
             temp_root,
-            {"approval": {"auto_approve": True, "tool_defaults": {"python_exec": True, "shell_exec": True}}},
+            {
+                "approval": {
+                    "auto_approve": True,
+                    "tool_defaults": {"python_exec": True, "shell_exec": True},
+                }
+            },
         )
         app = MiniBotApp(temp_root)
         app.runtime.tool_dispatcher.docker_executor.available = lambda: False
@@ -1444,7 +1529,12 @@ def test_fake_model_triggers_sandbox_required_tools_without_host_execution() -> 
     try:
         _write_policy(
             temp_root,
-            {"approval": {"auto_approve": True, "tool_defaults": {"python_exec": True, "shell_exec": True}}},
+            {
+                "approval": {
+                    "auto_approve": True,
+                    "tool_defaults": {"python_exec": True, "shell_exec": True},
+                }
+            },
         )
         app = MiniBotApp(temp_root)
         app.runtime.tool_dispatcher.docker_executor.available = lambda: False
@@ -1454,7 +1544,9 @@ def test_fake_model_triggers_sandbox_required_tools_without_host_execution() -> 
         ]
         for content, tool_name in messages:
             result = app.runtime.agent_loop.handle_message(
-                ChannelMessage(channel="test", user_id="tester", session_id="sandbox-tools", content=content)
+                ChannelMessage(
+                    channel="test", user_id="tester", session_id="sandbox-tools", content=content
+                )
             )
             run_path = app.runtime.workspace.runs_dir / f"{result.run_id}.json"
             record = json.loads(run_path.read_text(encoding="utf-8"))
@@ -1471,7 +1563,12 @@ def test_tool_dispatcher_wraps_unexpected_exceptions() -> None:
         spec = ToolSpec(
             name="explode",
             description="explode",
-            input_schema={"type": "object", "required": [], "properties": {}, "additionalProperties": False},
+            input_schema={
+                "type": "object",
+                "required": [],
+                "properties": {},
+                "additionalProperties": False,
+            },
             risk_level="low",
             sandbox_required=False,
             timeout=1,
@@ -1483,7 +1580,9 @@ def test_tool_dispatcher_wraps_unexpected_exceptions() -> None:
 
     app = MiniBotApp(ROOT)
     app.runtime.tool_dispatcher.registry.register(ExplodingTool())
-    results, trace = app.runtime.tool_dispatcher.dispatch([{"tool_name": "explode", "arguments": {}}])
+    results, trace = app.runtime.tool_dispatcher.dispatch(
+        [{"tool_name": "explode", "arguments": {}}]
+    )
     assert results[0]["success"] is False
     assert results[0]["failure_category"] == "tool_dispatch_failed"
     assert trace[0]["status"] == "failed"
@@ -1491,7 +1590,9 @@ def test_tool_dispatcher_wraps_unexpected_exceptions() -> None:
 
 def test_tool_dispatcher_returns_structured_error_for_unknown_tool() -> None:
     app = MiniBotApp(ROOT)
-    results, trace = app.runtime.tool_dispatcher.dispatch([{"tool_name": "missing_tool", "arguments": {}}])
+    results, trace = app.runtime.tool_dispatcher.dispatch(
+        [{"tool_name": "missing_tool", "arguments": {}}]
+    )
     assert results[0]["success"] is False
     assert results[0]["failure_category"] == "tool_not_found"
     assert trace[0]["status"] == "failed"
@@ -1525,7 +1626,12 @@ def test_agent_loop_triggers_tool_calls_and_records_trace() -> None:
         assert (app.runtime.workspace.sandbox_dir / "notes" / "result.txt").exists()
 
         read_result = app.runtime.agent_loop.handle_message(
-            ChannelMessage(channel="test", user_id="tester", session_id="tool-loop", content="read notes/result.txt")
+            ChannelMessage(
+                channel="test",
+                user_id="tester",
+                session_id="tool-loop",
+                content="read notes/result.txt",
+            )
         )
         read_path = app.runtime.workspace.runs_dir / f"{read_result.run_id}.json"
         read_record = json.loads(read_path.read_text(encoding="utf-8"))
@@ -1533,7 +1639,12 @@ def test_agent_loop_triggers_tool_calls_and_records_trace() -> None:
         assert read_record["tool_results"][0]["status"] == "success"
 
         memory_result = app.runtime.agent_loop.handle_message(
-            ChannelMessage(channel="test", user_id="tester", session_id="tool-loop", content="记住 我喜欢中文回答")
+            ChannelMessage(
+                channel="test",
+                user_id="tester",
+                session_id="tool-loop",
+                content="记住 我喜欢中文回答",
+            )
         )
         memory_path = app.runtime.workspace.runs_dir / f"{memory_result.run_id}.json"
         memory_record = json.loads(memory_path.read_text(encoding="utf-8"))

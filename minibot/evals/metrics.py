@@ -34,8 +34,12 @@ def summarize_case_metrics(case_results: list[dict[str, object]]) -> dict[str, o
         for item in counted
         if item.get("downgrade_reason") not in {None, ""}
     )
-    verifier_counter = Counter(str(item["verifier_reason"]) for item in counted if item.get("verifier_reason"))
-    verifier_mode_counter = Counter(str(item["verifier_mode"]) for item in counted if item.get("verifier_mode"))
+    verifier_counter = Counter(
+        str(item["verifier_reason"]) for item in counted if item.get("verifier_reason")
+    )
+    verifier_mode_counter = Counter(
+        str(item["verifier_mode"]) for item in counted if item.get("verifier_mode")
+    )
     verifier_failure_counter = Counter(
         str(item["verifier_failure_category"])
         for item in counted

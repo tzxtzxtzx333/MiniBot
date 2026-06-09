@@ -5,19 +5,14 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-from .evidence.store import EvidenceStore
-from .evidence.summarizer import EvidenceSummarizer
-from .evals.benchmark_runner import BenchmarkRunner
-from .planning.long_task_runner import LongTaskRunner
-from .planning.planner_agent import PlannerAgent
-from .planning.replanner_agent import ReplannerAgent
-from .planning.step_verifier import StepVerifier
-from .planning.task_executor import TaskExecutor
 from .config import MiniBotConfig, load_config
 from .context.history_truncator import HistoryTruncator
 from .context.placeholder_cleaner import PlaceholderCleaner
 from .context.prompt_builder import PromptBuilder
 from .context.token_budget import TokenBudget
+from .evals.benchmark_runner import BenchmarkRunner
+from .evidence.store import EvidenceStore
+from .evidence.summarizer import EvidenceSummarizer
 from .governance.approval_store import ApprovalStore
 from .governance.policy_manager import ToolPolicyManager
 from .harness.agent_loop import AgentLoop
@@ -25,12 +20,17 @@ from .harness.context_builder import ContextBuilder
 from .harness.model_client import _load_env_settings, load_model_client
 from .harness.run_recorder import RunRecorder
 from .harness.tool_dispatcher import ToolDispatcher
+from .hooks.hook_manager import HookManager
 from .memory.archive import ArchiveWriter
 from .memory.compactor import MemoryCompactor
 from .memory.history_retriever import HistoryRetriever
 from .memory.recall import MemoryRecall
 from .memory.store import MemoryStore
-from .hooks.hook_manager import HookManager
+from .planning.long_task_runner import LongTaskRunner
+from .planning.planner_agent import PlannerAgent
+from .planning.replanner_agent import ReplannerAgent
+from .planning.step_verifier import StepVerifier
+from .planning.task_executor import TaskExecutor
 from .status import MiniBotStatusService
 from .subagents.memory_agent import MemoryAgent
 from .subagents.summarizer_agent import SummarizerAgent
@@ -157,17 +157,31 @@ class MiniBotApp:
         task_store = TaskStore(workspace.root / "tasks")
         approval_store = ApprovalStore(workspace.approvals_dir)
         status_service = MiniBotStatusService(
-            self.root, config, workspace,
+            self.root,
+            config,
+            workspace,
             task_store=task_store,
             approval_store=approval_store,
         )
         step_verifier = StepVerifier(mode=config.model_mode, external_verifier=verifier_agent)
         planner_agent = PlannerAgent(
             mode=config.model_mode,
-            model_provider=settings.get("MINIBOT_MODEL_PROVIDER", "fake") if config.model_mode == "real" else "fake",
-            model_name=settings.get("MINIBOT_MODEL_NAME", "fake") if config.model_mode == "real" else "fake",
-            model_base_url=settings.get("MINIBOT_MODEL_BASE_URL") if config.model_mode == "real" else None,
-            model_api_key=settings.get("MINIBOT_MODEL_API_KEY") if config.model_mode == "real" else None,
+            model_provider=(
+                settings.get("MINIBOT_MODEL_PROVIDER", "fake")
+                if config.model_mode == "real"
+                else "fake"
+            ),
+            model_name=(
+                settings.get("MINIBOT_MODEL_NAME", "fake")
+                if config.model_mode == "real"
+                else "fake"
+            ),
+            model_base_url=(
+                settings.get("MINIBOT_MODEL_BASE_URL") if config.model_mode == "real" else None
+            ),
+            model_api_key=(
+                settings.get("MINIBOT_MODEL_API_KEY") if config.model_mode == "real" else None
+            ),
         )
         task_executor = TaskExecutor(
             agent_loop=agent_loop,
@@ -181,8 +195,13 @@ class MiniBotApp:
             replanner=replanner,
             task_store=task_store,
         )
-        benchmark_runner = BenchmarkRunner(agent_loop, self.root, verifier_agent=verifier_agent,
-                                           long_task_runner=long_task_runner, planner_agent=planner_agent)
+        benchmark_runner = BenchmarkRunner(
+            agent_loop,
+            self.root,
+            verifier_agent=verifier_agent,
+            long_task_runner=long_task_runner,
+            planner_agent=planner_agent,
+        )
         return MiniBotRuntime(
             config=config,
             workspace=workspace,

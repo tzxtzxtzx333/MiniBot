@@ -13,7 +13,6 @@ from minibot.subagents.summarizer_agent import SummarizerAgent
 from minibot.subagents.tool_agent import ToolAgent
 from minibot.subagents.verifier_agent import VerifierAgent
 
-
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -57,7 +56,9 @@ def test_summarizer_agent_generates_archive_ready_summary_sections() -> None:
 def test_tool_agent_executes_plan_through_dispatcher() -> None:
     app = MiniBotApp(ROOT)
     plan = app.runtime.model_client.plan(
-        ChannelMessage(channel="test", user_id="tester", session_id="tool-agent", content="计算 2 + 3"),
+        ChannelMessage(
+            channel="test", user_id="tester", session_id="tool-agent", content="计算 2 + 3"
+        ),
         {},
     )
     tool_agent = ToolAgent(app.runtime.tool_dispatcher)
@@ -84,10 +85,17 @@ def test_summarizer_agent_archive_is_persisted_and_traced() -> None:
     try:
         app = MiniBotApp(temp_root)
         app.runtime.agent_loop.handle_message(
-            ChannelMessage(channel="test", user_id="tester", session_id="subagent-archive", content="hello archive")
+            ChannelMessage(
+                channel="test",
+                user_id="tester",
+                session_id="subagent-archive",
+                content="hello archive",
+            )
         )
         result = app.runtime.agent_loop.handle_message(
-            ChannelMessage(channel="test", user_id="tester", session_id="subagent-archive", content="/new")
+            ChannelMessage(
+                channel="test", user_id="tester", session_id="subagent-archive", content="/new"
+            )
         )
         archives = list(app.runtime.workspace.archives_dir.glob("*.md"))
         assert archives
@@ -105,7 +113,9 @@ def test_agent_loop_records_subagent_trace_and_verifier_reason() -> None:
     try:
         app = MiniBotApp(temp_root)
         result = app.runtime.agent_loop.handle_message(
-            ChannelMessage(channel="test", user_id="tester", session_id="subagent-loop", content="计算 2 + 3")
+            ChannelMessage(
+                channel="test", user_id="tester", session_id="subagent-loop", content="计算 2 + 3"
+            )
         )
         run_path = app.runtime.workspace.runs_dir / f"{result.run_id}.json"
         record = json.loads(run_path.read_text(encoding="utf-8"))
@@ -120,7 +130,9 @@ def test_benchmark_runner_uses_verifier_agent_reason() -> None:
     temp_root = _prepare_temp_root()
     try:
         app = MiniBotApp(temp_root)
-        runner = BenchmarkRunner(app.runtime.agent_loop, ROOT, verifier_agent=app.runtime.verifier_agent)
+        runner = BenchmarkRunner(
+            app.runtime.agent_loop, ROOT, verifier_agent=app.runtime.verifier_agent
+        )
         report = runner.run(profile="safety")  # 9 cases vs 100+, enough to prove verifier_reason
         non_pending = [item for item in report["results"] if item["status"] != "pending"]
         assert non_pending
