@@ -75,10 +75,10 @@
 - 实现 `web_fetch` 真实 HTTP provider 与 provider 状态标记
 - 实现 benchmark / compare / real report 审计链
 - 构建 116 Benchmark 任务集
-- 安全回归测试 8 个场景 100% 通过（safety profile 8/8 counted）
-- real execution profile 5/5 case 通过，平均延迟约 2.60s，平均工具轮次 1.2
-- real-agent profile 12/12
-- multiround profile 2/2，支持预算受控多轮 observe → re-plan loop
+- safety profile 用于回归三层治理和阻断链路（8 个场景 covered）
+- real execution profile 用于回归核心执行链路（5 个 case，平均延迟约 2.60s，平均工具轮次 1.2）
+- real-agent profile 用于验证模型驱动的端到端行为样例（12 个 case）
+- multiround profile 用于验证预算受控的多轮 observe → re-plan 链路（2 个 case）
 - TaskStore 任务状态管理（create / list / show / cancel / resume）
 - Task approval E2E：create → resume → waiting_approval → approve/reject → resume → completed/failed
 - HTTP Approval API（GET /approvals, POST approve / reject），与 CLI approval 共享 store

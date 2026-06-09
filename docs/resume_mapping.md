@@ -13,12 +13,11 @@
 
 ### 可以写进简历的数字
 
-- `100+` Benchmark 任务集
-- 安全回归测试 `8` 个场景，`100%` 通过（safety profile 8/8）
-- real execution profile `5/5` case 通过，`pass_rate 100%`
-- real-agent profile `12/12`
-- 平均延迟约 `2.60s`
-- 平均工具轮次 `1.2`
+- 116 个 JSON 工程回归用例
+- safety profile 覆盖 8 个安全场景（三层治理、阻断、审计链路回归）
+- real execution profile 覆盖 5 个核心执行 case（平均延迟约 2.60s，平均工具轮次 1.2）
+- real-agent profile 覆盖 12 个端到端行为样例
+- multiround profile 覆盖 2 个多轮 observe → re-plan case
 
 ### 不建议写进简历的数字
 
@@ -33,13 +32,13 @@ MiniBot 智能体｜核心开发者
 
 - 背景：针对 Agent 在长对话中上下文膨胀、工具调用失控等工程痛点，参考开源框架 nanobot 的架构思想新建 MiniBot——一个以 Harness 为核心的多层本地智能助手；通过 5 层模块化 / 插件化架构，统一管理多渠道接入、工具调用、Hook 治理与结构化记忆。
 - 技术栈：Python，Agent Harness，Tool Calling，Context Management，SubAgent，Docker，DeepSeek。
-- 多轮 Agent Loop：支持预算受控的多轮 observe → re-plan loop，可按 default / real-agent / long-task profile 配置工具轮次、总工具调用数、运行时间和重复调用上限；每轮工具调用均经过审批、黑名单、去重、Docker 沙箱与 trace 审计。多轮能力以独立 multiround profile 证明（2/2），覆盖 web_search→web_fetch 两轮链路与 duplicate_loop_detected 预算停止机制。
+- 多轮 Agent Loop：支持预算受控的多轮 observe → re-plan loop，可按 default / real-agent / long-task profile 配置工具轮次、总工具调用数、运行时间和重复调用上限；每轮工具调用均经过审批、黑名单、去重、Docker 沙箱与 trace 审计。多轮能力以独立 multiround profile 验证，覆盖 web_search→web_fetch 两轮链路与 duplicate_loop_detected 预算停止机制。
 - Hook 机制：在 SessionStart、PreToolUse、PostToolUse 等节点构建事件拦截管线，支持 exact / regex 模式匹配与日志、审批、阻断、脱敏等 Action 注入，与核心 AgentLoop 解耦，实现非侵入式扩展。
 - 结构化记忆：设计 MEMORY.md / HISTORY.md / Archives 多层记忆结构，支持长期偏好写入、近期对话检索与 /new 触发的 LLM 压缩归档，在保持记忆连续性的同时控制上下文长度。
-- 上下文管理：参考 Claude Code 分级压缩思路，自建多层治理管线，覆盖历史消息截断、记忆压缩、占位清理、工具输出压缩、硬截断与子代理摘要固化等策略，保障长对话场景下上下文窗口稳定。
-- 工具安全与运行治理：实现三层治理机制（白名单自动执行 / 灰名单审批确认 / 黑名单阻断并审计），落地参数校验、Pending Approval Queue、Docker 沙箱隔离、敏感信息脱敏、重复调用去重与高风险命令黑名单阻断；支持 Partial Success 识别与自动重试降级，安全回归测试 8 个场景保持 100% 通过率（safety profile 8/8）。
+- 上下文管理：自建多层上下文治理策略，覆盖历史消息截断、记忆压缩、占位清理、工具输出压缩、硬截断与子代理摘要固化，在长对话场景下控制上下文窗口增长。
+- 工具安全与运行治理：实现三层治理机制（白名单自动执行 / 灰名单审批确认 / 黑名单阻断并审计），落地参数校验、Pending Approval Queue、Docker 沙箱隔离、敏感信息脱敏、重复调用去重与高风险命令黑名单阻断；支持 Partial Success 识别与自动重试降级，通过 safety profile 覆盖安全阻断与审计链路回归。
 - 外部工具接入：接入 DeepSeek 作为真实模型后端，支持模型输出 tool_plan 驱动工具调用；实现 Feishu WebSocket、Tavily 搜索、QWeather 天气、AMap MCP 路线规划 / 周边 POI 等外部 provider 的接入边界，保留 mock / fake 模式用于本地回归测试。
-- 评测与审计闭环：构建 100+ Benchmark 任务集，覆盖记忆召回、上下文治理、工具安全、外部集成与多步推理等维度；支持 pass_rate / tool_rounds / avg_latency / failure_category / tool_trace / verifier_reason 等 6 项指标自动汇总与版本回归对比。real execution profile 5/5 case 通过，pass_rate 100%，平均延迟约 2.60s，平均工具轮次 1.2；real-agent profile 12/12；safety profile 8/8；multiround profile 2/2。
+- 评测与审计闭环：构建 116 个 JSON 工程回归用例，覆盖记忆召回、上下文治理、工具安全、外部集成与多步推理等维度；支持 pass_rate / tool_rounds / avg_latency / failure_category / tool_trace / verifier_reason 等指标自动汇总与版本回归对比。execution profile 回归核心执行链路（平均延迟约 2.60s，平均工具轮次 1.2）；safety profile 回归三层治理与阻断链路；real-agent profile 验证端到端行为样例；multiround profile 验证多轮 observe → re-plan 链路。
 ```
 
 ## 1. 基于 nanobot 架构思想设计 MiniBot
@@ -358,7 +357,7 @@ MiniBot 智能体｜核心开发者
 
 ### 最终简历附加表述
 
-支持 TaskStore 管理任务状态，任务可通过 tasks resume 重新进入 AgentLoop，run trace 记录 task_id；支持 Task approval E2E（create → resume → waiting_approval → approve/reject → resume → completed/failed）；支持 HTTP Approval API 在服务内查看和处理灰名单工具审批，可选 Bearer Token 认证边界；补齐 .env.example、status health check 和启动脚本等部署运行边界。MiniBot 已具备真实模型、真实工具、任务状态、渠道内审批、安全治理、预算受控多轮规划与部署运行边界的真实 Agent Harness 应用雏形。
+支持 TaskStore 管理任务状态，任务可通过 tasks resume 重新进入 AgentLoop，run trace 记录 task_id；支持 Task approval E2E（create → resume → waiting_approval → approve/reject → resume → completed/failed）；支持 HTTP Approval API 在服务内查看和处理灰名单工具审批，可选 Bearer Token 认证边界；补齐 .env.example、status health check 和启动脚本等部署运行边界。MiniBot 已打通模型调用、工具治理、任务状态、审批、安全策略、多轮工具规划与部署边界等核心链路，是一个 Harness-first 本地 Agent 框架原型。
 
 ## Context Token Reduction
 

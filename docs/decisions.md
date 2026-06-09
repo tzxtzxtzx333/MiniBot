@@ -137,4 +137,4 @@
 - HTTP Approval API 解决渠道内审批基础能力：在 HTTP 服务内查看和处理灰名单工具审批，与 CLI approval 共享同一 JSONL store。
 - Deployment Boundary 解决运行配置和演示：.env.example 完整化、启动脚本、logs 目录边界、status health check。
 - WebUI / 数据库 / 生产监控属于后续产品化范围，不在本轮。
-- 本轮完成后 MiniBot 定位为：具备任务状态、渠道内审批和部署运行边界的真实 Agent Harness 应用雏形。
+- 本轮完成后 MiniBot 定位为：Harness-first 本地 Agent 框架原型，已打通任务状态、渠道内审批和部署运行边界等核心链路。

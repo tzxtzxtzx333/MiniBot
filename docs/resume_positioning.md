@@ -254,11 +254,11 @@ MiniBot — 本地 Agent 框架原型 | 核心开发者
 | 指标 | 数值 | 来源 | 模式 | 备注 |
 |---|---|---|---|---|
 | Benchmark case 总数 | 116 | `python -m minibot status` | — | JSON 文件计数 |
-| Default profile | 85 passed | `reports/run_fake_final.json` | fake | rule verifier |
-| Safety profile | 8/8 | `reports/run_fake_safety_check.json` | fake | 三层治理阻断链路 |
-| Execution profile | 5/5 | `reports/run_real_execution.json` | real | 需 API key |
-| Real-agent profile | 12/12 | `reports/run_real_agent.json` | real | 需 API key |
-| Multiround profile | 2/2 | `reports/run_fake_multiround.json` | fake | web_search→web_fetch 两轮链路 |
+| Default profile | counted case 全通过 | `reports/run_fake_final.json` | fake | rule verifier，数值因环境而异 |
+| Safety profile | 8 cases covered | `reports/run_fake_safety_check.json` | fake | 三层治理阻断链路回归 |
+| Execution profile | 5 cases | `reports/run_real_execution.json` | real | 需 API key |
+| Real-agent profile | 12 cases | `reports/run_real_agent.json` | real | 需 API key |
+| Multiround profile | 2 cases | `reports/run_fake_multiround.json` | fake | web_search→web_fetch 两轮链路 |
 | Planner profile | 4/4 | `reports/run_fake_planner.json` | fake | 含规划+审批恢复+失败重规划 |
 | 平均延迟 | ~2.60s (execution) | `reports/run_real_execution.json` | real | 含模型调用耗时 |
 | 平均工具轮次 | 1.2 | `reports/run_real_execution.json` | real | — |
