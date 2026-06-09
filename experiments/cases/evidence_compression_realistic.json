@@ -1,0 +1,78 @@
+{
+  "description": "Realistic evidence compression — verify EvidenceStore on real project documents (README, architecture, resume_mapping, final_acceptance, final_metrics).",
+  "cases": [
+    {
+      "id": "ecr_readme_summary_001",
+      "category": "evidence_compression",
+      "input": "读取 README.md，总结 MiniBot 的项目定位",
+      "required_keywords": ["本地", "助手", "Harness"],
+      "uses_real_file": "README.md",
+      "verifier": { "rule": true, "model": false, "human_optional": false },
+      "metrics": ["pass_rate", "tool_trace", "verifier_reason"]
+    },
+    {
+      "id": "ecr_architecture_agentloop_002",
+      "category": "evidence_compression",
+      "input": "读取 docs/architecture.md，回答 AgentLoop 的执行流程",
+      "required_keywords": ["SessionStart", "AgentLoop", "事件"],
+      "uses_real_file": "docs/architecture.md",
+      "verifier": { "rule": true, "model": false, "human_optional": false },
+      "metrics": ["pass_rate", "tool_trace", "verifier_reason"]
+    },
+    {
+      "id": "ecr_resume_mapping_003",
+      "category": "evidence_compression",
+      "input": "读取 docs/resume_mapping.md，回答简历中有哪些核心能力映射",
+      "required_keywords": ["Harness", "Hook", "Benchmark", "三层"],
+      "uses_real_file": "docs/resume_mapping.md",
+      "verifier": { "rule": true, "model": false, "human_optional": false },
+      "metrics": ["pass_rate", "tool_trace", "verifier_reason"]
+    },
+    {
+      "id": "ecr_final_acceptance_004",
+      "category": "evidence_compression",
+      "input": "读取 docs/final_acceptance.md，总结 P0 验收项的通过情况",
+      "required_keywords": ["DeepSeek", "Docker", "归档", "通过"],
+      "uses_real_file": "docs/final_acceptance.md",
+      "verifier": { "rule": true, "model": false, "human_optional": false },
+      "metrics": ["pass_rate", "tool_trace", "verifier_reason"]
+    },
+    {
+      "id": "ecr_multi_file_capability_005",
+      "category": "evidence_compression",
+      "input": "读取 README.md 和 docs/resume_mapping.md，总结 MiniBot 当前能力边界",
+      "required_keywords": ["Tool", "Memory", "Governance", "Benchmark"],
+      "uses_real_file": "README.md",
+      "verifier": { "rule": true, "model": false, "human_optional": false },
+      "metrics": ["pass_rate", "tool_trace", "verifier_reason"]
+    },
+    {
+      "id": "ecr_large_file_evidence_006",
+      "category": "evidence_compression",
+      "input": "读取 README.md，检查 tool output 是否进入 EvidenceStore",
+      "required_keywords": [],
+      "uses_real_file": "README.md",
+      "check_evidence_store": true,
+      "verifier": { "rule": true, "model": false, "human_optional": false },
+      "metrics": ["pass_rate", "tool_trace", "verifier_reason"]
+    },
+    {
+      "id": "ecr_evidence_search_007",
+      "category": "evidence_compression",
+      "input": "根据之前的 evidence，MiniBot 的核心能力有哪些？",
+      "required_keywords": ["Harness", "Tool"],
+      "check_evidence_recall": true,
+      "verifier": { "rule": true, "model": false, "human_optional": false },
+      "metrics": ["pass_rate", "tool_trace", "verifier_reason"]
+    },
+    {
+      "id": "ecr_fallback_truncation_008",
+      "category": "evidence_compression",
+      "input": "读取 docs/evidence/final_metrics.md，用截断方式总结关键指标",
+      "required_keywords": ["pass_rate", "safety", "real-agent"],
+      "uses_real_file": "docs/evidence/final_metrics.md",
+      "verifier": { "rule": true, "model": false, "human_optional": false },
+      "metrics": ["pass_rate", "tool_trace", "verifier_reason"]
+    }
+  ]
+}

@@ -1,0 +1,153 @@
+{
+  "description": "Realistic context robustness — verify context governance on lifelike long conversations (not filler text).",
+  "cases": [
+    {
+      "id": "crr_early_relevant_001",
+      "category": "context_robust",
+      "input": "what Python version did we decide on in the early setup discussion?",
+      "required_keywords": ["Python", "3.11", "setup"],
+      "expected_relevant_history_ids": ["msg_03"],
+      "context_seed": {
+        "history": "user: let's set up the project environment 01\nassistant: good idea, what Python version 01\nuser: let's use Python 3.11 02\nassistant: Python 3.11 supports all features we need 02\nuser: also we need Docker setup 03\nassistant: I'll create a Dockerfile with Python 3.11 base 03\nuser: now about the frontend, React 18? 04\nassistant: React 18 works well with our backend 04\nuser: let's decide on the database 05\nassistant: PostgreSQL 16 is the safest choice 05\nuser: what about caching 06\nassistant: Redis is standard for our use case 06\nuser: authentication strategy 07\nassistant: JWT with refresh tokens 07\nuser: API design REST or GraphQL 08\nassistant: REST for simplicity, GraphQL later if needed 08\nuser: monitoring and logging 09\nassistant: Prometheus + Grafana stack 09\nuser: deployment strategy 10\nassistant: Kubernetes with Helm charts 10"
+      },
+      "verifier": { "rule": true, "model": false, "human_optional": false },
+      "metrics": ["pass_rate", "tool_rounds", "verifier_reason"]
+    },
+    {
+      "id": "crr_recent_relevant_002",
+      "category": "context_robust",
+      "input": "what deployment strategy did we just agree on?",
+      "required_keywords": ["Kubernetes", "Helm"],
+      "expected_relevant_history_ids": ["msg_10"],
+      "context_seed": {
+        "history": "user: early discussion about team 01\nassistant: we have 3 backend and 2 frontend 01\nuser: let's pick the ORM 02\nassistant: SQLAlchemy is the Python standard 02\nuser: what about testing framework 03\nassistant: pytest is the community favorite 03\nuser: CI/CD pipeline choice 04\nassistant: GitHub Actions is free for open source 04\nuser: code style and linting 05\nassistant: ruff is fast and modern 05\nuser: documentation tools 06\nassistant: MkDocs with Material theme 06\nuser: secrets management 07\nassistant: use environment variables with .env 07\nuser: container registry 08\nassistant: Docker Hub or GitHub Container Registry 08\nuser: deployment strategy 09\nassistant: Kubernetes with Helm charts is our best option 09\nuser: what about staging environment 10\nassistant: we can have a staging namespace in the same cluster 10"
+      },
+      "verifier": { "rule": true, "model": false, "human_optional": false },
+      "metrics": ["pass_rate", "tool_rounds", "verifier_reason"]
+    },
+    {
+      "id": "crr_scattered_facts_003",
+      "category": "context_robust",
+      "input": "summarize all decisions about the database and deployment",
+      "required_keywords": ["PostgreSQL", "16", "Kubernetes", "Helm"],
+      "expected_relevant_history_ids": ["msg_05", "msg_10"],
+      "context_seed": {
+        "history": "user: project kickoff 01\nassistant: scope defined as personal assistant 01\nuser: tech stack initial thoughts 02\nassistant: Python backend with React frontend 02\nuser: database decision 03\nassistant: PostgreSQL 16 is recommended 03\nuser: frontend framework decision 04\nassistant: React 18 with TypeScript 04\nuser: caching layer 05\nassistant: Redis for session and cache 05\nuser: auth mechanism 06\nassistant: JWT with OAuth2 optional 06\nuser: API style 07\nassistant: REST with OpenAPI spec 07\nuser: testing stack 08\nassistant: pytest + React Testing Library 08\nuser: CI tool 09\nassistant: GitHub Actions 09\nuser: deployment target 10\nassistant: Kubernetes with Helm charts on AWS EKS 10"
+      },
+      "verifier": { "rule": true, "model": false, "human_optional": false },
+      "metrics": ["pass_rate", "tool_rounds", "verifier_reason"]
+    },
+    {
+      "id": "crr_similar_projects_004",
+      "category": "context_robust",
+      "input": "which project uses Rust for backend? Alpha, Beta, or Gamma?",
+      "required_keywords": ["Beta", "Rust"],
+      "expected_relevant_history_ids": ["msg_06"],
+      "context_seed": {
+        "history": "user: project Alpha uses Python and React 01\nassistant: noted Alpha: Python+React 01\nuser: project Beta uses Rust and Svelte 02\nassistant: noted Beta: Rust+Svelte 02\nuser: project Gamma uses Go and Vue 03\nassistant: noted Gamma: Go+Vue 03\nuser: Alpha needs PostgreSQL 04\nassistant: Alpha DB: PostgreSQL 04\nuser: Beta needs MongoDB 05\nassistant: Beta DB: MongoDB 05\nuser: Gamma needs SQLite 06\nassistant: Gamma DB: SQLite 06\nuser: all projects need monitoring 07\nassistant: Prometheus for all three 07\nuser: Alpha deploy target: AWS 08\nassistant: Alpha on ECS 08\nuser: Beta deploy target: GCP 09\nassistant: Beta on GKE 09\nuser: Gamma deploy target: Azure 10\nassistant: Gamma on AKS 10"
+      },
+      "verifier": { "rule": true, "model": false, "human_optional": false },
+      "metrics": ["pass_rate", "tool_rounds", "verifier_reason"]
+    },
+    {
+      "id": "crr_preference_change_005",
+      "category": "context_robust",
+      "input": "what is the current preferred deployment target? Earlier we said AWS but we changed it.",
+      "required_keywords": ["GCP", "GKE"],
+      "expected_relevant_history_ids": ["msg_08"],
+      "context_seed": {
+        "history": "user: initial deploy target: AWS ECS 01\nassistant: AWS ECS is a solid choice 01\nuser: let's set up the CI/CD for AWS 02\nassistant: GitHub Actions to ECS pipeline ready 02\nuser: we need cost estimation for AWS 03\nassistant: estimated $500/month on ECS 03\nuser: that's too expensive, what about GCP 04\nassistant: GCP GKE would be around $350/month 04\nuser: let's switch to GCP then 05\nassistant: updating deployment configs to GCP 05\nuser: what about Azure for comparison 06\nassistant: Azure AKS is about $400/month 06\nuser: stick with GCP, it's the best price 07\nassistant: GCP GKE finalized as deployment target 07\nuser: update all docs to reflect GCP 08\nassistant: documentation updated to GCP GKE 08\nuser: CI/CD needs GCP credentials now 09\nassistant: GCP service account configured 09\nuser: confirm final deployment target 10\nassistant: confirmed: GCP GKE is the deployment target 10"
+      },
+      "verifier": { "rule": true, "model": false, "human_optional": false },
+      "metrics": ["pass_rate", "tool_rounds", "verifier_reason"]
+    },
+    {
+      "id": "crr_task_state_across_turns_006",
+      "category": "context_robust",
+      "input": "list all the tasks we tracked and their final status",
+      "required_keywords": ["deploy", "completed", "testing", "monitoring", "in-progress"],
+      "expected_relevant_history_ids": ["msg_03", "msg_06", "msg_09"],
+      "context_seed": {
+        "history": "user: task 1: set up repo 01\nassistant: repo created on GitHub 01\nuser: task 1 completed, task 2: CI pipeline 02\nassistant: GitHub Actions pipeline built 02\nuser: task 2 completed, task 3: deploy staging 03\nassistant: staging deployed to test cluster 03\nuser: task 3 completed, task 4: add monitoring 04\nassistant: Prometheus metrics being added 04\nuser: task 4 in progress, task 5: write docs 05\nassistant: docs scaffold created 05\nuser: task 5 completed, task 6: load testing 06\nassistant: k6 load test script ready 06\nuser: task 6 in-progress, task 7: security audit 07\nassistant: OWASP scan started 07\nuser: task 7 completed, task 8: backup setup 08\nassistant: automated backups configured 08\nuser: task 8 completed, task 9: monitoring dashboards 09\nassistant: Grafana dashboards being built 09\nuser: task 9 in-progress, final status report 10\nassistant: here is the task summary 10"
+      },
+      "verifier": { "rule": true, "model": false, "human_optional": false },
+      "metrics": ["pass_rate", "tool_rounds", "verifier_reason"]
+    },
+    {
+      "id": "crr_archive_key_summary_007",
+      "category": "context_robust",
+      "input": "what was the conclusion of the architecture review meeting?",
+      "required_keywords": ["microservices", "monolith", "chose", "monolith"],
+      "expected_relevant_history_ids": [],
+      "context_seed": {
+        "history": "user: daily standup notes 01\nassistant: everyone is on track 01\nuser: minor bug fix needed 02\nassistant: PR opened for the fix 02\nuser: code review feedback 03\nassistant: addressed all comments 03\nuser: performance issue found 04\nassistant: identified N+1 query problem 04\nuser: fixed the query 05\nassistant: performance improved 10x 05",
+        "archives": [{
+          "name": "arch-review-2026-06-01.md",
+          "content": "# ARCHIVE\nsummary_by: SummarizerAgent\narchive_mode: fake\n\n## 关键决策\n- architecture review concluded: keep monolith for V1, microservices later\n- chose monolith because team is small (3 devs)\n- microservices would add deployment complexity without proportional benefit\n- decision reviewed by tech lead and approved\n\n## 后续建议\n- revisit microservices when team grows to 8+ devs"
+        }]
+      },
+      "verifier": { "rule": true, "model": false, "human_optional": false },
+      "metrics": ["pass_rate", "tool_rounds", "verifier_reason"]
+    },
+    {
+      "id": "crr_conflicting_info_008",
+      "category": "context_robust",
+      "input": "what is the actual budget? Earlier we said $10K, then $15K, then settled on a final number.",
+      "required_keywords": ["12K", "12000", "compromise", "budget"],
+      "expected_relevant_history_ids": ["msg_07"],
+      "context_seed": {
+        "history": "user: initial budget proposal: $10K 01\nassistant: $10K covers basic infrastructure 01\nuser: we might need more for monitoring 02\nassistant: monitoring adds about $2K 02\nuser: revised budget: $15K to be safe 03\nassistant: $15K gives us comfortable headroom 03\nuser: management pushed back on $15K 04\nassistant: we can trim monitoring to basics 04\nuser: how about $12K as compromise 05\nassistant: $12K covers essentials plus basic monitoring 05\nuser: let's go with $12K, document it 06\nassistant: budget locked at $12K 06\nuser: make sure all teams know the final number 07\nassistant: budget memo sent: $12K approved 07\nuser: what about contingency 08\nassistant: $12K includes 10% contingency 08\nuser: quarterly review of budget 09\nassistant: next review scheduled for Q3 09\nuser: project closeout report 10\nassistant: final spend was $11.8K of $12K budget 10"
+      },
+      "verifier": { "rule": true, "model": false, "human_optional": false },
+      "metrics": ["pass_rate", "tool_rounds", "verifier_reason"]
+    },
+    {
+      "id": "crr_multi_fact_recall_009",
+      "category": "context_robust",
+      "input": "what are the three decisions we made about auth, database, and deploy?",
+      "required_keywords": ["JWT", "PostgreSQL", "Kubernetes"],
+      "expected_relevant_history_ids": ["msg_03", "msg_05", "msg_09"],
+      "context_seed": {
+        "history": "user: let's start planning 01\nassistant: architecture overview first 01\nuser: auth mechanism: JWT or OAuth? 02\nassistant: JWT is simpler for our scale 02\nuser: agreed, JWT it is 03\nassistant: JWT with refresh tokens documented 03\nuser: database options: Postgres or MySQL? 04\nassistant: PostgreSQL has better JSON support 04\nuser: PostgreSQL selected 05\nassistant: PostgreSQL 16 schema designed 05\nuser: caching: Redis or Memcached? 06\nassistant: Redis has more features we need 06\nuser: Redis confirmed 07\nassistant: Redis cluster configured 07\nuser: deployment: K8s or Docker Compose? 08\nassistant: Kubernetes for production, Compose for dev 08\nuser: Kubernetes for production agreed 09\nassistant: K8s manifests prepared 09\nuser: monitoring: Prometheus or Datadog? 10\nassistant: Prometheus is free and sufficient 10\nuser: Prometheus confirmed 10"
+      },
+      "verifier": { "rule": true, "model": false, "human_optional": false },
+      "metrics": ["pass_rate", "tool_rounds", "verifier_reason"]
+    },
+    {
+      "id": "crr_tool_history_mixed_010",
+      "category": "context_robust",
+      "input": "based on the file we read earlier about the API spec, what endpoints do we have?",
+      "required_keywords": ["/users", "/tasks", "endpoint"],
+      "expected_relevant_history_ids": ["msg_04"],
+      "context_seed": {
+        "history": "user: let's design the API 01\nassistant: starting with REST conventions 01\nuser: read the api_spec.md file 02\nassistant: file_read api_spec.md returned content 02\nuser: the spec shows /users /tasks /projects endpoints 03\nassistant: three main resource endpoints confirmed 03\nuser: let's add /health and /metrics 04\nassistant: health and metrics endpoints added to spec 04\nuser: implement /users first 05\nassistant: /users CRUD implemented 05\nuser: implement /tasks next 06\nassistant: /tasks with filtering done 06\nuser: implement /projects 07\nassistant: /projects with nested tasks done 07\nuser: add authentication middleware 08\nassistant: JWT auth on all endpoints 08\nuser: add rate limiting 09\nassistant: rate limit 100 req/min per user 09\nuser: document all endpoints 10\nassistant: OpenAPI spec generated 10"
+      },
+      "verifier": { "rule": true, "model": false, "human_optional": false },
+      "metrics": ["pass_rate", "tool_rounds", "verifier_reason"]
+    },
+    {
+      "id": "crr_no_recall_needed_011",
+      "category": "context_robust",
+      "input": "what is 2+2?",
+      "required_keywords": ["4"],
+      "expected_relevant_history_ids": [],
+      "context_seed": {
+        "history": "user: project Alpha uses Python 01\nassistant: Python 3.11 for Alpha 01\nuser: project Beta uses Rust 02\nassistant: Rust 1.70 for Beta 02\nuser: Alpha deployment on AWS 03\nassistant: ECS cluster ready 03\nuser: Beta deployment on GCP 04\nassistant: GKE cluster configured 04\nuser: monitoring setup for both 05\nassistant: Prometheus federated 05\nuser: logging with ELK stack 06\nassistant: Elasticsearch cluster up 06\nuser: backup strategy 07\nassistant: daily snapshots to S3 07\nuser: disaster recovery plan 08\nassistant: cross-region replication 08\nuser: compliance review 09\nassistant: SOC2 checklist started 09\nuser: security audit results 10\nassistant: no critical findings 10"
+      },
+      "verifier": { "rule": true, "model": false, "human_optional": false },
+      "metrics": ["pass_rate", "tool_rounds", "verifier_reason"]
+    },
+    {
+      "id": "crr_doc_chat_mixed_012",
+      "category": "context_robust",
+      "input": "combining what we discussed about budgets and what's in the project README, what is the project's scope?",
+      "required_keywords": ["budget", "personal", "Harness", "scope"],
+      "expected_relevant_history_ids": ["msg_03", "msg_07"],
+      "context_seed": {
+        "history": "user: project scope discussion 01\nassistant: scope should focus on core features 01\nuser: we have budget constraints 02\nassistant: estimated cost for MVP: $8K 02\nuser: budget approved at $10K with buffer 03\nassistant: $10K gives us 2 months runway 03\nuser: what features can we get for $10K 04\nassistant: core Harness + Tool Calling + basic UI 04\nuser: what about Memory and Governance 05\nassistant: those are phase 2, after MVP 05\nuser: phase 2 budget estimate 06\nassistant: additional $6K for phase 2 06\nuser: overall scope: local personal assistant 07\nassistant: scope locked: personal assistant with tools 07\nuser: what about multi-user 08\nassistant: out of scope for V1 08\nuser: cloud deployment 09\nassistant: local-first, not cloud in V1 09\nuser: final scope confirmation 10\nassistant: V1: local CLI agent with Harness+Tools 10"
+      },
+      "verifier": { "rule": true, "model": false, "human_optional": false },
+      "metrics": ["pass_rate", "tool_rounds", "verifier_reason"]
+    }
+  ]
+}

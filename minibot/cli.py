@@ -118,6 +118,17 @@ def build_parser() -> argparse.ArgumentParser:
     plan_resume_parser = plan_subparsers.add_parser("resume", help="Resume a paused plan")
     plan_resume_parser.add_argument("plan_id")
 
+    experiments_parser = subparsers.add_parser("experiments", help="Run ablation experiments")
+    experiments_subparsers = experiments_parser.add_subparsers(dest="experiments_command")
+    experiments_subparsers.add_parser("list", help="List available experiments")
+    exp_run_parser = experiments_subparsers.add_parser("run", help="Run an experiment")
+    exp_run_parser.add_argument("--name", required=True, help="Experiment name, e.g. context_ablation")
+    exp_run_parser.add_argument("--mode", choices=["fake", "real"], default="fake", help="Experiment mode")
+    exp_run_parser.add_argument("--report", help="Output report path")
+    exp_summary_parser = experiments_subparsers.add_parser("summarize", help="Generate Markdown summary from reports")
+    exp_summary_parser.add_argument("--reports", nargs="+", required=True, help="One or more report JSON paths")
+    exp_summary_parser.add_argument("--output", default="docs/evidence/experiment_summary.md", help="Output Markdown path")
+
     return parser
 
 
@@ -143,6 +154,8 @@ def main(argv: list[str] | None = None) -> int:
         return _run_evidence(args)
     if args.command == "plan":
         return _run_plan(args)
+    if args.command == "experiments":
+        return _run_experiments(args)
 
     try:
         app = MiniBotApp()
@@ -377,6 +390,55 @@ def _run_plan(args: argparse.Namespace) -> int:
         return 0 if result["status"] in {"completed", "waiting_approval"} else 1
 
     print(f"unknown_plan_command: {command}", file=sys.stderr)
+    return 1
+
+
+def _run_experiments(args: argparse.Namespace) -> int:
+    command = args.experiments_command
+    if command is None:
+        print("experiments_command_missing (list | run | summarize)", file=sys.stderr)
+        return 1
+
+    from pathlib import Path as _Path
+
+    if command == "list":
+        cases_dir = _Path("experiments/cases")
+        if cases_dir.is_dir():
+            for p in sorted(cases_dir.glob("*.json")):
+                print(p.stem)
+        else:
+            print("(no experiments found)")
+        return 0
+
+    if command == "summarize":
+        from minibot.evals.experiment_report import summarize_reports
+        report_paths = [_Path(p) for p in args.reports]
+        output_path = _Path(args.output)
+        md = summarize_reports(report_paths, output_path)
+        print(md)
+        return 0
+
+    if command == "run":
+        try:
+            app = MiniBotApp()
+        except (RuntimeError, ValueError) as exc:
+            print(str(exc), file=sys.stderr)
+            return 1
+
+        from minibot.evals.experiment_runner import ExperimentRunner
+        runner = ExperimentRunner(
+            app.runtime.agent_loop, app.root,
+            verifier_agent=app.runtime.verifier_agent,
+            long_task_runner=app.runtime.long_task_runner,
+            planner_agent=app.runtime.planner_agent,
+        )
+        report_path = _Path(args.report) if args.report else None
+        report = runner.run(args.name, mode=args.mode, report_path=report_path)
+        import json
+        print(json.dumps(report, ensure_ascii=False, indent=2))
+        return 0
+
+    print(f"unknown_experiments_command: {command}", file=sys.stderr)
     return 1
 
 

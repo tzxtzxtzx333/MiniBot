@@ -1,0 +1,149 @@
+{
+  "description": "HISTORY retrieval robustness — verify HistoryRetriever (top_k, relevance scoring) vs recent-N truncation.",
+  "cases": [
+    {
+      "id": "hrr_early_relevant_001",
+      "category": "history_retrieval",
+      "input": "what Python version did we decide on early in the project?",
+      "required_keywords": ["3.11", "Python"],
+      "expected_relevant_history_ids": ["turn_03"],
+      "context_seed": {
+        "history": "user: setup environment 01\nassistant: which Python version 01\nuser: Python 3.11 02\nassistant: 3.11 confirmed 02\nuser: IDE choice 03\nassistant: VS Code recommended 03\nuser: git workflow 04\nassistant: trunk-based development 04\nuser: linting rules 05\nassistant: ruff with strict mode 05\nuser: test coverage 06\nassistant: 80% minimum required 06\nuser: doc format 07\nassistant: Markdown with MkDocs 07\nuser: CI minutes budget 08\nassistant: 2000 min/month on GitHub 08\nuser: code owners 09\nassistant: team leads as reviewers 09\nuser: release cadence 10\nassistant: weekly patch, monthly minor 10"
+      },
+      "verifier": { "rule": true, "model": false, "human_optional": false },
+      "metrics": ["pass_rate", "tool_rounds", "verifier_reason"]
+    },
+    {
+      "id": "hrr_recent_relevant_002",
+      "category": "history_retrieval",
+      "input": "what cadence did we just decide on for releases?",
+      "required_keywords": ["weekly", "monthly", "release"],
+      "expected_relevant_history_ids": ["turn_10"],
+      "context_seed": {
+        "history": "user: versioning scheme 01\nassistant: semver recommended 01\nuser: changelog format 02\nassistant: keep a changelog standard 02\nuser: PR template 03\nassistant: checklist template created 03\nuser: branch naming 04\nassistant: feature/ fix/ chore/ prefixes 04\nuser: commit style 05\nassistant: conventional commits 05\nuser: review process 06\nassistant: 2 approvals required 06\nuser: merge strategy 07\nassistant: squash merge preferred 07\nuser: deployment pipeline 08\nassistant: build → test → deploy stages 08\nuser: hotfix process 09\nassistant: cherry-pick to main and release 09\nuser: release cadence 10\nassistant: weekly patch releases, monthly minor releases 10"
+      },
+      "verifier": { "rule": true, "model": false, "human_optional": false },
+      "metrics": ["pass_rate", "tool_rounds", "verifier_reason"]
+    },
+    {
+      "id": "hrr_synonym_match_003",
+      "category": "history_retrieval",
+      "input": "what did we choose for the container orchestration platform?",
+      "required_keywords": ["Kubernetes", "K8s"],
+      "expected_relevant_history_ids": ["turn_04"],
+      "context_seed": {
+        "history": "user: server choice 01\nassistant: Nginx recommended 01\nuser: database engine 02\nassistant: PostgreSQL 16 02\nuser: cache layer 03\nassistant: Redis cluster 03\nuser: container orchestration 04\nassistant: Kubernetes with Helm 04\nuser: service mesh 05\nassistant: Istio for observability 05\nuser: secret management 06\nassistant: HashiCorp Vault 06\nuser: log aggregation 07\nassistant: ELK stack 07\nuser: metrics collection 08\nassistant: Prometheus + Grafana 08\nuser: alerting 09\nassistant: Alertmanager with PagerDuty 09\nuser: backup solution 10\nassistant: Velero for K8s backups 10"
+      },
+      "verifier": { "rule": true, "model": false, "human_optional": false },
+      "metrics": ["pass_rate", "tool_rounds", "verifier_reason"]
+    },
+    {
+      "id": "hrr_keyword_mismatch_004",
+      "category": "history_retrieval",
+      "input": "what's our policy for handling urgent production fixes?",
+      "required_keywords": ["hotfix", "cherry-pick"],
+      "expected_relevant_history_ids": ["turn_07"],
+      "context_seed": {
+        "history": "user: coding standards 01\nassistant: PEP 8 enforced 01\nuser: testing requirements 02\nassistant: unit tests mandatory 02\nuser: code review policy 03\nassistant: two approvals minimum 03\nuser: deployment process 04\nassistant: automated CI/CD pipeline 04\nuser: monitoring alerts 05\nassistant: PagerDuty integration 05\nuser: incident response 06\nassistant: 15-min response SLA 06\nuser: hotfix procedure 07\nassistant: cherry-pick fix to main, then backport to release branch 07\nuser: rollback strategy 08\nassistant: blue-green deployment for zero downtime 08\nuser: data migration 09\nassistant: Flyway for schema changes 09\nuser: performance benchmarks 10\nassistant: weekly load test with k6 10"
+      },
+      "verifier": { "rule": true, "model": false, "human_optional": false },
+      "metrics": ["pass_rate", "tool_rounds", "verifier_reason"]
+    },
+    {
+      "id": "hrr_distractor_projects_005",
+      "category": "history_retrieval",
+      "input": "which project uses TypeScript for frontend?",
+      "required_keywords": ["Alpha", "TypeScript", "frontend"],
+      "expected_relevant_history_ids": ["turn_03"],
+      "context_seed": {
+        "history": "user: project Alpha frontend: React 01\nassistant: React for Alpha 01\nuser: project Beta frontend: Vue 02\nassistant: Vue for Beta 02\nuser: Alpha frontend language: TypeScript 03\nassistant: TypeScript for Alpha frontend 03\nuser: Beta frontend language: JavaScript 04\nassistant: JavaScript for Beta frontend 04\nuser: Gamma frontend: Svelte 05\nassistant: Svelte for Gamma 05\nuser: Gamma language: TypeScript 06\nassistant: TypeScript also for Gamma 06\nuser: Delta frontend: Angular 07\nassistant: Angular for Delta 07\nuser: Delta language: TypeScript 08\nassistant: TypeScript also for Delta 08\nuser: Epsilon frontend: SolidJS 09\nassistant: SolidJS for Epsilon 09\nuser: Epsilon language: JavaScript 10\nassistant: JavaScript for Epsilon 10"
+      },
+      "verifier": { "rule": true, "model": false, "human_optional": false },
+      "metrics": ["pass_rate", "tool_rounds", "verifier_reason"]
+    },
+    {
+      "id": "hrr_override_fact_006",
+      "category": "history_retrieval",
+      "input": "what is the current API base URL we're using now?",
+      "required_keywords": ["api.example.com", "v2"],
+      "expected_relevant_history_ids": ["turn_09"],
+      "context_seed": {
+        "history": "user: API base URL: https://api.example.com/v1 01\nassistant: using v1 endpoint 01\nuser: v1 working fine for users 02\nassistant: confirmed v1 stable 02\nuser: planning migration to v2 03\nassistant: v2 adds pagination 03\nuser: start testing v2 in staging 04\nassistant: v2 staging tests pass 04\nuser: v2 deployed to production 05\nassistant: v2 production live 05\nuser: we should deprecate v1 06\nassistant: v1 deprecation notice sent 06\nuser: final switch to v2 07\nassistant: all traffic on v2 now 07\nuser: update API docs to v2 08\nassistant: docs show v2 endpoints 08\nuser: confirm current API URL 09\nassistant: current base URL: https://api.example.com/v2 09\nuser: v1 shutdown complete 10\nassistant: v1 endpoint removed 10"
+      },
+      "verifier": { "rule": true, "model": false, "human_optional": false },
+      "metrics": ["pass_rate", "tool_rounds", "verifier_reason"]
+    },
+    {
+      "id": "hrr_two_fact_recall_007",
+      "category": "history_retrieval",
+      "input": "what language does the Auth service use, and what database does the User service use?",
+      "required_keywords": ["Go", "Auth", "PostgreSQL", "User"],
+      "expected_relevant_history_ids": ["turn_02", "turn_05"],
+      "context_seed": {
+        "history": "user: service architecture overview 01\nassistant: 4 microservices planned 01\nuser: Auth service language: Go 02\nassistant: Go selected for Auth 02\nuser: User service language: Python 03\nassistant: Python for User service 03\nuser: Payment service language: Rust 04\nassistant: Rust for Payment 04\nuser: User service database: PostgreSQL 05\nassistant: PostgreSQL for User data 05\nuser: Auth service database: Redis 06\nassistant: Redis for Auth tokens 06\nuser: Payment service database: MySQL 07\nassistant: MySQL for Payment records 07\nuser: Notification service language: Node 08\nassistant: Node.js for Notifications 08\nuser: Notification DB: MongoDB 09\nassistant: MongoDB for notification templates 09\nuser: all services documented 10\nassistant: architecture doc updated 10"
+      },
+      "verifier": { "rule": true, "model": false, "human_optional": false },
+      "metrics": ["pass_rate", "tool_rounds", "verifier_reason"]
+    },
+    {
+      "id": "hrr_no_irrelevant_recall_008",
+      "category": "history_retrieval",
+      "input": "what's the capital of France?",
+      "required_keywords": ["Paris"],
+      "expected_relevant_history_ids": [],
+      "context_seed": {
+        "history": "user: project setup discussion 01\nassistant: Python 3.11 environment 01\nuser: database choice 02\nassistant: PostgreSQL 16 02\nuser: API framework 03\nassistant: FastAPI selected 03\nuser: testing framework 04\nassistant: pytest with coverage 04\nuser: deployment target 05\nassistant: AWS ECS Fargate 05\nuser: monitoring stack 06\nassistant: Prometheus Grafana 06\nuser: logging solution 07\nassistant: ELK stack 07\nuser: backup strategy 08\nassistant: daily S3 snapshots 08\nuser: security scanning 09\nassistant: OWASP ZAP in CI 09\nuser: performance testing 10\nassistant: k6 load tests weekly 10"
+      },
+      "verifier": { "rule": true, "model": false, "human_optional": false },
+      "metrics": ["pass_rate", "tool_rounds", "verifier_reason"]
+    },
+    {
+      "id": "hrr_user_preference_009",
+      "category": "history_retrieval",
+      "input": "what code formatter do I prefer?",
+      "required_keywords": ["black", "formatter"],
+      "expected_relevant_history_ids": ["turn_04"],
+      "context_seed": {
+        "history": "user: editor setup 01\nassistant: VS Code with Python extensions 01\nuser: theme preference: dark 02\nassistant: dark theme configured 02\nuser: font choice: Fira Code 03\nassistant: Fira Code with ligatures 03\nuser: code formatter: black 04\nassistant: black configured with line-length 88 04\nuser: linter: ruff 05\nassistant: ruff with strict rules 05\nuser: type checker: mypy 06\nassistant: mypy strict mode 06\nuser: test runner: pytest 07\nassistant: pytest with verbose output 07\nuser: debugger: pdb 08\nassistant: pdb configured 08\nuser: profiler: py-spy 09\nassistant: py-spy for sampling 09\nuser: coverage tool: coverage.py 10\nassistant: coverage.py with HTML reports 10"
+      },
+      "verifier": { "rule": true, "model": false, "human_optional": false },
+      "metrics": ["pass_rate", "tool_rounds", "verifier_reason"]
+    },
+    {
+      "id": "hrr_project_fact_010",
+      "category": "history_retrieval",
+      "input": "what's the timeline for the Auth service migration?",
+      "required_keywords": ["Auth", "migration", "Q3"],
+      "expected_relevant_history_ids": ["turn_06"],
+      "context_seed": {
+        "history": "user: Q1 planning 01\nassistant: User service refactor in Q1 01\nuser: Q1 User refactor done 02\nassistant: User service now on FastAPI 02\nuser: Q2 planning 03\nassistant: Payment service upgrade in Q2 03\nuser: Q2 Payment upgrade done 04\nassistant: Payment now uses Stripe v2 04\nuser: Q3 planning 05\nassistant: Auth service migration planned 05\nuser: Auth migration timeline 06\nassistant: Auth service migration target: Q3 2026 06\nuser: Q3 also needs Notification update 07\nassistant: Notification service WebSocket upgrade Q3 07\nuser: Q4 planning 08\nassistant: Monitoring overhaul in Q4 08\nuser: Q4 also logging pipeline 09\nassistant: ELK upgrade to v8 in Q4 09\nuser: year-end summary 10\nassistant: 4 major migrations completed in 2026 10"
+      },
+      "verifier": { "rule": true, "model": false, "human_optional": false },
+      "metrics": ["pass_rate", "tool_rounds", "verifier_reason"]
+    },
+    {
+      "id": "hrr_tool_result_011",
+      "category": "history_retrieval",
+      "input": "what did the performance test results show for the User service?",
+      "required_keywords": ["User", "500", "RPS", "p95"],
+      "expected_relevant_history_ids": ["turn_05"],
+      "context_seed": {
+        "history": "user: run performance test on Auth service 01\nassistant: Auth service: 800 RPS, p95=45ms 01\nuser: Auth results look good 02\nassistant: Auth passed all thresholds 02\nuser: run performance test on Payment service 03\nassistant: Payment service: 300 RPS, p95=120ms 03\nuser: Payment needs optimization 04\nassistant: identified DB query bottleneck 04\nuser: run performance test on User service 05\nassistant: User service: 500 RPS, p95=25ms 05\nuser: User service is fastest 06\nassistant: User service queries are well-indexed 06\nuser: run performance test on Notification 07\nassistant: Notification: 200 RPS, p95=80ms 07\nuser: acceptable for notification 08\nassistant: Notification within SLA 08\nuser: summary of all tests 09\nassistant: Auth:800, Payment:300, User:500, Notification:200 RPS 09\nuser: which needs most work 10\nassistant: Payment service needs DB optimization 10"
+      },
+      "verifier": { "rule": true, "model": false, "human_optional": false },
+      "metrics": ["pass_rate", "tool_rounds", "verifier_reason"]
+    },
+    {
+      "id": "hrr_task_status_012",
+      "category": "history_retrieval",
+      "input": "what is the current status of the monitoring dashboard task?",
+      "required_keywords": ["monitoring", "in-progress", "Grafana"],
+      "expected_relevant_history_ids": ["turn_08"],
+      "context_seed": {
+        "history": "user: task board review 01\nassistant: 12 tasks total, 8 done 01\nuser: deploy pipeline task: done 02\nassistant: CI/CD pipeline live 02\nuser: auth module: done 03\nassistant: JWT auth implemented 03\nuser: user CRUD: done 04\nassistant: full CRUD with tests 04\nuser: payment integration: blocked 05\nassistant: waiting for Stripe API key 05\nuser: notification service: done 06\nassistant: email and push working 06\nuser: logging pipeline: done 07\nassistant: ELK stack operational 07\nuser: monitoring dashboard: in-progress 08\nassistant: Grafana dashboards 60% complete 08\nuser: backup automation: done 09\nassistant: daily snapshots verified 09\nuser: security audit: pending 10\nassistant: OWASP scan scheduled next week 10"
+      },
+      "verifier": { "rule": true, "model": false, "human_optional": false },
+      "metrics": ["pass_rate", "tool_rounds", "verifier_reason"]
+    }
+  ]
+}

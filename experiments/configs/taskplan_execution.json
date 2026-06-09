@@ -1,0 +1,19 @@
+{
+  "description": "TaskPlan execution — baseline (normal AgentLoop chat) vs current (PlannerAgent→LongTaskRunner). Cases with planner_mode:'current' bypass the context toggle and use the real planner path.",
+  "baseline": {
+    "enable_history_retrieval": false,
+    "enable_history_truncation": false,
+    "enable_memory_compaction": false,
+    "enable_archive_recall": false,
+    "enable_placeholder_clean": false,
+    "enable_archive_full_context": false
+  },
+  "current": {
+    "enable_history_retrieval": false,
+    "enable_history_truncation": false,
+    "enable_memory_compaction": false,
+    "enable_archive_recall": false,
+    "enable_placeholder_clean": false,
+    "enable_archive_full_context": false
+  }
+}

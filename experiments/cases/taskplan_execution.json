@@ -1,0 +1,78 @@
+{
+  "description": "TaskPlan execution experiment — compare normal chat (baseline) vs PlannerAgent→LongTaskRunner (current) on multi-step tasks.",
+  "cases": [
+    {
+      "id": "tplan_file_report_001",
+      "category": "taskplan_execution",
+      "input": "读取 README.md，总结 MiniBot 能力，并写入 tplan_report_001.md",
+      "expected_behavior": ["final_response_not_empty"],
+      "planner_mode": "current",
+      "verifier": { "rule": true, "model": false, "human_optional": false },
+      "metrics": ["pass_rate", "tool_trace", "verifier_reason"]
+    },
+    {
+      "id": "tplan_multi_file_001",
+      "category": "taskplan_execution",
+      "input": "读取 README.md 和 pyproject.toml，生成一份项目摘要写入 tplan_multi_001.md",
+      "expected_behavior": ["final_response_not_empty"],
+      "planner_mode": "current",
+      "verifier": { "rule": true, "model": false, "human_optional": false },
+      "metrics": ["pass_rate", "tool_trace", "verifier_reason"]
+    },
+    {
+      "id": "tplan_evidence_001",
+      "category": "taskplan_execution",
+      "input": "读取 README.md，生成 evidence summary，总结 MiniBot 核心功能",
+      "expected_behavior": ["final_response_not_empty"],
+      "planner_mode": "current",
+      "verifier": { "rule": true, "model": false, "human_optional": false },
+      "metrics": ["pass_rate", "tool_trace", "verifier_reason"]
+    },
+    {
+      "id": "tplan_approval_resume_001",
+      "category": "taskplan_execution",
+      "input": "写入 notes/tplan_approval_test.txt 内容 TPlanApprovalOK",
+      "expected_behavior": ["final_response_not_empty"],
+      "planner_mode": "current",
+      "preloaded_approval": { "tool_name": "file_write", "arguments": { "path": "notes/tplan_approval_test.txt", "content": "TPlanApprovalOK" }, "status": "approved" },
+      "verifier": { "rule": true, "model": false, "human_optional": false },
+      "metrics": ["pass_rate", "tool_trace", "verifier_reason"]
+    },
+    {
+      "id": "tplan_replan_fallback_001",
+      "category": "taskplan_execution",
+      "input": "先读取 missing_plan_source.md；如果失败，请改用 README.md 总结能力边界",
+      "expected_behavior": ["final_response_not_empty"],
+      "planner_mode": "current",
+      "verifier": { "rule": true, "model": false, "human_optional": false },
+      "metrics": ["pass_rate", "failure_category", "tool_trace", "verifier_reason"]
+    },
+    {
+      "id": "tplan_feishu_mock_001",
+      "category": "taskplan_execution",
+      "input": "/plan 读取 README.md 总结 MiniBot 能力",
+      "expected_behavior": ["final_response_not_empty"],
+      "planner_mode": "current",
+      "verifier": { "rule": true, "model": false, "human_optional": false },
+      "metrics": ["pass_rate", "tool_trace", "verifier_reason"]
+    },
+    {
+      "id": "tplan_real_file_report_001",
+      "category": "taskplan_execution",
+      "input": "读取 README.md，总结 MiniBot 能力边界，写入 tplan_real_001.md",
+      "expected_behavior": ["final_response_not_empty"],
+      "planner_mode": "current",
+      "preloaded_approval": { "tool_name": "file_write", "arguments": { "path": "tplan_real_001.md", "content": "placeholder" }, "status": "approved" },
+      "verifier": { "rule": true, "model": false, "human_optional": false },
+      "metrics": ["pass_rate", "tool_trace", "verifier_reason"]
+    },
+    {
+      "id": "tplan_chat_baseline_001",
+      "category": "taskplan_execution",
+      "input": "读取 README.md，总结 MiniBot 能力，并写入 summary_baseline.md",
+      "expected_behavior": ["final_response_not_empty"],
+      "verifier": { "rule": true, "model": false, "human_optional": false },
+      "metrics": ["pass_rate", "tool_trace", "verifier_reason"]
+    }
+  ]
+}

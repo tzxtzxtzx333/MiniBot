@@ -1,0 +1,206 @@
+{
+  "description": "Context ablation cases — varying history lengths across memory/context/reasoning categories.",
+  "cases": [
+    {
+      "id": "ctx_abl_20_memory_001",
+      "category": "experiment_ctx_20",
+      "input": "remember alpha project uses Python",
+      "expected_behavior": [
+        "subagent_trace_contains:MemoryAgent",
+        "final_response_not_empty"
+      ],
+      "context_seed": {
+        "history": "user: message 01\nassistant: response 01\nuser: message 02\nassistant: response 02\nuser: message 03\nassistant: response 03\nuser: message 04\nassistant: response 04\nuser: message 05\nassistant: response 05\nuser: message 06\nassistant: response 06\nuser: message 07\nassistant: response 07\nuser: message 08\nassistant: response 08\nuser: message 09\nassistant: response 09\nuser: message 10\nassistant: response 10\nuser: message 11\nassistant: response 11\nuser: message 12\nassistant: response 12\nuser: message 13\nassistant: response 13\nuser: message 14\nassistant: response 14\nuser: message 15\nassistant: response 15\nuser: message 16\nassistant: response 16\nuser: message 17\nassistant: response 17\nuser: message 18\nassistant: response 18\nuser: message 19\nassistant: response 19\nuser: message 20\nassistant: response 20"
+      },
+      "verifier": {
+        "rule": true,
+        "model": false,
+        "human_optional": false
+      },
+      "metrics": [
+        "pass_rate",
+        "tool_rounds",
+        "tool_trace",
+        "verifier_reason"
+      ]
+    },
+    {
+      "id": "ctx_abl_20_context_001",
+      "category": "experiment_ctx_20",
+      "input": "summarize the discussion about message 10",
+      "expected_behavior": [
+        "final_response_not_empty"
+      ],
+      "context_seed": {
+        "history": "user: topic A discussion line 01\nassistant: A topic response 01\nuser: topic B question 02\nassistant: B answer 02\nuser: topic A detail 03\nassistant: A detail response 03\nuser: topic C new 04\nassistant: C response 04\nuser: topic A more 05\nassistant: A more response 05\nuser: topic B follow 06\nassistant: B follow response 06\nuser: topic A deep 07\nassistant: A deep response 07\nuser: topic D intro 08\nassistant: D intro response 08\nuser: topic A final 09\nassistant: A final response 09\nuser: summary request 10\nassistant: here is the summary of topic A 10\nuser: topic E start 11\nassistant: E start response 11\nuser: topic F question 12\nassistant: F answer 12\nuser: topic E more 13\nassistant: E more response 13\nuser: topic G new 14\nassistant: G response 14\nuser: topic E detail 15\nassistant: E detail response 15\nuser: topic H intro 16\nassistant: H intro response 16\nuser: topic E wrap 17\nassistant: E wrap response 17\nuser: topic I brief 18\nassistant: I brief response 18\nuser: topic E summary 19\nassistant: E summary response 19\nuser: overview request 20\nassistant: overview 20"
+      },
+      "verifier": {
+        "rule": true,
+        "model": false,
+        "human_optional": false
+      },
+      "metrics": [
+        "pass_rate",
+        "tool_rounds",
+        "tool_trace",
+        "verifier_reason"
+      ]
+    },
+    {
+      "id": "ctx_abl_20_reasoning_001",
+      "category": "experiment_ctx_20",
+      "input": "based on our 20 messages, what was the most discussed topic",
+      "expected_behavior": [
+        "final_response_not_empty"
+      ],
+      "context_seed": {
+        "history": "user: topic X start 01\nassistant: X start 01\nuser: topic Y brief 02\nassistant: Y brief 02\nuser: topic X detail 03\nassistant: X detail 03\nuser: topic Z intro 04\nassistant: Z intro 04\nuser: topic X problem 05\nassistant: X solution 05\nuser: topic Y return 06\nassistant: Y return 06\nuser: topic X more 07\nassistant: X more 07\nuser: topic W new 08\nassistant: W new 08\nuser: topic X final 09\nassistant: X final 09\nuser: conclusion request 10\nassistant: X is most discussed 10\nuser: topic V brief 11\nassistant: V brief 11\nuser: topic X again 12\nassistant: X again 12\nuser: topic U intro 13\nassistant: U intro 13\nuser: topic X yet more 14\nassistant: X yet more 14\nuser: topic T question 15\nassistant: T answer 15\nuser: topic X wrapup 16\nassistant: X wrapup 16\nuser: topic S brief 17\nassistant: S brief 17\nuser: topic X end 18\nassistant: X end 18\nuser: topic R one 19\nassistant: R one 19\nuser: final question 20\nassistant: final answer 20"
+      },
+      "verifier": {
+        "rule": true,
+        "model": false,
+        "human_optional": false
+      },
+      "metrics": [
+        "pass_rate",
+        "tool_rounds",
+        "tool_trace",
+        "verifier_reason"
+      ]
+    },
+    {
+      "id": "ctx_abl_50_memory_001",
+      "category": "experiment_ctx_50",
+      "input": "remember project beta uses Rust for backend",
+      "expected_behavior": [
+        "subagent_trace_contains:MemoryAgent",
+        "final_response_not_empty"
+      ],
+      "context_seed": {
+        "history": "user: msg 01\nassistant: rsp 01\nuser: msg 02\nassistant: rsp 02\nuser: msg 03\nassistant: rsp 03\nuser: msg 04\nassistant: rsp 04\nuser: msg 05\nassistant: rsp 05\nuser: msg 06\nassistant: rsp 06\nuser: msg 07\nassistant: rsp 07\nuser: msg 08\nassistant: rsp 08\nuser: msg 09\nassistant: rsp 09\nuser: msg 10\nassistant: rsp 10\nuser: msg 11\nassistant: rsp 11\nuser: msg 12\nassistant: rsp 12\nuser: msg 13\nassistant: rsp 13\nuser: msg 14\nassistant: rsp 14\nuser: msg 15\nassistant: rsp 15\nuser: msg 16\nassistant: rsp 16\nuser: msg 17\nassistant: rsp 17\nuser: msg 18\nassistant: rsp 18\nuser: msg 19\nassistant: rsp 19\nuser: msg 20\nassistant: rsp 20\nuser: msg 21\nassistant: rsp 21\nuser: msg 22\nassistant: rsp 22\nuser: msg 23\nassistant: rsp 23\nuser: msg 24\nassistant: rsp 24\nuser: msg 25\nassistant: rsp 25\nuser: msg 26\nassistant: rsp 26\nuser: msg 27\nassistant: rsp 27\nuser: msg 28\nassistant: rsp 28\nuser: msg 29\nassistant: rsp 29\nuser: msg 30\nassistant: rsp 30\nuser: msg 31\nassistant: rsp 31\nuser: msg 32\nassistant: rsp 32\nuser: msg 33\nassistant: rsp 33\nuser: msg 34\nassistant: rsp 34\nuser: msg 35\nassistant: rsp 35\nuser: msg 36\nassistant: rsp 36\nuser: msg 37\nassistant: rsp 37\nuser: msg 38\nassistant: rsp 38\nuser: msg 39\nassistant: rsp 39\nuser: msg 40\nassistant: rsp 40\nuser: msg 41\nassistant: rsp 41\nuser: msg 42\nassistant: rsp 42\nuser: msg 43\nassistant: rsp 43\nuser: msg 44\nassistant: rsp 44\nuser: msg 45\nassistant: rsp 45\nuser: msg 46\nassistant: rsp 46\nuser: msg 47\nassistant: rsp 47\nuser: msg 48\nassistant: rsp 48\nuser: msg 49\nassistant: rsp 49\nuser: msg 50\nassistant: rsp 50"
+      },
+      "verifier": {
+        "rule": true,
+        "model": false,
+        "human_optional": false
+      },
+      "metrics": [
+        "pass_rate",
+        "tool_rounds",
+        "tool_trace",
+        "verifier_reason"
+      ]
+    },
+    {
+      "id": "ctx_abl_50_context_001",
+      "category": "experiment_ctx_50",
+      "input": "what was the topic discussed around message 25",
+      "expected_behavior": [
+        "final_response_not_empty"
+      ],
+      "context_seed": {
+        "history": "user: A start 01\nassistant: A rsp 01\nuser: B brief 02\nassistant: B rsp 02\nuser: C intro 03\nassistant: C rsp 03\nuser: A detail 04\nassistant: A rsp 04\nuser: D new 05\nassistant: D rsp 05\nuser: E start 06\nassistant: E rsp 06\nuser: F question 07\nassistant: F rsp 07\nuser: A return 08\nassistant: A rsp 08\nuser: G brief 09\nassistant: G rsp 09\nuser: H intro 10\nassistant: H rsp 10\nuser: I detail 11\nassistant: I rsp 11\nuser: J new 12\nassistant: J rsp 12\nuser: K start 13\nassistant: K rsp 13\nuser: L brief 14\nassistant: L rsp 14\nuser: M intro 15\nassistant: M rsp 15\nuser: N detail 16\nassistant: N rsp 16\nuser: O new 17\nassistant: O rsp 17\nuser: P start 18\nassistant: P rsp 18\nuser: Q brief 19\nassistant: Q rsp 19\nuser: R intro 20\nassistant: R rsp 20\nuser: S detail 21\nassistant: S rsp 21\nuser: T new 22\nassistant: T rsp 22\nuser: U start 23\nassistant: U rsp 23\nuser: V brief 24\nassistant: V rsp 24\nuser: W intro 25\nassistant: W rsp 25\nuser: X detail 26\nassistant: X rsp 26\nuser: Y new 27\nassistant: Y rsp 27\nuser: Z start 28\nassistant: Z rsp 28\nuser: AA brief 29\nassistant: AA rsp 29\nuser: BB intro 30\nassistant: BB rsp 30\nuser: CC detail 31\nassistant: CC rsp 31\nuser: DD new 32\nassistant: DD rsp 32\nuser: EE start 33\nassistant: EE rsp 33\nuser: FF brief 34\nassistant: FF rsp 34\nuser: GG intro 35\nassistant: GG rsp 35\nuser: HH detail 36\nassistant: HH rsp 36\nuser: II new 37\nassistant: II rsp 37\nuser: JJ start 38\nassistant: JJ rsp 38\nuser: KK brief 39\nassistant: KK rsp 39\nuser: LL intro 40\nassistant: LL rsp 40\nuser: MM detail 41\nassistant: MM rsp 41\nuser: NN new 42\nassistant: NN rsp 42\nuser: OO start 43\nassistant: OO rsp 43\nuser: PP brief 44\nassistant: PP rsp 44\nuser: QQ intro 45\nassistant: QQ rsp 45\nuser: RR detail 46\nassistant: RR rsp 46\nuser: SS new 47\nassistant: SS rsp 47\nuser: TT start 48\nassistant: TT rsp 48\nuser: UU brief 49\nassistant: UU rsp 49\nuser: VV intro 50\nassistant: VV rsp 50"
+      },
+      "verifier": {
+        "rule": true,
+        "model": false,
+        "human_optional": false
+      },
+      "metrics": [
+        "pass_rate",
+        "tool_rounds",
+        "tool_trace",
+        "verifier_reason"
+      ]
+    },
+    {
+      "id": "ctx_abl_50_reasoning_001",
+      "category": "experiment_ctx_50",
+      "input": "across all 50 messages, identify the three most frequent topics",
+      "expected_behavior": [
+        "final_response_not_empty"
+      ],
+      "context_seed": {
+        "history": "user: a1 intro 01\nassistant: a1 rsp 01\nuser: b2 question 02\nassistant: b2 rsp 02\nuser: c3 note 03\nassistant: c3 rsp 03\nuser: a1 more 04\nassistant: a1 rsp 04\nuser: d4 start 05\nassistant: d4 rsp 05\nuser: e5 brief 06\nassistant: e5 rsp 06\nuser: a1 detail 07\nassistant: a1 rsp 07\nuser: f6 new 08\nassistant: f6 rsp 08\nuser: b2 again 09\nassistant: b2 rsp 09\nuser: g7 intro 10\nassistant: g7 rsp 10\nuser: a1 wrap 11\nassistant: a1 rsp 11\nuser: h8 brief 12\nassistant: h8 rsp 12\nuser: c3 return 13\nassistant: c3 rsp 13\nuser: i9 start 14\nassistant: i9 rsp 14\nuser: b2 detail 15\nassistant: b2 rsp 15\nuser: j10 new 16\nassistant: j10 rsp 16\nuser: k11 brief 17\nassistant: k11 rsp 17\nuser: l12 intro 18\nassistant: l12 rsp 18\nuser: m13 detail 19\nassistant: m13 rsp 19\nuser: n14 new 20\nassistant: n14 rsp 20\nuser: o15 brief 21\nassistant: o15 rsp 21\nuser: p16 intro 22\nassistant: p16 rsp 22\nuser: q17 detail 23\nassistant: q17 rsp 23\nuser: r18 new 24\nassistant: r18 rsp 24\nuser: s19 brief 25\nassistant: s19 rsp 25\nuser: t20 intro 26\nassistant: t20 rsp 26\nuser: u21 detail 27\nassistant: u21 rsp 27\nuser: v22 new 28\nassistant: v22 rsp 28\nuser: w23 brief 29\nassistant: w23 rsp 29\nuser: x24 intro 30\nassistant: x24 rsp 30\nuser: y25 detail 31\nassistant: y25 rsp 31\nuser: z26 new 32\nassistant: z26 rsp 32\nuser: aa27 brief 33\nassistant: aa27 rsp 33\nuser: bb28 intro 34\nassistant: bb28 rsp 34\nuser: cc29 detail 35\nassistant: cc29 rsp 35\nuser: dd30 new 36\nassistant: dd30 rsp 36\nuser: ee31 brief 37\nassistant: ee31 rsp 37\nuser: ff32 intro 38\nassistant: ff32 rsp 38\nuser: gg33 detail 39\nassistant: gg33 rsp 39\nuser: hh34 new 40\nassistant: hh34 rsp 40\nuser: ii35 brief 41\nassistant: ii35 rsp 41\nuser: jj36 intro 42\nassistant: jj36 rsp 42\nuser: kk37 detail 43\nassistant: kk37 rsp 43\nuser: ll38 new 44\nassistant: ll38 rsp 44\nuser: mm39 brief 45\nassistant: mm39 rsp 45\nuser: nn40 intro 46\nassistant: nn40 rsp 46\nuser: oo41 detail 47\nassistant: oo41 rsp 47\nuser: pp42 new 48\nassistant: pp42 rsp 48\nuser: qq43 brief 49\nassistant: qq43 rsp 49\nuser: rr44 intro 50\nassistant: rr44 rsp 50"
+      },
+      "verifier": {
+        "rule": true,
+        "model": false,
+        "human_optional": false
+      },
+      "metrics": [
+        "pass_rate",
+        "tool_rounds",
+        "tool_trace",
+        "verifier_reason"
+      ]
+    },
+    {
+      "id": "ctx_abl_100_memory_001",
+      "category": "experiment_ctx_100",
+      "input": "remember project gamma milestone is Q4 delivery",
+      "expected_behavior": [
+        "subagent_trace_contains:MemoryAgent",
+        "final_response_not_empty"
+      ],
+      "context_seed": {
+        "history": "user: msg 01\nassistant: rsp 01\nuser: msg 02\nassistant: rsp 02\nuser: msg 03\nassistant: rsp 03\nuser: msg 04\nassistant: rsp 04\nuser: msg 05\nassistant: rsp 05\nuser: msg 06\nassistant: rsp 06\nuser: msg 07\nassistant: rsp 07\nuser: msg 08\nassistant: rsp 08\nuser: msg 09\nassistant: rsp 09\nuser: msg 10\nassistant: rsp 10\nuser: msg 11\nassistant: rsp 11\nuser: msg 12\nassistant: rsp 12\nuser: msg 13\nassistant: rsp 13\nuser: msg 14\nassistant: rsp 14\nuser: msg 15\nassistant: rsp 15\nuser: msg 16\nassistant: rsp 16\nuser: msg 17\nassistant: rsp 17\nuser: msg 18\nassistant: rsp 18\nuser: msg 19\nassistant: rsp 19\nuser: msg 20\nassistant: rsp 20\nuser: msg 21\nassistant: rsp 21\nuser: msg 22\nassistant: rsp 22\nuser: msg 23\nassistant: rsp 23\nuser: msg 24\nassistant: rsp 24\nuser: msg 25\nassistant: rsp 25\nuser: msg 26\nassistant: rsp 26\nuser: msg 27\nassistant: rsp 27\nuser: msg 28\nassistant: rsp 28\nuser: msg 29\nassistant: rsp 29\nuser: msg 30\nassistant: rsp 30\nuser: msg 31\nassistant: rsp 31\nuser: msg 32\nassistant: rsp 32\nuser: msg 33\nassistant: rsp 33\nuser: msg 34\nassistant: rsp 34\nuser: msg 35\nassistant: rsp 35\nuser: msg 36\nassistant: rsp 36\nuser: msg 37\nassistant: rsp 37\nuser: msg 38\nassistant: rsp 38\nuser: msg 39\nassistant: rsp 39\nuser: msg 40\nassistant: rsp 40\nuser: msg 41\nassistant: rsp 41\nuser: msg 42\nassistant: rsp 42\nuser: msg 43\nassistant: rsp 43\nuser: msg 44\nassistant: rsp 44\nuser: msg 45\nassistant: rsp 45\nuser: msg 46\nassistant: rsp 46\nuser: msg 47\nassistant: rsp 47\nuser: msg 48\nassistant: rsp 48\nuser: msg 49\nassistant: rsp 49\nuser: msg 50\nassistant: rsp 50\nuser: msg 51\nassistant: rsp 51\nuser: msg 52\nassistant: rsp 52\nuser: msg 53\nassistant: rsp 53\nuser: msg 54\nassistant: rsp 54\nuser: msg 55\nassistant: rsp 55\nuser: msg 56\nassistant: rsp 56\nuser: msg 57\nassistant: rsp 57\nuser: msg 58\nassistant: rsp 58\nuser: msg 59\nassistant: rsp 59\nuser: msg 60\nassistant: rsp 60\nuser: msg 61\nassistant: rsp 61\nuser: msg 62\nassistant: rsp 62\nuser: msg 63\nassistant: rsp 63\nuser: msg 64\nassistant: rsp 64\nuser: msg 65\nassistant: rsp 65\nuser: msg 66\nassistant: rsp 66\nuser: msg 67\nassistant: rsp 67\nuser: msg 68\nassistant: rsp 68\nuser: msg 69\nassistant: rsp 69\nuser: msg 70\nassistant: rsp 70\nuser: msg 71\nassistant: rsp 71\nuser: msg 72\nassistant: rsp 72\nuser: msg 73\nassistant: rsp 73\nuser: msg 74\nassistant: rsp 74\nuser: msg 75\nassistant: rsp 75\nuser: msg 76\nassistant: rsp 76\nuser: msg 77\nassistant: rsp 77\nuser: msg 78\nassistant: rsp 78\nuser: msg 79\nassistant: rsp 79\nuser: msg 80\nassistant: rsp 80\nuser: msg 81\nassistant: rsp 81\nuser: msg 82\nassistant: rsp 82\nuser: msg 83\nassistant: rsp 83\nuser: msg 84\nassistant: rsp 84\nuser: msg 85\nassistant: rsp 85\nuser: msg 86\nassistant: rsp 86\nuser: msg 87\nassistant: rsp 87\nuser: msg 88\nassistant: rsp 88\nuser: msg 89\nassistant: rsp 89\nuser: msg 90\nassistant: rsp 90\nuser: msg 91\nassistant: rsp 91\nuser: msg 92\nassistant: rsp 92\nuser: msg 93\nassistant: rsp 93\nuser: msg 94\nassistant: rsp 94\nuser: msg 95\nassistant: rsp 95\nuser: msg 96\nassistant: rsp 96\nuser: msg 97\nassistant: rsp 97\nuser: msg 98\nassistant: rsp 98\nuser: msg 99\nassistant: rsp 99\nuser: msg 100\nassistant: rsp 100"
+      },
+      "verifier": {
+        "rule": true,
+        "model": false,
+        "human_optional": false
+      },
+      "metrics": [
+        "pass_rate",
+        "tool_rounds",
+        "tool_trace",
+        "verifier_reason"
+      ]
+    },
+    {
+      "id": "ctx_abl_100_context_001",
+      "category": "experiment_ctx_100",
+      "input": "extract the key decisions from our 100-message discussion",
+      "expected_behavior": [
+        "final_response_not_empty"
+      ],
+      "context_seed": {
+        "history": "user: decision review A 01\nassistant: A rsp 01\nuser: decision B proposal 02\nassistant: B rsp 02\nuser: decision C discussion 03\nassistant: C rsp 03\nuser: meta review 04\nassistant: meta rsp 04\nuser: decision D plan 05\nassistant: D rsp 05\nuser: decision E option 06\nassistant: E rsp 06\nuser: decision F analysis 07\nassistant: F rsp 07\nuser: status check 08\nassistant: status rsp 08\nuser: decision G vote 09\nassistant: G rsp 09\nuser: decision H budget 10\nassistant: H rsp 10\nuser: pause 11\nassistant: pause rsp 11\nuser: decision I timeline 12\nassistant: I rsp 12\nuser: decision J risk 13\nassistant: J rsp 13\nuser: review 14\nassistant: review rsp 14\nuser: decision K scope 15\nassistant: K rsp 15\nuser: decision L team 16\nassistant: L rsp 16\nuser: decision M vendor 17\nassistant: M rsp 17\nuser: break 18\nassistant: break rsp 18\nuser: decision N cost 19\nassistant: N rsp 19\nuser: decision O schedule 20\nassistant: O rsp 20\nuser: decision P quality 21\nassistant: P rsp 21\nuser: decision Q metrics 22\nassistant: Q rsp 22\nuser: decision R tools 23\nassistant: R rsp 23\nuser: decision S process 24\nassistant: S rsp 24\nuser: decision T training 25\nassistant: T rsp 25\nuser: decision U docs 26\nassistant: U rsp 26\nuser: decision V testing 27\nassistant: V rsp 27\nuser: decision W deploy 28\nassistant: W rsp 28\nuser: decision X monitor 29\nassistant: X rsp 29\nuser: decision Y backup 30\nassistant: Y rsp 30\nuser: decision Z security 31\nassistant: Z rsp 31\nuser: review point 32\nassistant: review rsp 32\nuser: topic aa 33\nassistant: aa rsp 33\nuser: topic bb 34\nassistant: bb rsp 34\nuser: topic cc 35\nassistant: cc rsp 35\nuser: topic dd 36\nassistant: dd rsp 36\nuser: topic ee 37\nassistant: ee rsp 37\nuser: topic ff 38\nassistant: ff rsp 38\nuser: topic gg 39\nassistant: gg rsp 39\nuser: topic hh 40\nassistant: hh rsp 40\nuser: topic ii 41\nassistant: ii rsp 41\nuser: topic jj 42\nassistant: jj rsp 42\nuser: topic kk 43\nassistant: kk rsp 43\nuser: topic ll 44\nassistant: ll rsp 44\nuser: topic mm 45\nassistant: mm rsp 45\nuser: topic nn 46\nassistant: nn rsp 46\nuser: topic oo 47\nassistant: oo rsp 47\nuser: topic pp 48\nassistant: pp rsp 48\nuser: topic qq 49\nassistant: qq rsp 49\nuser: topic rr 50\nassistant: rr rsp 50\nuser: topic ss 51\nassistant: ss rsp 51\nuser: topic tt 52\nassistant: tt rsp 52\nuser: topic uu 53\nassistant: uu rsp 53\nuser: topic vv 54\nassistant: vv rsp 54\nuser: topic ww 55\nassistant: ww rsp 55\nuser: topic xx 56\nassistant: xx rsp 56\nuser: topic yy 57\nassistant: yy rsp 57\nuser: topic zz 58\nassistant: zz rsp 58\nuser: topic aaa 59\nassistant: aaa rsp 59\nuser: topic bbb 60\nassistant: bbb rsp 60\nuser: topic ccc 61\nassistant: ccc rsp 61\nuser: topic ddd 62\nassistant: ddd rsp 62\nuser: topic eee 63\nassistant: eee rsp 63\nuser: topic fff 64\nassistant: fff rsp 64\nuser: topic ggg 65\nassistant: ggg rsp 65\nuser: topic hhh 66\nassistant: hhh rsp 66\nuser: topic iii 67\nassistant: iii rsp 67\nuser: topic jjj 68\nassistant: jjj rsp 68\nuser: topic kkk 69\nassistant: kkk rsp 69\nuser: topic lll 70\nassistant: lll rsp 70\nuser: topic mmm 71\nassistant: mmm rsp 71\nuser: topic nnn 72\nassistant: nnn rsp 72\nuser: topic ooo 73\nassistant: ooo rsp 73\nuser: topic ppp 74\nassistant: ppp rsp 74\nuser: topic qqq 75\nassistant: qqq rsp 75\nuser: topic rrr 76\nassistant: rrr rsp 76\nuser: topic sss 77\nassistant: sss rsp 77\nuser: topic ttt 78\nassistant: ttt rsp 78\nuser: topic uuu 79\nassistant: uuu rsp 79\nuser: topic vvv 80\nassistant: vvv rsp 80\nuser: topic www 81\nassistant: www rsp 81\nuser: topic xxx 82\nassistant: xxx rsp 82\nuser: topic yyy 83\nassistant: yyy rsp 83\nuser: topic zzz 84\nassistant: zzz rsp 84\nuser: topic a1 85\nassistant: a1 rsp 85\nuser: topic b1 86\nassistant: b1 rsp 86\nuser: topic c1 87\nassistant: c1 rsp 87\nuser: topic d1 88\nassistant: d1 rsp 88\nuser: topic e1 89\nassistant: e1 rsp 89\nuser: topic f1 90\nassistant: f1 rsp 90\nuser: topic g1 91\nassistant: g1 rsp 91\nuser: topic h1 92\nassistant: h1 rsp 92\nuser: topic i1 93\nassistant: i1 rsp 93\nuser: topic j1 94\nassistant: j1 rsp 94\nuser: topic k1 95\nassistant: k1 rsp 95\nuser: topic l1 96\nassistant: l1 rsp 96\nuser: topic m1 97\nassistant: m1 rsp 97\nuser: topic n1 98\nassistant: n1 rsp 98\nuser: topic o1 99\nassistant: o1 rsp 99\nuser: extract key decisions 100\nassistant: decisions rsp 100"
+      },
+      "verifier": {
+        "rule": true,
+        "model": false,
+        "human_optional": false
+      },
+      "metrics": [
+        "pass_rate",
+        "tool_rounds",
+        "tool_trace",
+        "verifier_reason"
+      ]
+    },
+    {
+      "id": "ctx_abl_100_reasoning_001",
+      "category": "experiment_ctx_100",
+      "input": "given our 100 messages of planning, propose the next 3 actions",
+      "expected_behavior": [
+        "final_response_not_empty"
+      ],
+      "context_seed": {
+        "history": "user: plan phase1 start 01\nassistant: p1 rsp 01\nuser: plan phase1 detail 02\nassistant: p1 rsp 02\nuser: plan phase2 intro 03\nassistant: p2 rsp 03\nuser: plan phase2 budget 04\nassistant: p2 rsp 04\nuser: plan phase3 risk 05\nassistant: p3 rsp 05\nuser: plan phase3 timeline 06\nassistant: p3 rsp 06\nuser: plan review week1 07\nassistant: review rsp 07\nuser: plan phase4 scope 08\nassistant: p4 rsp 08\nuser: plan phase4 team 09\nassistant: p4 rsp 09\nuser: plan phase5 vendor 10\nassistant: p5 rsp 10\nuser: checkin 11\nassistant: ck rsp 11\nuser: plan phase5 cost 12\nassistant: p5 rsp 12\nuser: plan phase6 schedule 13\nassistant: p6 rsp 13\nuser: plan phase6 deps 14\nassistant: p6 rsp 14\nuser: plan phase7 quality 15\nassistant: p7 rsp 15\nuser: plan phase7 test 16\nassistant: p7 rsp 16\nuser: plan phase8 deploy 17\nassistant: p8 rsp 17\nuser: plan phase8 monitor 18\nassistant: p8 rsp 18\nuser: plan phase9 backup 19\nassistant: p9 rsp 19\nuser: plan phase9 docs 20\nassistant: p9 rsp 20\nuser: plan phase10 security 21\nassistant: p10 rsp 21\nuser: plan phase10 review 22\nassistant: p10 rsp 22\nuser: plan buffer 23\nassistant: buf rsp 23\nuser: plan phase11 comms 24\nassistant: p11 rsp 24\nuser: plan phase11 launch 25\nassistant: p11 rsp 25\nuser: plan retrospect 26\nassistant: retro rsp 26\nuser: status q1 27\nassistant: stat rsp 27\nuser: status q2 28\nassistant: stat rsp 28\nuser: status q3 29\nassistant: stat rsp 29\nuser: status q4 30\nassistant: stat rsp 30\nuser: milestone m1 31\nassistant: ms rsp 31\nuser: milestone m2 32\nassistant: ms rsp 32\nuser: milestone m3 33\nassistant: ms rsp 33\nuser: milestone m4 34\nassistant: ms rsp 34\nuser: milestone m5 35\nassistant: ms rsp 35\nuser: blocker alpha 36\nassistant: blk rsp 36\nuser: blocker beta 37\nassistant: blk rsp 37\nuser: blocker gamma 38\nassistant: blk rsp 38\nuser: resolution a 39\nassistant: res rsp 39\nuser: resolution b 40\nassistant: res rsp 40\nuser: resource r1 41\nassistant: res rsp 41\nuser: resource r2 42\nassistant: res rsp 42\nuser: resource r3 43\nassistant: res rsp 43\nuser: budget b1 44\nassistant: bud rsp 44\nuser: budget b2 45\nassistant: bud rsp 45\nuser: budget b3 46\nassistant: bud rsp 46\nuser: risk r1 47\nassistant: rsk rsp 47\nuser: risk r2 48\nassistant: rsk rsp 48\nuser: risk r3 49\nassistant: rsk rsp 49\nuser: dependency d1 50\nassistant: dep rsp 50\nuser: dependency d2 51\nassistant: dep rsp 51\nuser: dependency d3 52\nassistant: dep rsp 52\nuser: stakeholder s1 53\nassistant: stk rsp 53\nuser: stakeholder s2 54\nassistant: stk rsp 54\nuser: stakeholder s3 55\nassistant: stk rsp 55\nuser: deliverable dv1 56\nassistant: dv rsp 56\nuser: deliverable dv2 57\nassistant: dv rsp 57\nuser: deliverable dv3 58\nassistant: dv rsp 58\nuser: deliverable dv4 59\nassistant: dv rsp 59\nuser: deliverable dv5 60\nassistant: dv rsp 60\nuser: timeline t1 61\nassistant: tl rsp 61\nuser: timeline t2 62\nassistant: tl rsp 62\nuser: timeline t3 63\nassistant: tl rsp 63\nuser: timeline t4 64\nassistant: tl rsp 64\nuser: timeline t5 65\nassistant: tl rsp 65\nuser: quality q1 66\nassistant: ql rsp 66\nuser: quality q2 67\nassistant: ql rsp 67\nuser: quality q3 68\nassistant: ql rsp 68\nuser: quality q4 69\nassistant: ql rsp 69\nuser: quality q5 70\nassistant: ql rsp 70\nuser: ops o1 71\nassistant: ops rsp 71\nuser: ops o2 72\nassistant: ops rsp 72\nuser: ops o3 73\nassistant: ops rsp 73\nuser: ops o4 74\nassistant: ops rsp 74\nuser: ops o5 75\nassistant: ops rsp 75\nuser: review monthly 76\nassistant: rev rsp 76\nuser: review sprint 77\nassistant: rev rsp 77\nuser: review retro 78\nassistant: rev rsp 78\nuser: review planning 79\nassistant: rev rsp 79\nuser: review demo 80\nassistant: rev rsp 80\nuser: next steps a 81\nassistant: ns rsp 81\nuser: next steps b 82\nassistant: ns rsp 82\nuser: next steps c 83\nassistant: ns rsp 83\nuser: next steps d 84\nassistant: ns rsp 84\nuser: next steps e 85\nassistant: ns rsp 85\nuser: action item 1 86\nassistant: ai rsp 86\nuser: action item 2 87\nassistant: ai rsp 87\nuser: action item 3 88\nassistant: ai rsp 88\nuser: action item 4 89\nassistant: ai rsp 89\nuser: action item 5 90\nassistant: ai rsp 90\nuser: summary q1 91\nassistant: sum rsp 91\nuser: summary q2 92\nassistant: sum rsp 92\nuser: summary q3 93\nassistant: sum rsp 93\nuser: summary q4 94\nassistant: sum rsp 94\nuser: wrap up 95\nassistant: wrap rsp 95\nuser: final notes 96\nassistant: fn rsp 96\nuser: archive request 97\nassistant: arch rsp 97\nuser: close out 98\nassistant: close rsp 98\nuser: sign off 99\nassistant: sign rsp 99\nuser: propose next 3 actions 100\nassistant: next actions rsp 100"
+      },
+      "verifier": {
+        "rule": true,
+        "model": false,
+        "human_optional": false
+      },
+      "metrics": [
+        "pass_rate",
+        "tool_rounds",
+        "tool_trace",
+        "verifier_reason"
+      ]
+    }
+  ]
+}
