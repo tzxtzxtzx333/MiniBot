@@ -129,6 +129,11 @@ def build_parser() -> argparse.ArgumentParser:
     exp_summary_parser.add_argument("--reports", nargs="+", required=True, help="One or more report JSON paths")
     exp_summary_parser.add_argument("--output", default="docs/evidence/experiment_summary.md", help="Output Markdown path")
 
+    providers_parser = subparsers.add_parser("providers", help="Provider smoke checks")
+    providers_subparsers = providers_parser.add_subparsers(dest="providers_command")
+    prov_smoke_parser = providers_subparsers.add_parser("smoke", help="Run provider config smoke check")
+    prov_smoke_parser.add_argument("--report", help="Output report path")
+
     return parser
 
 
@@ -156,6 +161,8 @@ def main(argv: list[str] | None = None) -> int:
         return _run_plan(args)
     if args.command == "experiments":
         return _run_experiments(args)
+    if args.command == "providers":
+        return _run_providers(args)
 
     try:
         app = MiniBotApp()
@@ -390,6 +397,22 @@ def _run_plan(args: argparse.Namespace) -> int:
         return 0 if result["status"] in {"completed", "waiting_approval"} else 1
 
     print(f"unknown_plan_command: {command}", file=sys.stderr)
+    return 1
+
+
+def _run_providers(args: argparse.Namespace) -> int:
+    command = args.providers_command
+    if command is None:
+        print("providers_command_missing (smoke)", file=sys.stderr)
+        return 1
+    if command == "smoke":
+        from minibot.evals.provider_smoke import run_provider_smoke
+        report_path = Path(args.report) if getattr(args, "report", None) else None
+        report = run_provider_smoke(report_path)
+        import json as _json
+        print(_json.dumps(report, ensure_ascii=False, indent=2))
+        return 0
+    print(f"unknown_providers_command: {command}", file=sys.stderr)
     return 1
 
 

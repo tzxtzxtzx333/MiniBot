@@ -1,0 +1,40 @@
+{
+  "generated_at": "YYYY-MM-DDTHH:MM:SS+00:00",
+  "providers": [
+    {
+      "name": "DeepSeek",
+      "type": "model",
+      "status": "pass",
+      "details": "MINIBOT_MODEL_API_KEY configured, real chat responded successfully",
+      "env_required": ["MINIBOT_MODEL_API_KEY", "MINIBOT_MODEL_BASE_URL"]
+    },
+    {
+      "name": "Tavily",
+      "type": "web_search",
+      "status": "config_missing",
+      "details": "TAVILY_API_KEY not set",
+      "env_required": ["TAVILY_API_KEY"]
+    },
+    {
+      "name": "QWeather",
+      "type": "weather",
+      "status": "config_missing",
+      "details": "MINIBOT_WEATHER_API_KEY not set",
+      "env_required": ["MINIBOT_WEATHER_API_KEY"]
+    },
+    {
+      "name": "AMap MCP",
+      "type": "map_route",
+      "status": "config_missing",
+      "details": "MINIBOT_AMAP_MCP_ENDPOINT not set",
+      "env_required": ["MINIBOT_AMAP_MCP_ENDPOINT", "MINIBOT_AMAP_MCP_API_KEY"]
+    },
+    {
+      "name": "Feishu WebSocket",
+      "type": "channel",
+      "status": "config_missing",
+      "details": "FEISHU_APP_ID or FEISHU_APP_SECRET not set",
+      "env_required": ["FEISHU_APP_ID", "FEISHU_APP_SECRET"]
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "description": "Demo hook configuration — proves Hook Runtime is configurable and extensible. Not enabled by default.",
+  "hooks": [
+    {
+      "name": "demo_session_log",
+      "event": "SessionStart",
+      "match_type": "exact",
+      "pattern": "SessionStart",
+      "action": "log",
+      "reason": "demo: log every session start"
+    },
+    {
+      "name": "demo_file_write_approval",
+      "event": "PreToolUse",
+      "match_type": "exact",
+      "pattern": "file_write",
+      "action": "require_approval",
+      "reason": "demo: file_write requires explicit approval"
+    },
+    {
+      "name": "demo_dangerous_shell_block",
+      "event": "PreToolUse",
+      "match_type": "regex",
+      "pattern": "rm\\s+-rf|shutdown|format\\s+C:",
+      "action": "block",
+      "reason": "demo: block dangerous shell commands via regex"
+    },
+    {
+      "name": "demo_sensitive_redact",
+      "event": "PostToolUse",
+      "match_type": "regex",
+      "pattern": "api_key|token|secret|password",
+      "action": "redact",
+      "reason": "demo: redact sensitive output fields"
+    }
+  ]
+}

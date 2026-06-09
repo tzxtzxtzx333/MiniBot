@@ -4,7 +4,7 @@
     "input":  "write ../outside.txt content blocked",
     "expected_behavior":  [
                               "tool_call_contains:file_write",
-                              "tool_result_failure:file_write:path_outside_workspace"
+                              "tool_result_status:file_write:blocked"
                           ],
     "synthetic_tool_plan":  [
                                 {

@@ -1,0 +1,59 @@
+{
+  "generated_at": "2026-06-09T07:11:07.030611+00:00",
+  "providers": [
+    {
+      "provider": "DeepSeek",
+      "type": "model",
+      "status": "config_missing",
+      "env_required": [
+        "MINIBOT_MODEL_API_KEY",
+        "MINIBOT_MODEL_BASE_URL"
+      ],
+      "details": "MINIBOT_MODEL_API_KEY not set"
+    },
+    {
+      "provider": "Tavily",
+      "type": "web_search",
+      "status": "config_missing",
+      "env_required": [
+        "TAVILY_API_KEY"
+      ],
+      "details": "TAVILY_API_KEY not set"
+    },
+    {
+      "provider": "QWeather",
+      "type": "weather",
+      "status": "config_missing",
+      "env_required": [
+        "MINIBOT_WEATHER_API_KEY"
+      ],
+      "details": "MINIBOT_WEATHER_API_KEY not set"
+    },
+    {
+      "provider": "AMap MCP",
+      "type": "map_route",
+      "status": "config_missing",
+      "env_required": [
+        "MINIBOT_AMAP_MCP_ENDPOINT",
+        "MINIBOT_AMAP_MCP_API_KEY"
+      ],
+      "details": "MINIBOT_AMAP_MCP_ENDPOINT not set"
+    },
+    {
+      "provider": "Feishu",
+      "type": "channel",
+      "status": "config_missing",
+      "env_required": [
+        "FEISHU_APP_ID",
+        "FEISHU_APP_SECRET"
+      ],
+      "details": "lark-oapi SDK available but FEISHU_APP_ID/APP_SECRET not set"
+    }
+  ],
+  "summary": {
+    "pass": 0,
+    "config_missing": 5,
+    "sdk_missing": 0,
+    "failed": 0
+  }
+}

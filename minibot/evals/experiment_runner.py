@@ -37,6 +37,41 @@ class ExperimentRunner:
     ) -> dict[str, object]:
         config = self._load_config(experiment_name)
         cases = self._load_cases(experiment_name)
+
+        # Real mode pre-check: if model key is missing, skip all cases
+        if mode == "real":
+            import os
+            api_key = (os.getenv("MINIBOT_MODEL_API_KEY", "") or
+                       os.getenv("MINIBOT_API_KEY", "").strip())
+            if not api_key:
+                report = {
+                    "experiment": experiment_name,
+                    "mode": "real",
+                    "status": "skipped",
+                    "skip_reason": "provider_config_missing",
+                    "missing": ["MINIBOT_MODEL_API_KEY"],
+                    "generated_at": self._now(),
+                    "total_cases": len(cases),
+                    "completed_cases": 0,
+                    "passed_cases": 0,
+                    "engineering_passed": 0,
+                    "failed_metric_missing": 0,
+                    "failed_expectation": len(cases),
+                    "skipped_cases": len(cases),
+                    "pass_rate": 0.0,
+                    "engineering_pass_rate": 0.0,
+                    "summary": {"provider_mode": "real", "provider_usage_prompt_tokens": "unavailable",
+                                 "provider_usage_total_tokens": "unavailable", "model_name": "config_missing"},
+                    "results": [{"id": c["id"], "status": "skipped", "passed": False,
+                                 "skip_reason": "provider_config_missing",
+                                 "baseline_metrics": {}, "current_metrics": {}} for c in cases],
+                }
+                if report_path is not None:
+                    report_path.parent.mkdir(parents=True, exist_ok=True)
+                    import json as _json
+                    report_path.write_text(_json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+                return report
+
         baseline_config = config.get("baseline", {})
         current_config = config.get("current", {})
 
@@ -298,8 +333,21 @@ class ExperimentRunner:
             result["context_chars"] = int(cm.get("dynamic_context_chars", cm.get("context_chars", 0)) or 0)
             result["history_chars"] = int(cm.get("history_chars", 0) or 0)
             result["evidence_chars"] = int(cm.get("evidence_chars", 0) or 0)
-            # evidence_count is a top-level run record field
+            # evidence_count / evidence_ids from run record
+            ev_ids = rec.get("evidence_ids", [])
             result["evidence_count"] = int(rec.get("evidence_count", 0) or 0)
+            # Read actual evidence records from EvidenceStore for summary_chars
+            evidence_store = self._agent_loop.evidence_store
+            evidence_summary_chars = 0
+            evidence_id_injected = False
+            if evidence_store is not None and ev_ids:
+                for ev_id in ev_ids:
+                    ev_record = evidence_store.get(str(ev_id))
+                    if ev_record:
+                        evidence_summary_chars += len(str(ev_record.get("summary", "")))
+                        evidence_id_injected = True
+            result["evidence_summary_chars"] = evidence_summary_chars
+            result["evidence_id_injected"] = evidence_id_injected
             # raw_tool_output_chars: from actual file content in tool_trace output
             raw_chars = 0
             for t in result.get("tool_trace", []):
@@ -341,6 +389,8 @@ class ExperimentRunner:
             "history_chars": int(result.get("history_chars", 0) or 0),
             "evidence_chars": int(result.get("evidence_chars", 0) or 0),
             "evidence_count": int(result.get("evidence_count", 0) or 0),
+            "evidence_summary_chars": int(result.get("evidence_summary_chars", 0) or 0),
+            "evidence_id_injected": bool(result.get("evidence_id_injected", False)),
             "raw_tool_output_chars": int(result.get("raw_tool_output_chars", 0) or 0),
             "prompt_chars": int(result.get("prompt_chars", 0) or 0),
             "tool_rounds": int(result.get("tool_rounds", 0) or 0),
@@ -828,21 +878,25 @@ class ExperimentRunner:
         def _rate(n: int, d: int):
             return round(n / d, 4) if d > 0 else None
         ev_count = 0
+        ev_cases = 0
         ev_total = len(results)
         passed = sum(1 for r in results if r.get("passed"))
-        kw_hits = 0
+        kw_hits = sum(1 for r in results if r.get("passed"))
         raw_chars = 0
-        ev_chars = 0
+        ev_summary_chars = 0
         cur_ctx = 0
+        ev_injected_count = 0
         for r in results:
             cm = r.get("current_metrics", {}) or {}
             ev_c = int(cm.get("evidence_count", 0) or 0)
             if ev_c > 0:
-                ev_count += 1
-            ec = int(cm.get("evidence_chars", 0) or 0)
-            if ec > 0:
-                ev_chars += ec
-            # raw_tool_output_chars from actual file_read tool output, not context chars
+                ev_count += ev_c
+                ev_cases += 1
+            esc = int(cm.get("evidence_summary_chars", 0) or 0)
+            if esc > 0:
+                ev_summary_chars += esc
+            if cm.get("evidence_id_injected"):
+                ev_injected_count += 1
             rc = int(cm.get("raw_tool_output_chars", 0) or 0)
             if rc > 0:
                 raw_chars += rc
@@ -850,14 +904,15 @@ class ExperimentRunner:
             if cc > 0:
                 cur_ctx += cc
             if r.get("passed"):
-                kw_hits += 1
+                pass  # counted in kw_hits above
         return {
             "evidence_count": ev_count if ev_count > 0 else None,
-            "evidence_summary_chars": round(ev_chars / ev_count, 2) if ev_count else None,
+            "evidence_summary_chars": ev_summary_chars if ev_summary_chars > 0 else None,
+            "evidence_id_injected": True if ev_injected_count > 0 else False,
             "raw_tool_output_chars": raw_chars if raw_chars > 0 else None,
             "current_context_chars": cur_ctx if cur_ctx > 0 else None,
+            "tool_output_context_reduction_rate": None,  # computed in context_deltas
             "answer_pass_rate": _rate(passed, ev_total),
-            "required_keywords_hit_rate": _rate(kw_hits, ev_total),
         }
 
     @staticmethod

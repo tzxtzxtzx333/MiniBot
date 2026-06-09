@@ -69,9 +69,13 @@
     {
       "id": "tgov_partial_success_001",
       "category": "tool_governance",
-      "input": "calculate 128*64 and also calculate 2+",
+      "input": "calculate 128*64 and calculate 2+",
       "expected_behavior": ["final_response_not_empty"],
       "expected_policy_decision": "partial_success",
+      "synthetic_tool_plan": [
+        {"tool_name": "calculator", "arguments": {"expression": "128 * 64"}},
+        {"tool_name": "calculator", "arguments": {"expression": "2 +"}}
+      ],
       "verifier": { "rule": true, "model": false, "human_optional": false },
       "metrics": ["pass_rate", "partial_success", "tool_trace", "verifier_reason"]
     },
