@@ -1,0 +1,23 @@
+{
+  "id": "planner_approval_resume_001",
+  "category": "planner",
+  "input": "写入 notes/planner_approval_test.txt 内容 PlannerApprovalOK",
+  "expected_behavior": [
+    "tool_call_contains:file_write",
+    "final_response_not_empty"
+  ],
+  "synthetic_tool_plan": [
+    {
+      "tool_name": "file_write",
+      "arguments": { "path": "notes/planner_approval_test.txt", "content": "PlannerApprovalOK" }
+    }
+  ],
+  "profiles": ["planner"],
+  "preloaded_approval": {
+    "tool_name": "file_write",
+    "arguments": { "path": "notes/planner_approval_test.txt", "content": "PlannerApprovalOK" },
+    "status": "approved"
+  },
+  "verifier": { "rule": true, "model": false, "human_optional": false },
+  "metrics": ["pass_rate", "tool_rounds", "tool_trace", "verifier_reason"]
+}

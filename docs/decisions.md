@@ -116,6 +116,20 @@
 - 返回 401（缺 token）和 403（错 token），语义清晰。
 - 如果要上生产，应在反向代理层（nginx + OAuth2 Proxy）做认证，而不是在 MiniBot 内部实现。
 
+## 19. 为什么 HISTORY 相关性检索用 token overlap + Jaccard 而不是向量数据库
+
+- MiniBot 的 HISTORY 规模小（通常 < 50 轮对话），向量数据库的检索精度优势不显著。
+- token overlap + Jaccard 是标准库即可实现的轻量方案，不引入额外依赖。
+- 中文按字符 / 连续片段做简易匹配，在短文本场景下效果足够。
+- 相关性评分 + top_k 注入 + token budget 截断已提供完整闭环，无需重型基础设施。
+
+## 20. 为什么压缩归档保留最近 N 轮而不是全量清除
+
+- 全量清除会导致最近的对话上下文突然缺失，影响用户体验。
+- 保留 `history_compact_keep_recent` 轮确保压缩后仍有最近上下文可用。
+- `/new` 手动触发（`manual_new`）与轮次阈值自动触发（`turn_threshold`）通过 `compression_trigger` 区分，便于审计和调试。
+- summarizer 失败时保留原 HISTORY，确保数据安全。
+
 ## 17. 为什么只补 TaskStore / HTTP Approval API / Deployment Boundary，而不做 WebUI、数据库或生产级监控
 
 - 当前目标是应用雏形和简历/面试证据，不是生产级 SaaS 平台。

@@ -1,0 +1,29 @@
+{
+  "id": "planner_file_report_001",
+  "category": "planner",
+  "input": "读取 README.md 和 docs/resume_mapping.md，总结 MiniBot 当前能力边界，并写入 realistic_roadmap.md",
+  "expected_behavior": [
+    "tool_call_contains:file_read",
+    "tool_call_contains:file_write",
+    "tool_result_status:file_read:success",
+    "final_response_not_empty"
+  ],
+  "synthetic_tool_plan": [
+    {
+      "tool_name": "file_read",
+      "arguments": { "path": "README.md" }
+    },
+    {
+      "tool_name": "file_write",
+      "arguments": { "path": "realistic_roadmap.md", "content": "# MiniBot 能力边界总结\n\nMiniBot 支持多轮 Agent Loop、Hook 机制、结构化记忆、上下文管理等核心能力。" }
+    }
+  ],
+  "profiles": ["planner"],
+  "preloaded_approval": {
+    "tool_name": "file_write",
+    "arguments": { "path": "realistic_roadmap.md", "content": "# MiniBot 能力边界总结\n\nMiniBot 支持多轮 Agent Loop、Hook 机制、结构化记忆、上下文管理等核心能力。" },
+    "status": "approved"
+  },
+  "verifier": { "rule": true, "model": false, "human_optional": false },
+  "metrics": ["pass_rate", "tool_rounds", "tool_trace", "verifier_reason"]
+}

@@ -32,7 +32,7 @@ class ReportComparator:
                 "right": right_report.get(metric),
                 "delta": round(float(right_report.get(metric, 0.0)) - float(left_report.get(metric, 0.0)), 4),
             }
-            for metric in ("pass_rate", "avg_latency", "avg_tool_rounds", "tool_rounds", "retry_count", "partial_success")
+            for metric in ("pass_rate", "avg_latency", "avg_tool_rounds", "tool_rounds", "retry_count", "partial_success", "planner_pass_rate", "avg_plan_steps", "avg_evidence_count", "replan_count")
         }
         avg_prompt_tokens_before = left_report.get("avg_prompt_tokens", 0.0)
         avg_prompt_tokens_after = right_report.get("avg_prompt_tokens", 0.0)

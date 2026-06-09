@@ -164,22 +164,26 @@ MiniBot 智能体｜核心开发者
 
 ## 13. HISTORY.md
 
-- 简历表述：实现近期会话历史持久化
-- 实现说明：每轮对话写入 HISTORY 与 session
-- 对应代码文件：`minibot/memory/store.py`
-- 演示命令：`python -m minibot chat --message "hello"`
+- 简历表述：HISTORY.md 存储近期对话（按相关性检索）
+- 实现说明：每轮对话写入 HISTORY 与 session；`HistoryRetriever` 基于 token overlap + Jaccard 评分，按 query 相关性检索 top_k 历史片段注入上下文
+- 对应代码文件：`minibot/memory/store.py`、`minibot/memory/history_retriever.py`
+- 演示命令：`python -m minibot chat --message "python deploy"`
 - 测试文件：`tests/test_memory_context.py`
-- 报告来源：run trace
+- 报告来源：run trace / context_summary 包含 `history_retrieval_mode=relevance`
 - 当前状态：已真实完成
 
-## 14. `/new` LLM 压缩归档
+## 14. 对话轮次阈值自动压缩归档 + `/new` 手动压缩
 
-- 简历表述：实现 `/new` 触发的 LLM 压缩归档
-- 实现说明：real 模式调用真实模型；fake 模式只用于回归
-- 对应代码文件：`minibot/subagents/summarizer_agent.py`、`minibot/memory/archive.py`
+- 简历表述：当对话轮次达到阈值或用户显式输入 `/new` 时，自动触发 LLM 对旧对话进行压缩归档
+- 实现说明：
+  - `/new` 触发 `compression_trigger = "manual_new"`，`MemoryStore.compact_history` 调用 `SummarizerAgent` 生成 archive
+  - `auto_compact_enabled=true` 且 `turn_count > history_turn_compact_threshold` 时触发 `compression_trigger = "turn_threshold"`，自动截断 HISTORY 保留最近 `history_compact_keep_recent` 轮
+  - archive metadata 记录 `summary_by`、`archive_mode`、`token_before`、`token_after`、`compression_trigger`、`history_turn_count_before`、`history_turn_count_after`
+  - summarizer 失败时保留原 HISTORY，不丢数据
+- 对应代码文件：`minibot/harness/agent_loop.py`、`minibot/memory/store.py`、`minibot/memory/compactor.py`、`minibot/memory/archive.py`、`minibot/subagents/summarizer_agent.py`
 - 演示命令：`python -m minibot chat --message "/new"`
-- 测试文件：`tests/test_memory_context.py`、`tests/test_summarizer_agent_real.py`
-- 报告来源：`reports/run_real_with_key_v1.json`
+- 测试文件：`tests/test_memory_context.py`
+- 报告来源：archive 文件、run trace 中 compression_events
 - 当前状态：已真实完成
 
 ## 15. 工具调用治理

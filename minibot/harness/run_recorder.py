@@ -18,7 +18,10 @@ class RunRecorder:
         """Create a new run record and persist its initial state."""
 
         run_id = str(uuid4())
-        task_id = message.metadata.get("task_id") if message.metadata else None
+        meta = message.metadata if message.metadata else {}
+        task_id = meta.get("task_id")
+        plan_id = meta.get("plan_id")
+        step_id = meta.get("step_id")
         record = {
             "run_id": run_id,
             "started_at": datetime.now(timezone.utc).isoformat(),
@@ -27,6 +30,9 @@ class RunRecorder:
             "session_id": message.session_id,
             "user_id": message.user_id,
             "task_id": task_id,
+            "plan_id": plan_id,
+            "step_id": step_id,
+            "step_description": message.content if plan_id else None,
             "user_input": message.content,
             "context_summary": "",
             "context_metrics": {},
@@ -65,6 +71,9 @@ class RunRecorder:
             "max_runtime_seconds": 0,
             "actual_runtime_seconds": 0.0,
             "max_same_tool_calls": 0,
+            "evidence_ids": [],
+            "evidence_count": 0,
+            "tool_output_compressed_to_evidence": False,
         }
         self._write(record)
         return record
@@ -112,6 +121,9 @@ class RunRecorder:
         max_runtime_seconds: int = 0,
         actual_runtime_seconds: float = 0.0,
         max_same_tool_calls: int = 0,
+        evidence_ids: list[str] | None = None,
+        evidence_count: int = 0,
+        tool_output_compressed_to_evidence: bool = False,
     ) -> None:
         """Update a run record with the final response."""
 
@@ -153,6 +165,9 @@ class RunRecorder:
         record["max_runtime_seconds"] = max_runtime_seconds
         record["actual_runtime_seconds"] = actual_runtime_seconds
         record["max_same_tool_calls"] = max_same_tool_calls
+        record["evidence_ids"] = list(evidence_ids or [])
+        record["evidence_count"] = evidence_count
+        record["tool_output_compressed_to_evidence"] = tool_output_compressed_to_evidence
         self._write(record)
 
     def _read(self, run_id: str) -> dict[str, object]:

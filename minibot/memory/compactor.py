@@ -20,6 +20,8 @@ class MemoryCompactor:
         history_text: str,
         memory_text: str,
         compression_trigger: str,
+        history_turn_count_before: int = 0,
+        history_turn_count_after: int = 0,
     ) -> dict[str, object]:
         """Compact recent history into an archive file and return trace metadata."""
 
@@ -39,6 +41,8 @@ class MemoryCompactor:
             token_before=token_before,
             token_after=token_after,
             compression_trigger=compression_trigger,
+            history_turn_count_before=history_turn_count_before,
+            history_turn_count_after=history_turn_count_after,
         )
         return {
             "summary_by": "SummarizerAgent",
@@ -51,4 +55,6 @@ class MemoryCompactor:
             "trigger": compression_trigger,
             "token_before": token_before,
             "token_after": token_after,
+            "history_turn_count_before": history_turn_count_before,
+            "history_turn_count_after": history_turn_count_after,
         }

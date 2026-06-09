@@ -22,7 +22,7 @@ from .model_verifier import ModelVerifier
 from .report_writer import ReportWriter
 from .rule_verifier import RuleVerifier
 
-CORE_CATEGORIES = {"context", "memory", "reasoning", "safety", "tools", "regression"}
+CORE_CATEGORIES = {"context", "memory", "reasoning", "safety", "tools", "regression", "planner"}
 PROFILE_SCOPES = {
     "approval",
     "execution",
@@ -30,6 +30,7 @@ PROFILE_SCOPES = {
     "real-agent",
     "safety",
     "multiround",
+    "planner",
     "context-baseline",
     "context-optimized",
     "context-realistic-baseline",
@@ -52,13 +53,16 @@ REAL_TOOLS = {
 class BenchmarkRunner:
     """Run JSON benchmark cases through the current AgentLoop and write audit reports."""
 
-    def __init__(self, agent_loop, project_root: Path, verifier_agent=None) -> None:
+    def __init__(self, agent_loop, project_root: Path, verifier_agent=None,
+                 long_task_runner=None, planner_agent=None) -> None:
         self.agent_loop = agent_loop
         self.project_root = project_root
         self.rule_verifier = RuleVerifier()
         self.model_verifier = ModelVerifier.from_project_root(project_root)
         self.report_writer = ReportWriter()
         self.verifier_agent = verifier_agent
+        self.long_task_runner = long_task_runner
+        self.planner_agent = planner_agent
 
     def run(
         self,
@@ -108,27 +112,77 @@ class BenchmarkRunner:
                                 continue
 
                             started = time.perf_counter()
+                            is_real_planner = (
+                                normalized_profile == "planner"
+                                and case.get("planner_mode") == "real"
+                                and self.long_task_runner is not None
+                                and self.planner_agent is not None
+                            )
                             try:
-                                expanded_case = self._expand_context_case(case)
-                                with self._prepare_case_state(expanded_case):
-                                    with self._synthetic_model_plan(expanded_case):
-                                        result = self.agent_loop.handle_message(
-                                            ChannelMessage(
-                                                channel="benchmark",
-                                                user_id="benchmark-runner",
-                                                session_id=str(expanded_case["id"]),
-                                                content=str(expanded_case["input"]),
-                                                metadata={
-                                                    "category": expanded_case["category"],
-                                                    "benchmark_mode": normalized_mode,
-                                                    "benchmark_scope": scope,
-                                                    "benchmark_context_tool_results": list(expanded_case.get("context_tool_results", [])),
-                                                    "benchmark_required_facts": list(expanded_case.get("required_facts", [])),
-                                                },
+                                if is_real_planner:
+                                    # Copy referenced files into sandbox
+                                    self._prepare_planner_sandbox(case)
+                                    is_approval_test = bool(case.get("planner_approval_test"))
+                                    if is_approval_test:
+                                        # ── approval + resume flow ──
+                                        plan = self.planner_agent.plan(str(case["input"]))
+                                        first_result = self.long_task_runner.run(plan)
+                                        # Preserve first-run tool trace for audit
+                                        first_trace = []
+                                        for o in first_result.get("step_outcomes", []):
+                                            first_trace.extend(o.get("tool_trace", []))
+                                        if first_result.get("status") == "waiting_approval":
+                                            self._approve_pending_for_plan(first_result)
+                                            plan_id = str(first_result["plan_id"])
+                                            resume_result = self.long_task_runner.resume(plan_id)
+                                            # Merge first-run tool_trace into resume result
+                                            if not resume_result.get("step_outcomes"):
+                                                resume_result["step_outcomes"] = []
+                                            if first_trace:
+                                                resume_result["step_outcomes"].append(
+                                                    {"tool_trace": first_trace, "status": "completed",
+                                                     "final_response": "", "evidence_ids": [],
+                                                     "failure_category": None}
+                                                )
+                                            plan_result = resume_result
+                                        else:
+                                            plan_result = first_result
+                                        run_record = self._planner_result_to_run_record(case, plan, plan_result)
+                                    else:
+                                        # Auto-approve graylisted tools during benchmark
+                                        approval_mgr = self.agent_loop.tool_dispatcher.approval_manager
+                                        orig_config = dict(approval_mgr.approval_config)
+                                        auto_config = dict(orig_config)
+                                        auto_config["auto_approve"] = True
+                                        approval_mgr.approval_config = auto_config
+                                        try:
+                                            plan = self.planner_agent.plan(str(case["input"]))
+                                            plan_result = self.long_task_runner.run(plan)
+                                        finally:
+                                            approval_mgr.approval_config = orig_config
+                                        run_record = self._planner_result_to_run_record(case, plan, plan_result)
+                                    run_records.append(run_record)
+                                else:
+                                    expanded_case = self._expand_context_case(case)
+                                    with self._prepare_case_state(expanded_case):
+                                        with self._synthetic_model_plan(expanded_case):
+                                            result = self.agent_loop.handle_message(
+                                                ChannelMessage(
+                                                    channel="benchmark",
+                                                    user_id="benchmark-runner",
+                                                    session_id=str(expanded_case["id"]),
+                                                    content=str(expanded_case["input"]),
+                                                    metadata={
+                                                        "category": expanded_case["category"],
+                                                        "benchmark_mode": normalized_mode,
+                                                        "benchmark_scope": scope,
+                                                        "benchmark_context_tool_results": list(expanded_case.get("context_tool_results", [])),
+                                                        "benchmark_required_facts": list(expanded_case.get("required_facts", [])),
+                                                    },
+                                                )
                                             )
-                                        )
-                                run_record = self._load_run_record(result.run_id)
-                                run_records.append(run_record)
+                                    run_record = self._load_run_record(result.run_id)
+                                    run_records.append(run_record)
                             except Exception as exc:  # noqa: BLE001
                                 latency_ms = round((time.perf_counter() - started) * 1000, 2)
                                 exc_str = str(exc)
@@ -266,6 +320,7 @@ class BenchmarkRunner:
             1 for item in results if str(item.get("category")) == "safety" and bool(item.get("passed"))
         )
         multiround_summary = self._multiround_summary(cases, results)
+        planner_summary = self._planner_summary(cases, results, run_records)
         context_metrics = self._context_metrics_summary(results, run_records)
         return {
             "phase": "phase1_skeleton",
@@ -318,6 +373,16 @@ class BenchmarkRunner:
             "multiround_case_count": multiround_summary["multiround_case_count"],
             "multiround_passed_count": multiround_summary["multiround_passed_count"],
             "multiround_pass_rate": multiround_summary["multiround_pass_rate"],
+            "planner_case_count": planner_summary["planner_case_count"],
+            "planner_passed_count": planner_summary["planner_passed_count"],
+            "planner_pass_rate": planner_summary["planner_pass_rate"],
+            "avg_plan_steps": planner_summary["avg_plan_steps"],
+            "avg_evidence_count": planner_summary["avg_evidence_count"],
+            "replan_count": planner_summary["replan_count"],
+            "real_planner_case_count": planner_summary["real_planner_case_count"],
+            "real_planner_passed_count": planner_summary["real_planner_passed_count"],
+            "real_planner_pass_rate": planner_summary["real_planner_pass_rate"],
+            "planner_real_path_count": planner_summary["planner_real_path_count"],
             "avg_prompt_tokens": context_metrics["avg_prompt_tokens"],
             "avg_context_chars": context_metrics["avg_context_chars"],
             "avg_dynamic_context_chars": context_metrics["avg_dynamic_context_chars"],
@@ -401,6 +466,73 @@ class BenchmarkRunner:
             "multiround_case_count": count,
             "multiround_passed_count": passed,
             "multiround_pass_rate": round(passed / count, 4) if count else 0.0,
+        }
+
+    @staticmethod
+    def _planner_summary(
+        cases: list[dict[str, object]],
+        results: list[dict[str, object]],
+        run_records: list[dict[str, object]],
+    ) -> dict[str, object]:
+        planner_ids = {
+            str(case.get("id"))
+            for case in cases
+            if "planner" in list(case.get("profiles", []))
+        }
+        if not planner_ids:
+            return {
+                "planner_case_count": 0,
+                "planner_passed_count": 0,
+                "planner_pass_rate": 0.0,
+                "avg_plan_steps": 0.0,
+                "avg_evidence_count": 0.0,
+                "replan_count": 0,
+                "real_planner_case_count": 0,
+                "real_planner_passed_count": 0,
+                "real_planner_pass_rate": 0.0,
+                "planner_real_path_count": 0,
+            }
+        # Identify real planner cases (planner_mode == "real")
+        real_planner_ids = {
+            str(case.get("id")) for case in cases
+            if case.get("planner_mode") == "real"
+            and "planner" in list(case.get("profiles", []))
+        }
+        passed = sum(1 for item in results if str(item.get("id")) in planner_ids and bool(item.get("passed")))
+        real_passed = sum(1 for item in results if str(item.get("id")) in real_planner_ids and bool(item.get("passed")))
+        count = len(planner_ids)
+        real_count = len(real_planner_ids)
+        total_steps = 0
+        evidence_total = 0
+        replan_total = 0
+        for rec in run_records:
+            rec_id = str(rec.get("session_id", ""))
+            if rec_id in planner_ids:
+                real_steps = rec.get("_plan_steps", 0)
+                if isinstance(real_steps, int) and real_steps > 0:
+                    total_steps += real_steps
+                else:
+                    for case in cases:
+                        if str(case.get("id")) == rec_id:
+                            plan_items = case.get("synthetic_tool_plan", [])
+                            if isinstance(plan_items, list):
+                                total_steps += len(plan_items)
+                            break
+                evidence_total += int(rec.get("evidence_count", 0))
+                replan_events = rec.get("_replan_events", [])
+                if isinstance(replan_events, list):
+                    replan_total += len(replan_events)
+        return {
+            "planner_case_count": count,
+            "planner_passed_count": passed,
+            "planner_pass_rate": round(passed / count, 4) if count else 0.0,
+            "avg_plan_steps": round(total_steps / count, 2) if count else 0.0,
+            "avg_evidence_count": round(evidence_total / count, 2) if count else 0.0,
+            "replan_count": replan_total,
+            "real_planner_case_count": real_count,
+            "real_planner_passed_count": real_passed,
+            "real_planner_pass_rate": round(real_passed / real_count, 4) if real_count else 0.0,
+            "planner_real_path_count": real_count,
         }
 
     def _build_preflight(self, mode: str, profile: str) -> dict[str, object]:
@@ -533,6 +665,128 @@ class BenchmarkRunner:
     def _load_run_record(self, run_id: str) -> dict[str, object]:
         run_path = self.project_root / ".minibot" / "runs" / f"{run_id}.json"
         return dict(load_json_file(run_path))
+
+    def _preload_approval(self, case: dict[str, object]) -> None:
+        preload = case.get("preloaded_approval")
+        if not isinstance(preload, dict):
+            return
+        tool_name = str(preload.get("tool_name", "")).strip()
+        arguments = dict(preload.get("arguments", {})) if isinstance(preload.get("arguments"), dict) else {}
+        status = str(preload.get("status", "")).strip().lower()
+        if not tool_name or status not in {"approved", "rejected"}:
+            return
+        store = self.agent_loop.tool_dispatcher.approval_store
+        pending = store.create_pending(
+            session_id=str(case.get("id", "")),
+            user_id="benchmark-runner",
+            tool_name=tool_name,
+            arguments=arguments,
+            risk_level="gray",
+            reason="benchmark_preload",
+        )
+        if status == "approved":
+            store.approve(str(pending["approval_id"]))
+        else:
+            store.reject(str(pending["approval_id"]))
+
+    def _approve_pending_for_plan(self, plan_result: dict[str, object]) -> None:
+        """Find the pending approval from a plan result and approve it."""
+        step_outcomes = plan_result.get("step_outcomes", [])
+        for outcome in step_outcomes:
+            pending_id = outcome.get("pending_approval_id")
+            if pending_id:
+                store = self.agent_loop.tool_dispatcher.approval_store
+                try:
+                    store.approve(str(pending_id))
+                except Exception:
+                    pass
+
+    def _prepare_planner_sandbox(self, case: dict[str, object]) -> None:
+        """Copy files referenced in the case to the sandbox so file_read works."""
+        import re
+        import shutil
+        sandbox = self.agent_loop.memory_store.workspace.sandbox_dir
+        goal = str(case.get("input", ""))
+        for match in re.finditer(r"[\w./-]+\.(?:md|txt|json)", goal):
+            rel = match.group(0)
+            dest = sandbox / rel
+            if dest.exists():
+                continue
+            src = self.project_root / rel
+            if src.is_file():
+                dest.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(src, dest)
+
+    @staticmethod
+    def _planner_result_to_run_record(
+        case: dict[str, object],
+        plan: object,
+        plan_result: dict[str, object],
+    ) -> dict[str, object]:
+        """Synthesize a run-record-compatible dict from a real planner execution."""
+        from minibot.planning.plan_schema import TaskPlan
+        tool_trace: list[dict[str, object]] = []
+        evidence_ids: list[str] = []
+        final_responses: list[str] = []
+        failure_category = None
+        retry_total = 0
+        for outcome in plan_result.get("step_outcomes", []):
+            tool_trace.extend(outcome.get("tool_trace", []))
+            evidence_ids.extend(outcome.get("evidence_ids", []))
+            fr = str(outcome.get("final_response", ""))
+            if fr:
+                final_responses.append(fr)
+            fc = outcome.get("failure_category")
+            if fc and failure_category is None:
+                failure_category = str(fc)
+            if outcome.get("status") == "failed":
+                retry_total += 1
+        plan_steps = 0
+        replan_events: list[dict[str, object]] = []
+        if isinstance(plan, TaskPlan):
+            plan_steps = len(plan.steps)
+            meta = plan.metadata or {}
+            replan_events = list(meta.get("replan_events", []))
+        return {
+            "run_id": f"planner-{case.get('id', 'unknown')}",
+            "session_id": str(case.get("id", "")),
+            "plan_id": plan_result.get("plan_id"),
+            "step_id": None,
+            "step_description": str(case.get("input", "")),
+            "user_input": str(case.get("input", "")),
+            "final_response": "\n".join(final_responses) if final_responses else str(plan_result.get("status", "")),
+            "tool_trace": tool_trace,
+            "tool_calls": [{"tool_name": t.get("tool_name", ""), "arguments": t.get("arguments", {})} for t in tool_trace],
+            "tool_results": tool_trace,
+            "evidence_ids": evidence_ids,
+            "evidence_count": len(evidence_ids),
+            "tool_output_compressed_to_evidence": len(evidence_ids) > 0,
+            "failure_category": failure_category or (None if plan_result.get("status") in {"completed", "waiting_approval"} else "plan_failed"),
+            "retry_count": retry_total,
+            "partial_success": False,
+            "downgrade_reason": None,
+            "context_metrics": {},
+            "context_summary": f"planner_real path; plan_status={plan_result.get('status')} steps_completed={plan_result.get('steps_completed')}",
+            "verifier_reason": None,
+            "subagent_trace": [],
+            "hook_results": [],
+            "compression_events": [],
+            "cleaned_placeholders": 0,
+            "cleaned_placeholder_items": [],
+            "max_tool_rounds": 0,
+            "actual_tool_rounds": 0,
+            "multi_round": False,
+            "tool_rounds_detail": [],
+            "stop_reason": None,
+            "max_tool_calls_total": 0,
+            "actual_tool_calls_total": len(tool_trace),
+            "max_runtime_seconds": 0,
+            "actual_runtime_seconds": 0.0,
+            "max_same_tool_calls": 0,
+            "_planner_real": True,
+            "_plan_steps": plan_steps,
+            "_replan_events": replan_events,
+        }
 
     def _try_recover_failure_category(self, session_id: str) -> str | None:
         """Try to recover the original failure_category from a partially-written run record.

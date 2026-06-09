@@ -31,8 +31,8 @@ class FeishuWebSocketChannel(BaseChannel):
 
     channel_name = "feishu_ws"
 
-    def __init__(self, agent_loop, config: FeishuWebSocketConfig) -> None:
-        super().__init__(agent_loop)
+    def __init__(self, agent_loop, config: FeishuWebSocketConfig, **kwargs) -> None:
+        super().__init__(agent_loop, **kwargs)
         self.config = config
         self._sdk_channel: object | None = None
 
@@ -49,10 +49,10 @@ class FeishuWebSocketChannel(BaseChannel):
         )
 
     @classmethod
-    def from_env(cls, agent_loop, env: dict[str, str] | None = None):
+    def from_env(cls, agent_loop, env: dict[str, str] | None = None, **kwargs):
         """Build the adapter from environment variables."""
 
-        return cls(agent_loop=agent_loop, config=cls.load_config(env))
+        return cls(agent_loop=agent_loop, config=cls.load_config(env), **kwargs)
 
     def validate_config(self) -> tuple[bool, str | None]:
         """Validate required Feishu configuration."""
@@ -141,9 +141,15 @@ class FeishuWebSocketChannel(BaseChannel):
         return {"status": "sent", "chat_id": reply["chat_id"]}
 
     def handle_event(self, payload: dict[str, object] | object) -> dict[str, object]:
-        """Process one Feishu event through the shared AgentLoop."""
+        """Process one Feishu event — plan or normal chat."""
 
         message = self.to_channel_message(payload)
+        plan_reply = self.dispatch_plan(message)
+        if plan_reply is not None:
+            reply = self.send_reply(plan_reply, message)
+            reply["delivery_mode"] = "ws_adapter"
+            reply["dispatch_mode"] = "plan"
+            return reply
         result = self.dispatch_message(message)
         reply = self.send_reply(result.response, message)
         reply["delivery_mode"] = "ws_adapter"

@@ -123,15 +123,21 @@ MINIBOT_API_KEY=
 ```text
 .minibot/
   MEMORY.md   ← 长期偏好 / 长期事实（全量注入系统提示）
-  HISTORY.md  ← 近期对话（按 token 预算截断）
+  HISTORY.md  ← 近期对话（按相关性检索 + token 预算截断）
   archives/   ← 旧对话 LLM 压缩摘要归档，控制上下文长度并保留历史连续性
   sessions/
   runs/
   sandbox_workspace/
 ```
 
-`/new` 会触发 `SummarizerAgent` 做归档压缩：
+HISTORY.md 支持按相关性检索近期对话：基于 token overlap + Jaccard 评分，根据当前用户输入 query 对历史条目打分，在 token budget 下选取 top_k 相关片段注入上下文。可通过 `history_retrieval` 配置控制检索模式、top_k、最大字符数。
 
+当对话轮次达到配置阈值（`memory.history_turn_compact_threshold`，默认 20）或用户显式输入 `/new` 时，MiniBot 会触发 `SummarizerAgent` 对旧历史进行压缩归档至 Archives，HISTORY.md 保留最近 `history_compact_keep_recent` 轮（默认 6）。两种触发来源在 archive metadata 中通过 `compression_trigger` 区分：
+
+- `manual_new`：`/new` 手动触发
+- `turn_threshold`：对话轮次达到阈值自动触发
+
+归档摘要：
 - fake mode：规则式摘要
 - real mode：真实 LLM 摘要
 

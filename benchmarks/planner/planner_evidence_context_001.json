@@ -1,0 +1,18 @@
+{
+  "id": "planner_evidence_context_001",
+  "category": "planner",
+  "input": "读取一个较大的文档，内容应进入 EvidenceStore",
+  "expected_behavior": [
+    "tool_call_contains:file_read",
+    "final_response_not_empty"
+  ],
+  "synthetic_tool_plan": [
+    {
+      "tool_name": "file_read",
+      "arguments": { "path": "README.md" }
+    }
+  ],
+  "profiles": ["planner"],
+  "verifier": { "rule": true, "model": false, "human_optional": false },
+  "metrics": ["pass_rate", "tool_rounds", "tool_trace", "verifier_reason"]
+}

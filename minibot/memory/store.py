@@ -75,21 +75,36 @@ class MemoryStore:
         *,
         source_session_id: str,
         compression_trigger: str,
+        keep_recent_turns: int = 0,
     ) -> dict[str, object] | None:
-        """Archive the recent history window and reset `HISTORY.md`."""
+        """Archive the recent history window and optionally keep recent N turns.
+
+        When *keep_recent_turns* > 0, HISTORY.md is truncated to the most recent
+        N turns instead of being fully reset.
+        """
 
         if self.compactor is None:
             return None
         history_text = self.workspace.read_history()
         if self._is_effectively_empty_history(history_text):
             return None
+        history_turn_count_before = self.turn_count()
         result = self.compactor.compact(
             source_session_id=source_session_id,
             history_text=history_text,
             memory_text=self.workspace.read_memory(),
             compression_trigger=compression_trigger,
+            history_turn_count_before=history_turn_count_before,
+            history_turn_count_after=0,
         )
-        self.workspace.reset_history()
+        if keep_recent_turns > 0:
+            removed = self.workspace.truncate_history(keep_recent_turns)
+        else:
+            self.workspace.reset_history()
+            removed = history_turn_count_before
+        history_turn_count_after = self.turn_count()
+        result["history_turn_count_before"] = history_turn_count_before
+        result["history_turn_count_after"] = history_turn_count_after
         return result
 
     @staticmethod

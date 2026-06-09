@@ -36,6 +36,13 @@ class AgentLoop:
         chat_turn_limit: int = 20,
         budget=None,
         archive_token_budget: int = 900,
+        auto_compact_enabled: bool = True,
+        history_turn_compact_threshold: int = 20,
+        history_compact_keep_recent: int = 6,
+        evidence_store=None,
+        evidence_summarizer=None,
+        evidence_enabled: bool = True,
+        tool_output_min_chars: int = 1500,
     ) -> None:
         from minibot.config import AgentBudgetProfile
 
@@ -51,6 +58,13 @@ class AgentLoop:
         self.chat_turn_limit = chat_turn_limit
         self.budget = budget if isinstance(budget, AgentBudgetProfile) else AgentBudgetProfile()
         self.archive_token_budget = archive_token_budget
+        self.auto_compact_enabled = auto_compact_enabled
+        self.history_turn_compact_threshold = history_turn_compact_threshold
+        self.history_compact_keep_recent = history_compact_keep_recent
+        self.evidence_store = evidence_store
+        self.evidence_summarizer = evidence_summarizer
+        self.evidence_enabled = evidence_enabled
+        self.tool_output_min_chars = tool_output_min_chars
 
     def handle_message(self, message: ChannelMessage) -> AgentLoopResult:
         """Process one normalized channel message through the harness lifecycle."""
@@ -78,6 +92,9 @@ class AgentLoop:
         stop_reason: str | None = None
         actual_tool_calls_total = 0
         actual_runtime_seconds = 0.0
+        evidence_ids: list[str] = []
+        tool_output_compressed_to_evidence = False
+        evidence_results: list[dict[str, object]] = []
 
         self._event(run_id, "SessionStart")
         hook_results.extend(self._trigger_hooks("SessionStart", "SessionStart", {"run_id": run_id}))
@@ -114,7 +131,7 @@ class AgentLoop:
             self._event(run_id, "VerifierCheck")
             compacted = self.memory_store.compact_history(
                 source_session_id=message.session_id,
-                compression_trigger="user_new_command",
+                compression_trigger="manual_new",
             )
             if compacted is not None:
                 compression_events.append(compacted)
@@ -338,6 +355,16 @@ class AgentLoop:
             tool_results = all_tool_results
             tool_trace = all_tool_trace
 
+            # --- Evidence offloading: compress large tool outputs ---
+            tool_results, evidence_meta = self._offload_large_outputs(
+                run_id=run_id,
+                task_id=str(message.metadata.get("task_id") or ""),
+                tool_results=tool_results,
+            )
+            evidence_ids = evidence_meta["evidence_ids"]
+            tool_output_compressed_to_evidence = evidence_meta["compressed"]
+            evidence_results = evidence_meta["evidence_results"]
+
             self._event(run_id, "VerifierCheck")
             if tool_calls or tool_results:
                 self._event(run_id, "FinalAnswerSynthesis")
@@ -402,10 +429,12 @@ class AgentLoop:
             )
         self.memory_store.append_history(message, final_response)
         if message.content.strip() != "/new":
-            if self.memory_store.turn_count() > self.chat_turn_limit:
+            current_turn_count = self.memory_store.turn_count()
+            if self.auto_compact_enabled and current_turn_count > self.history_turn_compact_threshold:
                 compacted = self.memory_store.compact_history(
                     source_session_id=message.session_id,
-                    compression_trigger="turn_limit_exceeded",
+                    compression_trigger="turn_threshold",
+                    keep_recent_turns=self.history_compact_keep_recent,
                 )
                 if compacted is not None:
                     compression_events.append(compacted)
@@ -473,6 +502,9 @@ class AgentLoop:
             max_runtime_seconds=self.budget.max_runtime_seconds,
             actual_runtime_seconds=actual_runtime_seconds,
             max_same_tool_calls=self.budget.max_same_tool_calls,
+            evidence_ids=evidence_ids,
+            evidence_count=len(evidence_ids),
+            tool_output_compressed_to_evidence=tool_output_compressed_to_evidence,
         )
         self._event(run_id, "RunReportPersist")
         self._event(run_id, "SessionEnd")
@@ -512,6 +544,9 @@ class AgentLoop:
             max_runtime_seconds=self.budget.max_runtime_seconds,
             actual_runtime_seconds=actual_runtime_seconds,
             max_same_tool_calls=self.budget.max_same_tool_calls,
+            evidence_ids=evidence_ids,
+            evidence_count=len(evidence_ids),
+            tool_output_compressed_to_evidence=tool_output_compressed_to_evidence,
         )
         return AgentLoopResult(run_id=run_id, response=final_response, tool_trace=tool_trace, verifier_reason=verifier_reason)
 
@@ -554,6 +589,103 @@ class AgentLoop:
                 "tool_calls": [],
             },
         )
+
+    def _offload_large_outputs(
+        self,
+        *,
+        run_id: str,
+        task_id: str,
+        tool_results: list[dict[str, object]],
+    ) -> tuple[list[dict[str, object]], dict[str, object]]:
+        """Create evidence records for large tool outputs and compress them.
+
+        Returns ``(updated_results, meta)`` where *meta* contains
+        ``evidence_ids``, ``compressed``, and ``evidence_results``.
+        """
+        evidence_ids: list[str] = []
+        compressed = False
+        evidence_results: list[dict[str, object]] = []
+        if not self.evidence_enabled or self.evidence_store is None or self.evidence_summarizer is None:
+            return tool_results, {"evidence_ids": evidence_ids, "compressed": compressed, "evidence_results": evidence_results}
+
+        updated: list[dict[str, object]] = []
+        for result in tool_results:
+            output = result.get("output")
+            if output is None or result.get("status") not in {"success", None}:
+                updated.append(result)
+                continue
+
+            output_text = self._normalize_output_for_evidence(output)
+            if len(output_text) < self.tool_output_min_chars:
+                updated.append(result)
+                continue
+
+            # Create evidence record
+            tool_name = str(result.get("tool_name", "unknown"))
+            source = self._resolve_source(tool_name, result)
+            summary_result = self.evidence_summarizer.summarize(tool_name, output_text)
+            summary = str(summary_result.get("summary", ""))
+            key_points = list(summary_result.get("key_points", []))
+            raw_chars = int(summary_result.get("raw_chars", len(output_text)))
+
+            evidence = self.evidence_store.create(
+                run_id=run_id,
+                task_id=task_id if task_id else None,
+                tool_name=tool_name,
+                source=source,
+                raw_chars=raw_chars,
+                summary=summary,
+                key_points=key_points,
+            )
+            evidence_ids.append(str(evidence["evidence_id"]))
+            evidence_results.append(evidence)
+            compressed = True
+
+            # Replace the tool result output with compressed evidence reference
+            compressed_result = dict(result)
+            compressed_result["output"] = {
+                "_evidence_id": evidence["evidence_id"],
+                "_compressed": True,
+                "summary": summary,
+                "key_points": key_points,
+            }
+            compressed_result["metadata"] = dict(compressed_result.get("metadata", {}))
+            compressed_result["metadata"]["evidence_compressed"] = True
+            compressed_result["metadata"]["evidence_id"] = evidence["evidence_id"]
+            updated.append(compressed_result)
+
+        return updated, {
+            "evidence_ids": evidence_ids,
+            "compressed": compressed,
+            "evidence_results": evidence_results,
+        }
+
+    @staticmethod
+    def _normalize_output_for_evidence(output: object) -> str:
+        if isinstance(output, str):
+            return output
+        if output is None:
+            return ""
+        import json
+
+        try:
+            return json.dumps(output, ensure_ascii=False)
+        except (TypeError, ValueError):
+            return str(output)
+
+    @staticmethod
+    def _resolve_source(tool_name: str, result: dict[str, object]) -> str:
+        """Derive a human-readable source label from the tool result."""
+        output = result.get("output", {})
+        if isinstance(output, dict):
+            source = str(output.get("url") or output.get("path") or output.get("expression") or "")
+            if source:
+                return source
+        arguments = dict(result.get("arguments", {})) if isinstance(result.get("arguments"), dict) else {}
+        source = str(arguments.get("url") or arguments.get("path") or arguments.get("expression") or "")
+        if source:
+            return source
+        return tool_name
 
     @staticmethod
     def _canonical_call_key(tool_name: str, arguments: dict[str, object]) -> str:

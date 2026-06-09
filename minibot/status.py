@@ -34,6 +34,12 @@ class StatusReport:
     task_count: int = 0
     pending_task_count: int = 0
     approval_pending_count: int = 0
+    auto_compact_enabled: bool = True
+    history_turn_compact_threshold: int = 20
+    history_turn_count: int = 0
+    history_retrieval_enabled: bool = True
+    evidence_dir_exists: bool = False
+    evidence_count: int = 0
     budget: dict[str, object] = field(default_factory=dict)
 
     def to_json(self) -> str:
@@ -77,6 +83,18 @@ class MiniBotStatusService:
             "max_runtime_seconds": self.config.budget.max_runtime_seconds,
             "max_same_tool_calls": self.config.budget.max_same_tool_calls,
         }
+        # Count history turns
+        history_turn_count = 0
+        if self.workspace.history_file.exists():
+            history_lines = self.workspace.read_history().splitlines()
+            history_turn_count = sum(1 for line in history_lines if line.startswith("user: "))
+        # Evidence info
+        evidence_dir = self.workspace.evidence_dir
+        evidence_count = 0
+        if evidence_dir.exists():
+            evidence_jsonl = evidence_dir / "evidence.jsonl"
+            if evidence_jsonl.exists():
+                evidence_count = sum(1 for _ in evidence_jsonl.open("r", encoding="utf-8"))
         return StatusReport(
             version=self.config.version,
             config_files=config_files,
@@ -96,6 +114,12 @@ class MiniBotStatusService:
             task_count=tasks_info["task_count"],
             pending_task_count=tasks_info["pending_task_count"],
             approval_pending_count=approval_counts["pending_count"],
+            auto_compact_enabled=self.config.memory.auto_compact_enabled,
+            history_turn_compact_threshold=self.config.memory.history_turn_compact_threshold,
+            history_turn_count=history_turn_count,
+            history_retrieval_enabled=self.config.history_retrieval.enabled,
+            evidence_dir_exists=evidence_dir.exists(),
+            evidence_count=evidence_count,
             budget=budget,
         )
 

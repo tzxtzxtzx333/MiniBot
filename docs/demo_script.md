@@ -53,7 +53,27 @@ curl -H "Authorization: Bearer my-secret" \
   -X POST http://127.0.0.1:8000/approvals/<approval_id>/approve
 ```
 
-### 5. Benchmark Evidences
+### 5. TaskPlan 任务规划
+
+```bash
+# 创建计划
+python -m minibot plan create --goal "读取 README.md 和 docs/resume_mapping.md，总结 MiniBot 当前能力边界，并写入 realistic_roadmap.md"
+
+# 执行计划
+python -m minibot plan run <plan_id>
+
+# 查看计划状态
+python -m minibot plan show <plan_id>
+
+# 审批灰名单工具后恢复执行
+python -m minibot approvals approve <approval_id>
+python -m minibot plan resume <plan_id>
+
+# Planner benchmark 回归
+python -m minibot benchmark --mode fake --profile planner --report reports/run_fake_planner.json
+```
+
+### 6. Benchmark Evidences
 
 ```bash
 python -m minibot benchmark --mode fake --profile safety \
@@ -66,9 +86,17 @@ python -m minibot benchmark --mode real --scope core --profile real-agent \
   --report reports/run_real_agent.json
 ```
 
-### 6. 其他 Chat 演示
+### 7. 其他 Chat 演示
 
 ```bash
+# 验证 HISTORY 相关性检索
+python -m minibot chat --message "python deployment guide"
+python -m minibot chat --message "deploy python docker"
+# context_summary 会包含 history_retrieval_mode=relevance
+
+# 验证 /new 手动压缩归档（compression_trigger=manual_new）
+python -m minibot chat --message "/new"
+
 python -m minibot chat --message "计算 128 * 64"
 python -m minibot chat --message "run python code print(1+1)"
 python -m minibot chat --message "shell_exec rm -rf /"

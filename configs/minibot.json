@@ -36,6 +36,23 @@
                                              "max_same_tool_calls":  3
                                          }
                        },
+    "history_retrieval":  {
+                              "enabled":  true,
+                              "mode":  "relevance",
+                              "top_k":  5,
+                              "max_chars":  2000
+                          },
+    "memory":  {
+                   "auto_compact_enabled":  true,
+                   "history_turn_compact_threshold":  20,
+                   "history_compact_keep_recent":  6
+               },
+    "evidence":  {
+                     "enabled":  true,
+                     "tool_output_min_chars":  1500,
+                     "summary_max_chars":  800,
+                     "key_points_max":  5
+                 },
     "http":  {
                  "host":  "127.0.0.1",
                  "port":  8000

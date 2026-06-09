@@ -20,6 +20,7 @@ class WorkspacePaths:
     approvals_dir: Path
     approvals_pending_file: Path
     approvals_resolved_file: Path
+    evidence_dir: Path
 
 
 class WorkspaceManager:
@@ -39,6 +40,8 @@ class WorkspaceManager:
         self.approvals_resolved_file = self.approvals_dir / "resolved.jsonl"
         self.logs_dir = self.root / "logs"
         self.tasks_dir = self.root / "tasks"
+        self.evidence_dir = self.root / "evidence"
+        self.plans_dir = self.root / "plans"
 
     @property
     def paths(self) -> WorkspacePaths:
@@ -55,6 +58,7 @@ class WorkspaceManager:
             approvals_dir=self.approvals_dir,
             approvals_pending_file=self.approvals_pending_file,
             approvals_resolved_file=self.approvals_resolved_file,
+            evidence_dir=self.evidence_dir,
         )
 
     def ensure(self) -> WorkspacePaths:
@@ -69,6 +73,8 @@ class WorkspaceManager:
             self.approvals_dir,
             self.logs_dir,
             self.tasks_dir,
+            self.evidence_dir,
+            self.plans_dir,
         ]:
             path.mkdir(parents=True, exist_ok=True)
         for path in [self.approvals_pending_file, self.approvals_resolved_file]:
@@ -108,6 +114,55 @@ class WorkspaceManager:
         """Reset recent history after compaction."""
 
         self.history_file.write_text("# HISTORY\n\n", encoding="utf-8")
+
+    def truncate_history(self, keep_recent_turns: int) -> int:
+        """Keep only the most recent N turns in HISTORY.md.
+
+        Returns the number of turns removed.
+        """
+        if keep_recent_turns <= 0:
+            return 0
+        content = self.read_history()
+        turns = self._parse_turns(content)
+        if len(turns) <= keep_recent_turns:
+            return 0
+        removed = len(turns) - keep_recent_turns
+        recent = turns[-keep_recent_turns:]
+        new_content = "# HISTORY\n\n"
+        for user, assistant in recent:
+            if user:
+                new_content += f"user: {user}\n"
+            if assistant:
+                new_content += f"assistant: {assistant}\n"
+        self.history_file.write_text(new_content, encoding="utf-8")
+        return removed
+
+    @staticmethod
+    def _parse_turns(history_text: str) -> list[tuple[str, str]]:
+        """Split raw history into (user_line, assistant_line) turn pairs."""
+        lines = history_text.splitlines()
+        turns: list[tuple[str, str]] = []
+        pending_user: str | None = None
+        for raw_line in lines:
+            line = raw_line.strip()
+            if not line or line.startswith("#"):
+                continue
+            if line.startswith("user: "):
+                if pending_user is not None:
+                    turns.append((pending_user, ""))
+                pending_user = line[6:].strip()
+            elif line.startswith("assistant: "):
+                assistant = line[11:].strip()
+                if pending_user is not None:
+                    turns.append((pending_user, assistant))
+                    pending_user = None
+                else:
+                    turns.append(("", assistant))
+            elif pending_user is not None:
+                pending_user += " " + line
+        if pending_user is not None:
+            turns.append((pending_user, ""))
+        return turns
 
     def read_memory(self) -> str:
         """Read `MEMORY.md` as normalized UTF-8 text."""

@@ -1,0 +1,13 @@
+{
+  "id": "planner_real_file_report_001",
+  "category": "planner",
+  "input": "读取 README.md，总结 MiniBot 当前能力边界",
+  "expected_behavior": [
+    "tool_call_contains:file_read",
+    "final_response_not_empty"
+  ],
+  "profiles": ["planner"],
+  "planner_mode": "real",
+  "verifier": { "rule": true, "model": false, "human_optional": false },
+  "metrics": ["pass_rate", "tool_rounds", "tool_trace", "verifier_reason"]
+}

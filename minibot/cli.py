@@ -20,6 +20,7 @@ from .channels.http_channel import HttpChannel
 from .channels.mock_feishu_channel import MockFeishuChannel
 from .config import load_config
 from .evals.compare_reports import ReportComparator
+from .evidence.store import EvidenceStore
 from .governance.approval_store import ApprovalStore, ApprovalStoreError
 from .tasks.store import TaskStore, TaskStoreError
 from .workspace import WorkspaceManager
@@ -44,6 +45,7 @@ def build_parser() -> argparse.ArgumentParser:
     feishu_parser = subparsers.add_parser("feishu-mock", help="Run a mock Feishu event through AgentLoop")
     feishu_parser.add_argument("event_path", nargs="?", help="Path to mock event JSON")
     feishu_parser.add_argument("--event", default="examples/mock_feishu_event.json", help="Path to mock event JSON")
+    feishu_parser.add_argument("--message", help="Inline message text for quick testing (skips JSON file)")
     subparsers.add_parser("feishu", help="Run the real Feishu WebSocket Bot adapter boundary")
 
     approvals_parser = subparsers.add_parser("approvals", help="Manage pending human-review approvals")
@@ -85,6 +87,7 @@ def build_parser() -> argparse.ArgumentParser:
             "context-realistic-baseline",
             "context-realistic-optimized",
             "multiround",
+            "planner",
         ],
         default="default",
         help="Optional benchmark profile",
@@ -95,6 +98,25 @@ def build_parser() -> argparse.ArgumentParser:
     compare_parser = subparsers.add_parser("compare", help="Compare two benchmark reports")
     compare_parser.add_argument("left", nargs="?", help="Left report path")
     compare_parser.add_argument("right", nargs="?", help="Right report path")
+
+    evidence_parser = subparsers.add_parser("evidence", help="Manage evidence records")
+    evidence_subparsers = evidence_parser.add_subparsers(dest="evidence_command")
+    evidence_subparsers.add_parser("list", help="List recent evidence records")
+    evidence_show_parser = evidence_subparsers.add_parser("show", help="Show one evidence record")
+    evidence_show_parser.add_argument("evidence_id")
+    evidence_search_parser = evidence_subparsers.add_parser("search", help="Search evidence by keyword")
+    evidence_search_parser.add_argument("query")
+
+    plan_parser = subparsers.add_parser("plan", help="Task plan management")
+    plan_subparsers = plan_parser.add_subparsers(dest="plan_command")
+    plan_create_parser = plan_subparsers.add_parser("create", help="Create a new plan from a goal")
+    plan_create_parser.add_argument("--goal", required=True, help="User goal to decompose into steps")
+    plan_run_parser = plan_subparsers.add_parser("run", help="Execute a plan")
+    plan_run_parser.add_argument("plan_id")
+    plan_show_parser = plan_subparsers.add_parser("show", help="Show plan details")
+    plan_show_parser.add_argument("plan_id")
+    plan_resume_parser = plan_subparsers.add_parser("resume", help="Resume a paused plan")
+    plan_resume_parser.add_argument("plan_id")
 
     return parser
 
@@ -117,6 +139,10 @@ def main(argv: list[str] | None = None) -> int:
         return _run_approvals(args.approvals_command, getattr(args, "approval_id", None))
     if args.command == "tasks":
         return _run_tasks(args)
+    if args.command == "evidence":
+        return _run_evidence(args)
+    if args.command == "plan":
+        return _run_plan(args)
 
     try:
         app = MiniBotApp()
@@ -131,7 +157,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "http":
         return _run_http(app, args.host, args.port)
     if args.command == "feishu-mock":
-        return _run_feishu_mock(app, _resolve_event_path(args))
+        return _run_feishu_mock(app, args)
     if args.command == "feishu":
         return _run_feishu(app)
     parser.print_help()
@@ -175,14 +201,39 @@ def _run_http(app: MiniBotApp, host: str | None, port: int | None) -> int:
     return 0
 
 
-def _run_feishu_mock(app: MiniBotApp, event_path: Path) -> int:
-    channel = MockFeishuChannel(app.runtime.agent_loop)
+def _run_feishu_mock(app: MiniBotApp, args: argparse.Namespace) -> int:
+    channel = MockFeishuChannel(
+        app.runtime.agent_loop,
+        long_task_runner=app.runtime.long_task_runner,
+        planner_agent=app.runtime.planner_agent,
+    )
+    # Inline --message mode: bypass JSON file
+    inline_message = getattr(args, "message", None)
+    if inline_message:
+        message = ChannelMessage(
+            channel="feishu_mock",
+            user_id="feishu-user",
+            session_id="feishu-plan-test",
+            content=inline_message,
+            metadata={"message_id": "inline-test"},
+        )
+        plan_reply = channel.dispatch_plan(message)
+        if plan_reply is not None:
+            print(plan_reply)
+        else:
+            print(channel.dispatch_message(message).response)
+        return 0
+    event_path = _resolve_event_path(args)
     print(channel.run_event_file(event_path))
     return 0
 
 
 def _run_feishu(app: MiniBotApp) -> int:
-    channel = FeishuWebSocketChannel.from_env(agent_loop=app.runtime.agent_loop)
+    channel = FeishuWebSocketChannel.from_env(
+        agent_loop=app.runtime.agent_loop,
+        long_task_runner=app.runtime.long_task_runner,
+        planner_agent=app.runtime.planner_agent,
+    )
     try:
         status = channel.run()
     except KeyboardInterrupt:
@@ -250,6 +301,91 @@ def _run_approvals(command: str | None, approval_id: str | None) -> int:
         return 0
     print("approvals_command_missing", file=sys.stderr)
     return 1
+
+
+def _run_evidence(args: argparse.Namespace) -> int:
+    store = _load_evidence_store()
+    command = args.evidence_command
+    if command is None:
+        print("evidence_command_missing", file=sys.stderr)
+        return 1
+
+    if command == "list":
+        records = store.list(limit=50)
+        print(json.dumps(records, ensure_ascii=False, indent=2))
+        return 0
+
+    if command == "show":
+        evidence_id = getattr(args, "evidence_id", "")
+        record = store.get(evidence_id)
+        if record is None:
+            print(f"evidence_not_found: {evidence_id}", file=sys.stderr)
+            return 1
+        print(json.dumps(record, ensure_ascii=False, indent=2))
+        return 0
+
+    if command == "search":
+        query = getattr(args, "query", "")
+        results = store.search(query, top_k=10)
+        print(json.dumps(results, ensure_ascii=False, indent=2))
+        return 0
+
+    print(f"unknown_evidence_command: {command}", file=sys.stderr)
+    return 1
+
+
+def _run_plan(args: argparse.Namespace) -> int:
+    command = args.plan_command
+    if command is None:
+        print("plan_command_missing (create | run | show | resume)", file=sys.stderr)
+        return 1
+
+    try:
+        app = MiniBotApp()
+    except (RuntimeError, ValueError) as exc:
+        print(str(exc), file=sys.stderr)
+        return 1
+
+    if command == "create":
+        plan = app.runtime.planner_agent.plan(args.goal)
+        app.runtime.task_executor.save_plan(plan)
+        print(json.dumps(plan.to_dict(), ensure_ascii=False, indent=2))
+        return 0
+
+    if command == "show":
+        plan = app.runtime.task_executor.load_plan(args.plan_id)
+        if plan is None:
+            print(f"plan_not_found: {args.plan_id}", file=sys.stderr)
+            return 1
+        print(json.dumps(plan.to_dict(), ensure_ascii=False, indent=2))
+        return 0
+
+    if command == "run":
+        plan = app.runtime.task_executor.load_plan(args.plan_id)
+        if plan is None:
+            print(f"plan_not_found: {args.plan_id}", file=sys.stderr)
+            return 1
+        result = app.runtime.long_task_runner.run(plan)
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+        return 0 if result["status"] in {"completed", "waiting_approval"} else 1
+
+    if command == "resume":
+        result = app.runtime.long_task_runner.resume(args.plan_id)
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+        if result.get("status") == "error":
+            return 1
+        return 0 if result["status"] in {"completed", "waiting_approval"} else 1
+
+    print(f"unknown_plan_command: {command}", file=sys.stderr)
+    return 1
+
+
+def _load_evidence_store() -> EvidenceStore:
+    root = Path.cwd().resolve()
+    config = load_config(root / "configs" / "minibot.json")
+    workspace = WorkspaceManager(root, config.workspace_dir)
+    workspace.ensure()
+    return EvidenceStore(workspace.evidence_dir)
 
 
 def _run_tasks(args: argparse.Namespace, root: Path | None = None) -> int:

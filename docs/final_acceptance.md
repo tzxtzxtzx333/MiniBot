@@ -4,7 +4,10 @@
 
 - 真实模型接入：已完成
 - 真实 Tool Calling 决策：已完成
-- `/new` 真实 LLM 压缩归档：已完成
+- `/new` 真实 LLM 压缩归档：已完成（支持 `manual_new` 手动触发与 `turn_threshold` 阈值自动触发）
+- HISTORY.md 相关性检索：已完成（token overlap + Jaccard 评分，token budget 下 top_k 注入上下文）
+- TaskPlan 任务规划执行闭环：已完成（PlannerAgent / TaskExecutor / StepVerifier / ReplannerAgent / plan CLI）
+- Planner benchmark 回归：已完成（4/4，planner_file_report / approval_resume / failure_replan / evidence_context）
 - Docker 沙箱执行：已完成
 - fake / real benchmark：已完成
 - Feishu WebSocket Bot 接入边界：已完成
@@ -18,8 +21,9 @@
 
 1. DeepSeek / OpenAI-compatible 真实模型接入
 2. 真实模型参与 tool calling 决策
-3. `/new` 真实 LLM 压缩归档
-4. `python_exec` / `shell_exec` Docker 沙箱执行
+3. `/new` 真实 LLM 压缩归档（含对话轮次阈值自动触发）
+4. HISTORY.md 按相关性检索近期对话（token overlap + top_k 注入上下文）
+5. `python_exec` / `shell_exec` Docker 沙箱执行
 5. benchmark fake / real mode
 6. report 记录 fake / real mode 与能力状态
 7. 简历指标来源切换到 real report
@@ -64,7 +68,8 @@
 
 - 实现 DeepSeek / OpenAI-compatible 真实模型接入
 - 实现统一 `tool_plan` JSON Tool Calling
-- 实现 `/new` LLM 压缩归档
+- 实现 `/new` LLM 压缩归档与轮次阈值自动压缩归档（`manual_new` / `turn_threshold`）
+- 实现 HISTORY.md 按相关性检索近期对话（token overlap + top_k 注入上下文）
 - 实现 Docker 沙箱执行高风险工具
 - 实现 Feishu WebSocket Bot 接入路径与 mock 回归
 - 实现 `web_fetch` 真实 HTTP provider 与 provider 状态标记

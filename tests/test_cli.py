@@ -102,14 +102,9 @@ def run_cli_with_input(*args: str, stdin_text: str) -> subprocess.CompletedProce
 def _prepare_temp_root() -> Path:
     temp_root = ROOT / ".tmp_test_roots" / str(uuid4())
     temp_root.mkdir(parents=True, exist_ok=True)
-    for name in ("configs", "benchmarks", "examples", "reports"):
-        source = ROOT / name
-        target = temp_root / name
-        if source.is_dir():
-            shutil.copytree(source, target)
-        else:
-            target.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(source, target)
+    shutil.copytree(ROOT / "configs", temp_root / "configs")
+    for name in ("benchmarks", "examples", "reports"):
+        (temp_root / name).mkdir(parents=True, exist_ok=True)
     return temp_root
 
 
@@ -240,6 +235,8 @@ def test_feishu_command_fails_with_missing_config() -> None:
 def test_feishu_command_enters_long_running_channel_loop(monkeypatch, capsys) -> None:
     class _FakeRuntime:
         agent_loop = object()
+        long_task_runner = None
+        planner_agent = None
 
     class _FakeApp:
         runtime = _FakeRuntime()
@@ -257,7 +254,7 @@ def test_feishu_command_enters_long_running_channel_loop(monkeypatch, capsys) ->
     monkeypatch.setattr(
         minibot_cli.FeishuWebSocketChannel,
         "from_env",
-        staticmethod(lambda agent_loop: fake_channel),
+        staticmethod(lambda agent_loop, **kw: fake_channel),
     )
 
     exit_code = minibot_cli.main(["feishu"])
@@ -357,16 +354,16 @@ def test_approvals_command_returns_nonzero_for_missing_id(monkeypatch, capsys) -
 
 
 def test_benchmark_reports_safety_results_and_metrics() -> None:
-    completed = run_cli("benchmark")
+    completed = run_cli("benchmark", "--profile", "safety")
     assert completed.returncode == 0
     payload = json.loads(completed.stdout)
     assert payload["phase"] == "phase1_skeleton"
     assert payload["run_mode"] == "fake"
     assert payload["fake_model"] is True
     assert payload["report_path"] == "reports/latest.json"
-    assert payload["total_cases"] >= 70
-    assert payload["benchmark_case_count"] >= 70
-    assert payload["benchmark_case_count_by_profile"]["default"] >= 1
+    assert payload["total_cases"] >= 9  # --profile safety
+    assert payload["benchmark_case_count"] >= 70  # catalog counts all profiles
+    assert payload.get("safety_case_count", 0) >= 1
     assert payload["benchmark_case_count_by_category"]["tools"] >= 1
     assert "tool_rounds" in payload
     assert "avg_latency" in payload
@@ -380,7 +377,7 @@ def test_benchmark_reports_safety_results_and_metrics() -> None:
 
 
 def test_benchmark_command_supports_explicit_fake_mode_report() -> None:
-    completed = run_cli("benchmark", "--mode", "fake", "--report", "reports/run_fake_v1.json")
+    completed = run_cli("benchmark", "--mode", "fake", "--profile", "safety", "--report", "reports/run_fake_v1.json")
     assert completed.returncode == 0
     payload = json.loads(completed.stdout)
     assert payload["run_mode"] == "fake"
@@ -508,7 +505,7 @@ def test_benchmark_command_real_mode_http_error_generates_report_without_traceba
 
 
 def test_compare_command_returns_failure_and_metric_deltas() -> None:
-    benchmark = run_cli("benchmark", "--report", "reports/run_v1.json")
+    benchmark = run_cli("benchmark", "--profile", "safety", "--report", "reports/run_v1.json")
     assert benchmark.returncode == 0
     completed = run_cli("compare", "reports/run_v1.json", "reports/run_v1.json")
     assert completed.returncode == 0

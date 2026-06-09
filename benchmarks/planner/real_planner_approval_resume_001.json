@@ -1,0 +1,14 @@
+{
+  "id": "real_planner_approval_resume_001",
+  "category": "planner",
+  "input": "写入 notes/planner_benchmark_test.txt 内容 PlannerBenchmarkOK",
+  "expected_behavior": [
+    "tool_call_contains:file_write",
+    "final_response_not_empty"
+  ],
+  "profiles": ["planner"],
+  "planner_mode": "real",
+  "planner_approval_test": true,
+  "verifier": { "rule": true, "model": false, "human_optional": false },
+  "metrics": ["pass_rate", "tool_rounds", "tool_trace", "verifier_reason"]
+}

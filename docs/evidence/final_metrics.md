@@ -10,7 +10,16 @@
 - `HTTP Approval API token boundary = supported` — `MINIBOT_HTTP_AUTH_TOKEN` 可选 Bearer Token 认证
 - `Status health check = includes tasks / approvals / budget / archives`
 - `Deployment boundary = .env.example, scripts/, .minibot/logs/`
-- `pytest = 77 passed`（channels 34 + docs 15 + tasks CLI/resume/e2e 28）
+- `HISTORY.md relevance retrieval = supported` — HistoryRetriever 基于 token overlap + Jaccard 评分检索 top_k 历史片段
+- `Auto-compaction = supported` — 对话轮次达到 `history_turn_compact_threshold` 时自动触发压缩归档，HISTORY 保留 `history_compact_keep_recent` 轮
+- `/new` manual compaction = `compression_trigger = "manual_new"`
+- Turn threshold compaction = `compression_trigger = "turn_threshold"`
+- Archive metadata: `summary_by`、`archive_mode`、`token_before`、`token_after`、`compression_trigger`、`history_turn_count_before`、`history_turn_count_after`
+- `pytest = 313 passed`（含新增 history retrieval + auto-compaction 测试）
+- `planner profile = 4/4`, `pass_rate = 100%` — 覆盖 file_report / approval_resume / failure_replan / evidence_context
+- `planner benchmark report = docs/evidence/run_fake_planner.json`
+- Evidence: `planner_case_count=4`, `avg_plan_steps=1.5`, `avg_evidence_count=0.75`, `replan_count=0`
+- 项目定位：MiniBot 在 Harness-first 架构基础上新增轻量 TaskPlan 任务规划执行闭环，支持目标拆解、子任务执行、EvidenceStore 证据管理、审批暂停恢复、失败重规划与 planner benchmark 回归
 
 ## Notes
 

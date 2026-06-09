@@ -1,0 +1,13 @@
+{
+  "id": "planner_real_failure_replan_001",
+  "category": "planner",
+  "input": "先读取 missing_plan_source.md；如果失败，请改用 README.md 总结 MiniBot 能力边界，并写入 replan_roadmap.md",
+  "expected_behavior": [
+    "tool_call_contains:file_read",
+    "final_response_not_empty"
+  ],
+  "profiles": ["planner"],
+  "planner_mode": "real",
+  "verifier": { "rule": true, "model": false, "human_optional": false },
+  "metrics": ["pass_rate", "tool_rounds", "failure_category", "tool_trace", "verifier_reason", "retry_count"]
+}

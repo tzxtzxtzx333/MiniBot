@@ -13,6 +13,9 @@ class MockFeishuChannel(BaseChannel):
 
     channel_name = "feishu_mock"
 
+    def __init__(self, agent_loop, **kwargs) -> None:
+        super().__init__(agent_loop, **kwargs)
+
     def to_channel_message(self, payload: dict[str, object]) -> ChannelMessage:
         """Convert a mock Feishu event payload into `ChannelMessage`."""
 
@@ -26,9 +29,13 @@ class MockFeishuChannel(BaseChannel):
         )
 
     def run_event_file_payload(self, payload: dict[str, object]) -> str:
-        """Replay an already-loaded Feishu payload through AgentLoop."""
+        """Replay an already-loaded Feishu payload — plan or normal chat."""
 
-        return self.dispatch_message(self.to_channel_message(payload)).response
+        message = self.to_channel_message(payload)
+        plan_reply = self.dispatch_plan(message)
+        if plan_reply is not None:
+            return plan_reply
+        return self.dispatch_message(message).response
 
     def build_reply_payload(self, response_text: str, payload: dict[str, object]) -> dict[str, object]:
         """Package a mock response with Feishu-like reply metadata."""

@@ -28,6 +28,35 @@ class AgentBudgetProfile:
 
 
 @dataclass(slots=True)
+class HistoryRetrievalConfig:
+    """HISTORY.md relevance retrieval settings."""
+
+    enabled: bool = True
+    mode: str = "relevance"
+    top_k: int = 5
+    max_chars: int = 2000
+
+
+@dataclass(slots=True)
+class MemoryCompactConfig:
+    """Auto-compaction settings for history turn threshold."""
+
+    auto_compact_enabled: bool = True
+    history_turn_compact_threshold: int = 20
+    history_compact_keep_recent: int = 6
+
+
+@dataclass(slots=True)
+class EvidenceConfig:
+    """Evidence offloading settings for large tool outputs."""
+
+    enabled: bool = True
+    tool_output_min_chars: int = 1500
+    summary_max_chars: int = 800
+    key_points_max: int = 5
+
+
+@dataclass(slots=True)
 class MiniBotConfig:
     """Top-level application configuration."""
 
@@ -41,6 +70,9 @@ class MiniBotConfig:
     budget: AgentBudgetProfile
     agent_profiles: dict[str, AgentBudgetProfile] = field(default_factory=dict)
     http: HttpConfig | None = None
+    history_retrieval: HistoryRetrievalConfig = field(default_factory=HistoryRetrievalConfig)
+    memory: MemoryCompactConfig = field(default_factory=MemoryCompactConfig)
+    evidence: EvidenceConfig = field(default_factory=EvidenceConfig)
 
 
 def _resolve_agent_profile(data: dict[str, object]) -> AgentBudgetProfile:
@@ -97,6 +129,41 @@ def load_config(path: Path) -> MiniBotConfig:
                     max_runtime_seconds=int(value.get("max_runtime_seconds", budget.max_runtime_seconds)),
                     max_same_tool_calls=int(value.get("max_same_tool_calls", budget.max_same_tool_calls)),
                 )
+    # History retrieval config
+    retrieval_raw = data.get("history_retrieval", {})
+    if isinstance(retrieval_raw, dict):
+        history_retrieval = HistoryRetrievalConfig(
+            enabled=bool(retrieval_raw.get("enabled", True)),
+            mode=str(retrieval_raw.get("mode", "relevance")),
+            top_k=int(retrieval_raw.get("top_k", 5)),
+            max_chars=int(retrieval_raw.get("max_chars", 2000)),
+        )
+    else:
+        history_retrieval = HistoryRetrievalConfig()
+
+    # Memory auto-compaction config
+    memory_raw = data.get("memory", {})
+    if isinstance(memory_raw, dict):
+        memory_config = MemoryCompactConfig(
+            auto_compact_enabled=bool(memory_raw.get("auto_compact_enabled", True)),
+            history_turn_compact_threshold=int(memory_raw.get("history_turn_compact_threshold", 20)),
+            history_compact_keep_recent=int(memory_raw.get("history_compact_keep_recent", 6)),
+        )
+    else:
+        memory_config = MemoryCompactConfig()
+
+    # Evidence config
+    evidence_raw = data.get("evidence", {})
+    if isinstance(evidence_raw, dict):
+        evidence_config = EvidenceConfig(
+            enabled=bool(evidence_raw.get("enabled", True)),
+            tool_output_min_chars=int(evidence_raw.get("tool_output_min_chars", 1500)),
+            summary_max_chars=int(evidence_raw.get("summary_max_chars", 800)),
+            key_points_max=int(evidence_raw.get("key_points_max", 5)),
+        )
+    else:
+        evidence_config = EvidenceConfig()
+
     return MiniBotConfig(
         app_name=data["app_name"],
         version=data["version"],
@@ -108,6 +175,9 @@ def load_config(path: Path) -> MiniBotConfig:
         budget=budget,
         agent_profiles=agent_profiles,
         http=http,
+        history_retrieval=history_retrieval,
+        memory=memory_config,
+        evidence=evidence_config,
     )
 
 

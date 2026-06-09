@@ -19,14 +19,9 @@ ROOT = Path(__file__).resolve().parents[1]
 def _prepare_temp_root() -> Path:
     temp_root = ROOT / ".tmp_test_roots" / str(uuid4())
     temp_root.mkdir(parents=True, exist_ok=True)
-    for name in ("configs", "benchmarks", "examples", "reports"):
-        source = ROOT / name
-        target = temp_root / name
-        if source.is_dir():
-            shutil.copytree(source, target)
-        else:
-            target.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(source, target)
+    shutil.copytree(ROOT / "configs", temp_root / "configs")
+    for name in ("benchmarks", "examples", "reports"):
+        (temp_root / name).mkdir(parents=True, exist_ok=True)
     return temp_root
 
 

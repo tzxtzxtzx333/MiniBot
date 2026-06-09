@@ -21,14 +21,9 @@ ROOT = Path(__file__).resolve().parents[1]
 def _prepare_temp_root(hooks_config: dict[str, object]) -> Path:
     temp_root = ROOT / ".tmp_test_roots" / str(uuid4())
     temp_root.mkdir(parents=True, exist_ok=True)
-    for name in ("configs", "benchmarks", "examples", "reports"):
-        source = ROOT / name
-        target = temp_root / name
-        if source.is_dir():
-            shutil.copytree(source, target)
-        else:
-            target.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(source, target)
+    shutil.copytree(ROOT / "configs", temp_root / "configs")
+    for name in ("benchmarks", "examples", "reports"):
+        (temp_root / name).mkdir(parents=True, exist_ok=True)
     (temp_root / "configs" / "hooks.json").write_text(
         json.dumps(hooks_config, ensure_ascii=False, indent=2),
         encoding="utf-8",
@@ -39,14 +34,9 @@ def _prepare_temp_root(hooks_config: dict[str, object]) -> Path:
 def _prepare_temp_root_with_raw_hooks(raw_text: str) -> Path:
     temp_root = ROOT / ".tmp_test_roots" / str(uuid4())
     temp_root.mkdir(parents=True, exist_ok=True)
-    for name in ("configs", "benchmarks", "examples", "reports"):
-        source = ROOT / name
-        target = temp_root / name
-        if source.is_dir():
-            shutil.copytree(source, target)
-        else:
-            target.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(source, target)
+    shutil.copytree(ROOT / "configs", temp_root / "configs")
+    for name in ("benchmarks", "examples", "reports"):
+        (temp_root / name).mkdir(parents=True, exist_ok=True)
     (temp_root / "configs" / "hooks.json").write_text(raw_text, encoding="utf-8")
     return temp_root
 

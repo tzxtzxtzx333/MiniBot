@@ -20,14 +20,9 @@ ROOT = Path(__file__).resolve().parents[1]
 def _prepare_temp_root() -> Path:
     temp_root = ROOT / ".tmp_test_roots" / str(uuid4())
     temp_root.mkdir(parents=True, exist_ok=True)
-    for name in ("configs", "benchmarks", "examples", "reports"):
-        source = ROOT / name
-        target = temp_root / name
-        if source.is_dir():
-            shutil.copytree(source, target)
-        else:
-            target.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(source, target)
+    shutil.copytree(ROOT / "configs", temp_root / "configs")
+    for name in ("benchmarks", "examples", "reports"):
+        (temp_root / name).mkdir(parents=True, exist_ok=True)
     return temp_root
 
 
@@ -125,8 +120,8 @@ def test_benchmark_runner_uses_verifier_agent_reason() -> None:
     temp_root = _prepare_temp_root()
     try:
         app = MiniBotApp(temp_root)
-        runner = BenchmarkRunner(app.runtime.agent_loop, temp_root, verifier_agent=app.runtime.verifier_agent)
-        report = runner.run()
+        runner = BenchmarkRunner(app.runtime.agent_loop, ROOT, verifier_agent=app.runtime.verifier_agent)
+        report = runner.run(profile="safety")  # 9 cases vs 100+, enough to prove verifier_reason
         non_pending = [item for item in report["results"] if item["status"] != "pending"]
         assert non_pending
         assert all(item["verifier_reason"] for item in non_pending)
