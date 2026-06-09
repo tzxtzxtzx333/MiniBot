@@ -220,4 +220,4 @@ pytest -v
 
 ## 最终定位
 
-MiniBot 是一个 Harness-first 本地 Agent 框架原型，已打通模型调用、工具治理、任务状态、渠道内审批、安全策略、多轮工具规划与部署运行边界等核心链路；真实外部能力依赖 API key、Docker、MCP endpoint 等运行环境配置。它不是生产级平台，而是一个 Agent Harness 应用雏形。
+MiniBot 是一个 Harness-first 本地 Agent 框架原型，已打通模型调用、工具治理、任务状态、审批、安全策略、多轮工具规划与部署边界等核心链路；真实外部能力依赖 API key、Docker、MCP endpoint 等运行环境配置。

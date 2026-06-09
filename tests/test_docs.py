@@ -118,10 +118,10 @@ class TestReadmeKeywords:
 
     def test_readme_contains_final_positioning(self) -> None:
         content = (ROOT / "README.md").read_text(encoding="utf-8")
-        assert "任务状态" in content
-        assert "渠道内审批" in content
-        assert "部署运行边界" in content
-        assert "Agent Harness 应用雏形" in content
+        assert "Harness-first 本地 Agent 框架原型" in content
+        assert "已打通模型调用、工具治理、任务状态" in content
+        assert "真实外部能力依赖 API key、Docker、MCP endpoint 等运行环境配置" in content
+        assert "不是生产级平台" in content
 
 
 class TestFinalMetrics:
