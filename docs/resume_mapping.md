@@ -316,9 +316,9 @@ MiniBot 智能体｜核心开发者
 - 报告来源：run trace / benchmark
 - 当前状态：已真实完成
 
-## 28. 70+ Benchmark
+## 28. 115+ Benchmark
 
-- 简历表述：构建 100+ JSON benchmark case
+- 简历表述：构建 115+ JSON benchmark case
 - 实现说明：覆盖 channel、context、memory、tools、safety、reasoning、regression
 - 对应代码文件：`benchmarks/`
 - 演示命令：`python -m minibot benchmark --mode fake --report reports/run_fake_final.json`

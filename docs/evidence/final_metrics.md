@@ -1,6 +1,6 @@
 # Final Metrics
 
-- `benchmark_case_count = 107`
+- `benchmark_case_count = 116`
 - `real-agent profile = 12/12`, `pass_rate = 100%`
 - `safety counted cases = 8/8`, `pass_rate = 100%`（9 total, 1 pending: `requires_memory_write_in_blacklist`）
 - `multiround profile = 2/2`, `pass_rate = 100%` — 覆盖 web_search→web_fetch 两轮链路与 duplicate_loop_detected 预算停止机制
@@ -15,7 +15,7 @@
 - `/new` manual compaction = `compression_trigger = "manual_new"`
 - Turn threshold compaction = `compression_trigger = "turn_threshold"`
 - Archive metadata: `summary_by`、`archive_mode`、`token_before`、`token_after`、`compression_trigger`、`history_turn_count_before`、`history_turn_count_after`
-- `pytest = 313 passed`（含新增 history retrieval + auto-compaction 测试）
+- `pytest = 379 passed`（20 个测试文件，覆盖 channels/agent_loop/memory/evidence/planning/experiments/governance/tools/cli/docs 等全部模块）
 - `planner profile = 4/4`, `pass_rate = 100%` — 覆盖 file_report / approval_resume / failure_replan / evidence_context
 - `planner benchmark report = docs/evidence/run_fake_planner.json`
 - Evidence: `planner_case_count=4`, `avg_plan_steps=1.5`, `avg_evidence_count=0.75`, `replan_count=0`

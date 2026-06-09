@@ -74,7 +74,7 @@
 - 实现 Feishu WebSocket Bot 接入路径与 mock 回归
 - 实现 `web_fetch` 真实 HTTP provider 与 provider 状态标记
 - 实现 benchmark / compare / real report 审计链
-- 构建 107 Benchmark 任务集
+- 构建 116 Benchmark 任务集
 - 安全回归测试 8 个场景 100% 通过（safety profile 8/8 counted）
 - real execution profile 5/5 case 通过，平均延迟约 2.60s，平均工具轮次 1.2
 - real-agent profile 12/12
@@ -118,7 +118,7 @@
 
 ### pytest
 
-- `pytest -v`：最终结果 `136 passed`
+- `pytest -v`：最终结果 `379 passed`
 
 ## benchmark 结果摘要
 
